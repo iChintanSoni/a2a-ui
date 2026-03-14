@@ -1,3 +1,4 @@
+import { AddAgent } from "@/components/add-agent";
 import Page from "@/components/page";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -13,7 +14,7 @@ export default function HomePage() {
         height={10}
         priority
       />
-      <Button>Get Started</Button>
+      <AddAgent />
     </Page>
   );
 }
