@@ -1,8 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
+import agentsReducer from "./features/agents/agentsSlice";
 
 export const makeStore = () => {
   return configureStore({
-    reducer: {},
+    reducer: {
+      agents: agentsReducer,
+    },
   });
 };
 

@@ -6,7 +6,7 @@ A web-based tool for developers to inspect, debug, and validate A2A (Agent2Agent
 
 ### 🔗 Agent Connection
 
-- Connect to local A2A agent servers by specifying base URLs (e.g., `http://localhost:5555`)
+- Connect to local A2A agent servers by specifying base URLs (e.g., `http://localhost:9000`)
 - Support for multiple agent endpoints
 - Connection status monitoring and error handling
 
