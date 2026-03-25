@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 
 export function AddAgent() {
   const [open, setOpen] = useState(false);
-  const [url, setUrl] = useState("http://localhost:9000");
+  const [url, setUrl] = useState("http://localhost:3001");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
