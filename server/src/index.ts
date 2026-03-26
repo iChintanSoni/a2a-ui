@@ -1,8 +1,6 @@
 import express from "express";
-import {
-  DefaultRequestHandler,
-  InMemoryTaskStore,
-} from "@a2a-js/sdk/server";
+import cors from "cors";
+import { DefaultRequestHandler, InMemoryTaskStore } from "@a2a-js/sdk/server";
 import {
   jsonRpcHandler,
   agentCardHandler,
@@ -11,14 +9,14 @@ import {
 } from "@a2a-js/sdk/server/express";
 import type { AgentCard } from "@a2a-js/sdk";
 import { AGENT_CARD_PATH } from "@a2a-js/sdk";
-import { echoAgentExecutor } from "./agent.js";
+import { chatAgentExecutor } from "./agent.ts";
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 const agentCard: AgentCard = {
-  name: "Echo Agent",
-  description: "A simple agent that echoes back user messages.",
+  name: "Chat Agent",
+  description: "A conversational agent powered by Ollama with Tavily search.",
   url: `${BASE_URL}/a2a/jsonrpc`,
   version: "1.0.0",
   protocolVersion: "0.3.0",
@@ -33,11 +31,11 @@ const agentCard: AgentCard = {
   ],
   skills: [
     {
-      id: "echo",
-      name: "Echo",
-      description: "Echoes back the user message.",
-      tags: ["echo", "demo"],
-      examples: ["Hello!", "Say something"],
+      id: "chat",
+      name: "Chat",
+      description: "Conversational responses with optional web search.",
+      tags: ["chat", "search"],
+      examples: ["What is the capital of France?", "Search for the latest news on AI"],
     },
   ],
 };
@@ -45,14 +43,18 @@ const agentCard: AgentCard = {
 const requestHandler = new DefaultRequestHandler(
   agentCard,
   new InMemoryTaskStore(),
-  echoAgentExecutor
+  chatAgentExecutor,
 );
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use(`/${AGENT_CARD_PATH}`, agentCardHandler({ agentCardProvider: requestHandler }));
-app.use("/a2a/jsonrpc", jsonRpcHandler({ requestHandler, userBuilder: UserBuilder.noAuthentication }));
+app.use(
+  "/a2a/jsonrpc",
+  jsonRpcHandler({ requestHandler, userBuilder: UserBuilder.noAuthentication }),
+);
 app.use("/a2a/rest", restHandler({ requestHandler, userBuilder: UserBuilder.noAuthentication }));
 
 app.listen(PORT, () => {
