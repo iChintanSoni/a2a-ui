@@ -1,16 +1,30 @@
 "use client";
 
-import { useAppSelector } from "@/lib/hooks";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import { useAppSelector, useAppDispatch } from "@/lib/hooks";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { AddAgent } from "@/components/add-agent";
 import { H2, Muted, P } from "@/components/typography";
+import { addChat } from "@/lib/features/chats/chatsSlice";
+import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
+import { MessageSquarePlusIcon } from "lucide-react";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const agents = useAppSelector(state => state.agents.agents);
 
+  const startChat = (agentUrl: string, agentName: string) => {
+    dispatch(setActiveAgent(agentUrl));
+    const chatId = crypto.randomUUID();
+    dispatch(addChat({ id: chatId, title: `Chat with ${agentName}`, agentUrl, agentName, lastMessage: "", timestamp: Date.now() }));
+    router.push(`/dashboard/chat/${chatId}`);
+  };
+
   return (
-    <div className="flex-1 space-y-6 p-4 sm:p-6 md:p-8">
+    <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <H2>Connected Agents</H2>
         <AddAgent />
@@ -55,6 +69,17 @@ export default function DashboardPage() {
                   </span>
                 </div>
               </CardContent>
+              <CardFooter className="pt-0">
+                <Button
+                  size="sm"
+                  className="w-full"
+                  disabled={agent.status !== "connected"}
+                  onClick={() => startChat(agent.url, agent.card.name)}
+                >
+                  <MessageSquarePlusIcon className="size-4" />
+                  New Chat
+                </Button>
+              </CardFooter>
             </Card>
           ))}
         </div>

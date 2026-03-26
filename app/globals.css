@@ -127,3 +127,26 @@
     @apply font-sans;
   }
 }
+
+/* highlight.js dark mode overrides */
+.dark .hljs {
+  background: transparent;
+  color: #adbac7;
+}
+.dark .hljs-comment,
+.dark .hljs-quote { color: #768390; }
+.dark .hljs-keyword,
+.dark .hljs-selector-tag,
+.dark .hljs-addition { color: #f47067; }
+.dark .hljs-string,
+.dark .hljs-attr,
+.dark .hljs-attribute { color: #96d0ff; }
+.dark .hljs-number,
+.dark .hljs-literal,
+.dark .hljs-type { color: #6cb6ff; }
+.dark .hljs-built_in,
+.dark .hljs-builtin-name { color: #e3b341; }
+.dark .hljs-function,
+.dark .hljs-title { color: #dcbdfb; }
+.dark .hljs-variable,
+.dark .hljs-template-variable { color: #f69d50; }
