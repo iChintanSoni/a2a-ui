@@ -2,8 +2,8 @@
 
 import { use, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { ClientFactory } from "@a2a-js/sdk/client";
 import type { Client } from "@a2a-js/sdk/client";
+import { createClientFactory } from "@/lib/utils/auth";
 import type {
   Message,
   TaskStatusUpdateEvent,
@@ -45,7 +45,7 @@ export default function ChatPage({ params }: PageProps) {
   const getClient = useCallback(async (): Promise<Client> => {
     if (clientRef.current) return clientRef.current;
     if (!agent) throw new Error("Agent not found");
-    const factory = new ClientFactory();
+    const factory = createClientFactory(agent.auth, agent.customHeaders);
     const client = await factory.createFromUrl(agent.url);
     clientRef.current = client;
     return client;
@@ -144,7 +144,6 @@ export default function ChatPage({ params }: PageProps) {
       } catch (err: unknown) {
         if (err instanceof Error && err.name !== "AbortError") {
           setError(err.message || "Something went wrong.");
-          // Invalidate cached client on connection errors
           clientRef.current = null;
         }
       } finally {
