@@ -5,6 +5,7 @@ import {
   JsonRpcTransportFactory,
   RestTransportFactory,
   DefaultAgentCardResolver,
+  type CallInterceptor,
 } from "@a2a-js/sdk/client";
 
 /** Compute the HTTP headers that correspond to an auth config + custom headers. */
@@ -58,13 +59,22 @@ function createFetchWithHeaders(
 /** Build a ClientFactory that injects auth + custom headers into every request. */
 export function createClientFactory(
   auth: AuthConfig,
-  customHeaders: CustomHeader[]
+  customHeaders: CustomHeader[],
+  interceptors?: CallInterceptor[]
 ): ClientFactory {
   const extraHeaders = buildRequestHeaders(auth, customHeaders);
   const hasHeaders = Object.keys(extraHeaders).length > 0;
+  const clientConfig =
+    interceptors && interceptors.length > 0 ? { interceptors } : undefined;
 
   if (!hasHeaders) {
-    return new ClientFactory();
+    return new ClientFactory(
+      clientConfig
+        ? ClientFactoryOptions.createFrom(ClientFactoryOptions.default, {
+            clientConfig,
+          })
+        : undefined
+    );
   }
 
   const fetchImpl = createFetchWithHeaders(extraHeaders);
@@ -75,6 +85,7 @@ export function createClientFactory(
         new RestTransportFactory({ fetchImpl }),
       ],
       cardResolver: new DefaultAgentCardResolver({ fetchImpl }),
+      ...(clientConfig ? { clientConfig } : {}),
     })
   );
 }

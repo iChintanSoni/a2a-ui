@@ -4,6 +4,11 @@ import { use, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { Client } from "@a2a-js/sdk/client";
 import { createClientFactory } from "@/lib/utils/auth";
+import {
+  DebugInterceptor,
+  appendLog,
+  type LogEntry,
+} from "@/lib/utils/debugInterceptor";
 import type {
   Message,
   TaskStatusUpdateEvent,
@@ -23,8 +28,10 @@ import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { SessionInfoBar } from "@/components/chat/SessionInfoBar";
+import { DebugPanel } from "@/components/chat/DebugPanel";
 import { Button } from "@/components/ui/button";
-import { SquarePenIcon } from "lucide-react";
+import { SquarePenIcon, BugIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ chatId: string }>;
@@ -45,22 +52,41 @@ export default function ChatPage({ params }: PageProps) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [transportMethod, setTransportMethod] = useState<string | null>(null);
+
+  // ── Debug console state ────────────────────────────────────────────────────
+  const [debugOpen, setDebugOpen] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+
+  // Stable log adder so the interceptor never needs to be re-created
+  const addLogRef = useRef<(entry: LogEntry) => void>(() => {});
+  addLogRef.current = (entry: LogEntry) =>
+    setLogs((prev) => appendLog(prev, entry));
+
+  // One interceptor per page mount — routes through addLogRef
+  const interceptorRef = useRef<DebugInterceptor>(
+    new DebugInterceptor((entry) => addLogRef.current(entry))
+  );
+
+  // ── Client caching ─────────────────────────────────────────────────────────
   const clientRef = useRef<Client | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const getClient = useCallback(async (): Promise<Client> => {
     if (clientRef.current) return clientRef.current;
     if (!agent) throw new Error("Agent not found");
-    const factory = createClientFactory(agent.auth, agent.customHeaders);
+    const factory = createClientFactory(agent.auth, agent.customHeaders, [
+      interceptorRef.current,
+    ]);
     const client = await factory.createFromUrl(agent.url);
     clientRef.current = client;
-    // Detect and store the transport protocol being used
-    const proto = (client as unknown as { transport?: { protocolName?: string } })
-      .transport?.protocolName ?? null;
+    const proto = (
+      client as unknown as { transport?: { protocolName?: string } }
+    ).transport?.protocolName ?? null;
     setTransportMethod(proto);
     return client;
   }, [agent]);
 
+  // ── Send message ───────────────────────────────────────────────────────────
   const handleSend = useCallback(
     async (text: string) => {
       if (!chat || !agent) return;
@@ -153,8 +179,19 @@ export default function ChatPage({ params }: PageProps) {
         }
       } catch (err: unknown) {
         if (err instanceof Error && err.name !== "AbortError") {
-          setError(err.message || "Something went wrong.");
+          const msg = err.message || "Something went wrong.";
+          setError(msg);
           clientRef.current = null;
+          // Surface the error in the debug log too
+          setLogs((prev) =>
+            appendLog(prev, {
+              id: crypto.randomUUID(),
+              timestamp: Date.now(),
+              type: "error",
+              method: "sendMessageStream",
+              payload: { message: msg },
+            })
+          );
         }
       } finally {
         setIsStreaming(false);
@@ -164,6 +201,7 @@ export default function ChatPage({ params }: PageProps) {
     [chat, agent, chatId, dispatch, getClient]
   );
 
+  // ── New session ────────────────────────────────────────────────────────────
   const handleNewSession = useCallback(() => {
     if (!agent) return;
     dispatch(setActiveAgent(agent.url));
@@ -178,7 +216,6 @@ export default function ChatPage({ params }: PageProps) {
         timestamp: Date.now(),
       })
     );
-    // Reset client so a fresh one is created for the new session
     clientRef.current = null;
     setTransportMethod(null);
     router.push(`/dashboard/chat/${newChatId}`);
@@ -204,11 +241,29 @@ export default function ChatPage({ params }: PageProps) {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b px-4 py-3">
+      <div className="flex items-center gap-2 border-b px-4 py-3">
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="font-medium text-sm leading-tight truncate">{chat.title}</span>
-          <span className="text-xs text-muted-foreground truncate">{chat.agentName}</span>
+          <span className="truncate font-medium text-sm leading-tight">
+            {chat.title}
+          </span>
+          <span className="truncate text-xs text-muted-foreground">
+            {chat.agentName}
+          </span>
         </div>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "size-8 shrink-0",
+            debugOpen && "bg-muted text-foreground"
+          )}
+          onClick={() => setDebugOpen((v) => !v)}
+          title="Toggle debug console"
+        >
+          <BugIcon className="size-4" />
+        </Button>
+
         <Button
           variant="outline"
           size="sm"
@@ -229,7 +284,7 @@ export default function ChatPage({ params }: PageProps) {
         outputModes={outputModes}
       />
 
-      {/* Messages */}
+      {/* Messages — fills remaining space */}
       <ChatMessages chat={chat} />
 
       {/* Error banner */}
@@ -241,6 +296,15 @@ export default function ChatPage({ params }: PageProps) {
 
       {/* Input */}
       <ChatInput onSend={handleSend} disabled={isStreaming} />
+
+      {/* Debug console — sits at bottom, above nothing */}
+      {debugOpen && (
+        <DebugPanel
+          logs={logs}
+          onClear={() => setLogs([])}
+          onClose={() => setDebugOpen(false)}
+        />
+      )}
     </div>
   );
 }
