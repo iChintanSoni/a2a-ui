@@ -1,11 +1,32 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+export interface AgentCapabilities {
+  streaming?: boolean;
+  pushNotifications?: boolean;
+  stateTransitionHistory?: boolean;
+}
+
+export interface AgentSkill {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+  examples?: string[];
+  inputModes?: string[];
+  outputModes?: string[];
+}
+
 export interface AgentCard {
   name: string;
   description: string;
+  url?: string;
   version: string;
   protocolVersion: string;
   author?: string;
+  capabilities?: AgentCapabilities;
+  skills?: AgentSkill[];
+  defaultInputModes?: string[];
+  defaultOutputModes?: string[];
 }
 
 export type AuthType = "none" | "bearer" | "api-key" | "basic";

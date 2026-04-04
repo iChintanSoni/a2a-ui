@@ -17,6 +17,7 @@ import { AddAgent } from "@/components/add-agent";
 import { H2, Muted, P } from "@/components/typography";
 import { addChat } from "@/lib/features/chats/chatsSlice";
 import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
+import { checkCompliance } from "@/lib/utils/compliance";
 import { MessageSquarePlusIcon, SettingsIcon } from "lucide-react";
 
 export default function DashboardPage() {
@@ -95,8 +96,24 @@ export default function DashboardPage() {
                     v{agent.card.version}
                   </span>
                 </div>
-                {agent.auth.type !== "none" && (
-                  <div className="mt-2 flex items-center gap-1.5">
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  {(() => {
+                    const r = checkCompliance(agent.card);
+                    const variant =
+                      r.failCount === 0
+                        ? "default"
+                        : r.passCount >= r.failCount
+                          ? "secondary"
+                          : "destructive";
+                    return (
+                      <Badge variant={variant} className="text-xs">
+                        {r.failCount === 0
+                          ? "Compliant"
+                          : `${r.failCount} issue${r.failCount > 1 ? "s" : ""}`}
+                      </Badge>
+                    );
+                  })()}
+                  {agent.auth.type !== "none" && (
                     <Badge variant="secondary" className="text-xs capitalize">
                       {agent.auth.type === "api-key"
                         ? "API Key"
@@ -104,8 +121,8 @@ export default function DashboardPage() {
                           ? "Bearer"
                           : "Basic Auth"}
                     </Badge>
-                  </div>
-                )}
+                  )}
+                </div>
               </CardContent>
               <CardFooter className="flex gap-2 pt-0">
                 <Button

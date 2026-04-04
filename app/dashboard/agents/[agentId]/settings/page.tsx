@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PlusIcon, Trash2Icon, SaveIcon } from "lucide-react";
+import { PlusIcon, Trash2Icon, SaveIcon, CheckCircle2Icon, XCircleIcon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   updateAgentAuth,
@@ -11,6 +11,9 @@ import {
   type AuthConfig,
   type CustomHeader,
 } from "@/lib/features/agents/agentsSlice";
+import { checkCompliance } from "@/lib/utils/compliance";
+import { AgentCardViewer } from "@/components/agent-card-viewer";
+import { AgentCapabilitiesBadges } from "@/components/agent-capabilities";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -115,11 +118,14 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
     router.push("/dashboard");
   };
 
-  const activeTab = tab === "headers" ? "headers" : "auth";
+  const activeTab =
+    tab === "headers" ? "headers" : tab === "card" ? "card" : "auth";
 
   const handleTabChange = (value: string) => {
     router.replace(`/dashboard/agents/${agentId}/settings?tab=${value}`);
   };
+
+  const compliance = checkCompliance(agent.card);
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -176,6 +182,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
           <TabsList>
             <TabsTrigger value="auth">Authentication</TabsTrigger>
             <TabsTrigger value="headers">Custom Headers</TabsTrigger>
+            <TabsTrigger value="card">Agent Card</TabsTrigger>
           </TabsList>
 
           {/* ── Authentication ──────────────────────────────────────── */}
@@ -337,6 +344,77 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                 {headersSaved ? "Saved!" : "Save Headers"}
               </Button>
             </div>
+          </TabsContent>
+          {/* ── Agent Card ──────────────────────────────────────── */}
+          <TabsContent value="card" className="mt-6 space-y-8">
+
+            {/* Capabilities */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium">Capabilities</h3>
+              <AgentCapabilitiesBadges
+                capabilities={agent.card.capabilities}
+                defaultInputModes={agent.card.defaultInputModes}
+                defaultOutputModes={agent.card.defaultOutputModes}
+              />
+            </div>
+
+            {/* Skills */}
+            {agent.card.skills && agent.card.skills.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">
+                  Skills ({agent.card.skills.length})
+                </h3>
+                <div className="space-y-2">
+                  {agent.card.skills.map((skill) => (
+                    <div
+                      key={skill.id}
+                      className="rounded-md border px-3 py-2 text-sm"
+                    >
+                      <div className="font-medium">{skill.name}</div>
+                      <div className="text-muted-foreground text-xs mt-0.5">
+                        {skill.description}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Compliance */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-medium">A2A Spec Compliance</h3>
+                <span className="text-xs text-muted-foreground">
+                  {compliance.passCount}/{compliance.checks.length} checks passed
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {compliance.checks.map((c) => (
+                  <div key={c.id} className="flex items-start gap-2 text-xs">
+                    {c.pass ? (
+                      <CheckCircle2Icon className="size-3.5 mt-0.5 shrink-0 text-green-500" />
+                    ) : (
+                      <XCircleIcon className="size-3.5 mt-0.5 shrink-0 text-destructive" />
+                    )}
+                    <span className={c.pass ? "" : "text-destructive"}>
+                      <span className="font-mono">{c.label}</span>
+                      {!c.pass && (
+                        <span className="text-muted-foreground">
+                          {" "}— {c.message}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Raw JSON viewer */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Raw Agent Card</h3>
+              <AgentCardViewer card={agent.card} />
+            </div>
+
           </TabsContent>
         </Tabs>
       </div>
