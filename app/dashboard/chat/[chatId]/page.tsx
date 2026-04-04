@@ -11,6 +11,7 @@ import type {
 } from "@a2a-js/sdk";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
+  addChat,
   addUserMessage,
   applyStatusUpdate,
   applyArtifactUpdate,
@@ -18,8 +19,12 @@ import {
   applyAgentMessage,
   type PartData,
 } from "@/lib/features/chats/chatsSlice";
+import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { SessionInfoBar } from "@/components/chat/SessionInfoBar";
+import { Button } from "@/components/ui/button";
+import { SquarePenIcon } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ chatId: string }>;
@@ -39,6 +44,7 @@ export default function ChatPage({ params }: PageProps) {
 
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [transportMethod, setTransportMethod] = useState<string | null>(null);
   const clientRef = useRef<Client | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -48,6 +54,10 @@ export default function ChatPage({ params }: PageProps) {
     const factory = createClientFactory(agent.auth, agent.customHeaders);
     const client = await factory.createFromUrl(agent.url);
     clientRef.current = client;
+    // Detect and store the transport protocol being used
+    const proto = (client as unknown as { transport?: { protocolName?: string } })
+      .transport?.protocolName ?? null;
+    setTransportMethod(proto);
     return client;
   }, [agent]);
 
@@ -154,6 +164,26 @@ export default function ChatPage({ params }: PageProps) {
     [chat, agent, chatId, dispatch, getClient]
   );
 
+  const handleNewSession = useCallback(() => {
+    if (!agent) return;
+    dispatch(setActiveAgent(agent.url));
+    const newChatId = crypto.randomUUID();
+    dispatch(
+      addChat({
+        id: newChatId,
+        title: `Chat with ${agent.card.name}`,
+        agentUrl: agent.url,
+        agentName: agent.card.name,
+        lastMessage: "",
+        timestamp: Date.now(),
+      })
+    );
+    // Reset client so a fresh one is created for the new session
+    clientRef.current = null;
+    setTransportMethod(null);
+    router.push(`/dashboard/chat/${newChatId}`);
+  }, [agent, dispatch, router]);
+
   if (!chat) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
@@ -168,15 +198,36 @@ export default function ChatPage({ params }: PageProps) {
     );
   }
 
+  const inputModes = agent?.card.defaultInputModes ?? [];
+  const outputModes = agent?.card.defaultOutputModes ?? [];
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 border-b px-4 py-3">
-        <div className="flex flex-col">
-          <span className="font-medium text-sm leading-tight">{chat.title}</span>
-          <span className="text-xs text-muted-foreground">{chat.agentName}</span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="font-medium text-sm leading-tight truncate">{chat.title}</span>
+          <span className="text-xs text-muted-foreground truncate">{chat.agentName}</span>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleNewSession}
+          disabled={isStreaming}
+          className="shrink-0 gap-1.5"
+        >
+          <SquarePenIcon className="size-3.5" />
+          New Session
+        </Button>
       </div>
+
+      {/* Session info bar */}
+      <SessionInfoBar
+        contextId={chatId}
+        transportMethod={transportMethod}
+        inputModes={inputModes}
+        outputModes={outputModes}
+      />
 
       {/* Messages */}
       <ChatMessages chat={chat} />
