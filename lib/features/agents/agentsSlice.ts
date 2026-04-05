@@ -48,6 +48,7 @@ export interface CustomHeader {
 export interface Agent {
   id: string;
   url: string;
+  displayName?: string;
   card: AgentCard;
   status: "connected" | "disconnected" | "error";
   error?: string;
@@ -123,6 +124,26 @@ export const agentsSlice = createSlice({
         agent.customHeaders = action.payload.headers;
       }
     },
+    updateAgentDisplayName: (
+      state,
+      action: PayloadAction<{ agentId: string; displayName: string }>
+    ) => {
+      const agent = state.agents.find((a) => a.id === action.payload.agentId);
+      if (agent) {
+        agent.displayName = action.payload.displayName || undefined;
+      }
+    },
+    updateAgentCard: (
+      state,
+      action: PayloadAction<{ agentId: string; card: AgentCard }>
+    ) => {
+      const agent = state.agents.find((a) => a.id === action.payload.agentId);
+      if (agent) {
+        agent.card = action.payload.card;
+        agent.status = "connected";
+        agent.error = undefined;
+      }
+    },
   },
 });
 
@@ -133,6 +154,8 @@ export const {
   updateAgentStatus,
   updateAgentAuth,
   updateAgentHeaders,
+  updateAgentDisplayName,
+  updateAgentCard,
 } = agentsSlice.actions;
 
 export default agentsSlice.reducer;

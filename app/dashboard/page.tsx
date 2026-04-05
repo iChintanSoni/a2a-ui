@@ -68,7 +68,7 @@ export default function DashboardPage() {
             >
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                 <div className="space-y-1">
-                  <CardTitle className="text-xl">{agent.card.name}</CardTitle>
+                  <CardTitle className="text-xl">{agent.displayName ?? agent.card.name}</CardTitle>
                   <CardDescription className="max-w-50 truncate">
                     <Mono className="text-xs">{agent.url}</Mono>
                   </CardDescription>
@@ -127,7 +127,7 @@ export default function DashboardPage() {
                   size="sm"
                   className="flex-1"
                   disabled={agent.status !== "connected"}
-                  onClick={() => startChat(agent.url, agent.card.name)}
+                  onClick={() => startChat(agent.url, agent.displayName ?? agent.card.name)}
                 >
                   <MessageSquarePlusIcon className="size-4" />
                   New Chat

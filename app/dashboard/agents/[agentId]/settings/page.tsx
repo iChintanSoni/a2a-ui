@@ -2,15 +2,18 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PlusIcon, Trash2Icon, SaveIcon, CheckCircle2Icon, XCircleIcon } from "lucide-react";
+import { PlusIcon, Trash2Icon, SaveIcon, CheckCircle2Icon, XCircleIcon, RefreshCwIcon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   updateAgentAuth,
   updateAgentHeaders,
+  updateAgentDisplayName,
+  updateAgentCard,
   removeAgent,
   type AuthConfig,
   type CustomHeader,
 } from "@/lib/features/agents/agentsSlice";
+import { createClientFactory } from "@/lib/utils/auth";
 import { checkCompliance } from "@/lib/utils/compliance";
 import { AgentCardViewer } from "@/components/agent-card-viewer";
 import { AgentCapabilitiesBadges } from "@/components/agent-capabilities";
@@ -36,7 +39,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { PageTitle, SectionTitle, Caption, Muted, Mono, Small } from "@/components/typography";
+import { PageTitle, SectionTitle, Caption, Muted, Mono, Small, ErrorText } from "@/components/typography";
 
 interface PageProps {
   params: Promise<{ agentId: string }>;
@@ -54,6 +57,8 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
   );
 
   // Local copies for editing
+  const [displayName, setDisplayName] = useState(agent?.displayName ?? "");
+  const [displayNameSaved, setDisplayNameSaved] = useState(false);
   const [auth, setAuth] = useState<AuthConfig>(
     agent?.auth ?? { type: "none" }
   );
@@ -62,6 +67,10 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
   );
   const [authSaved, setAuthSaved] = useState(false);
   const [headersSaved, setHeadersSaved] = useState(false);
+  const [refetching, setRefetching] = useState(false);
+  const [refetchError, setRefetchError] = useState<string | null>(null);
+  const [refetchSuccess, setRefetchSuccess] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   if (!agent) {
     return (
@@ -76,6 +85,33 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
       </div>
     );
   }
+
+  const saveDisplayName = () => {
+    dispatch(updateAgentDisplayName({ agentId, displayName }));
+    setDisplayNameSaved(true);
+    setTimeout(() => setDisplayNameSaved(false), 2000);
+  };
+
+  const handleRefetchCard = async () => {
+    if (!agent) return;
+    setRefetching(true);
+    setRefetchError(null);
+    setRefetchSuccess(false);
+    try {
+      const factory = createClientFactory(agent.auth, agent.customHeaders);
+      const client = await factory.createFromUrl(agent.url);
+      const card = await client.getAgentCard();
+      dispatch(updateAgentCard({ agentId, card }));
+      setRefetchSuccess(true);
+      setTimeout(() => setRefetchSuccess(false), 3000);
+    } catch (err: unknown) {
+      setRefetchError(
+        err instanceof Error ? err.message : "Failed to fetch agent card."
+      );
+    } finally {
+      setRefetching(false);
+    }
+  };
 
   const handleAuthTypeChange = (type: AuthConfig["type"]) => {
     setAuth({ type });
@@ -120,7 +156,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
   };
 
   const activeTab =
-    tab === "headers" ? "headers" : tab === "card" ? "card" : "auth";
+    tab === "headers" ? "headers" : tab === "card" ? "card" : tab === "auth" ? "auth" : "general";
 
   const handleTabChange = (value: string) => {
     router.replace(`/dashboard/agents/${agentId}/settings?tab=${value}`);
@@ -134,7 +170,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
       <div className="border-b px-6 py-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <PageTitle>{agent.card.name}</PageTitle>
+            <PageTitle>{agent.displayName ?? agent.card.name}</PageTitle>
             <Mono className="text-muted-foreground break-all">
               {agent.url}
             </Mono>
@@ -150,7 +186,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
             </div>
           </div>
 
-          <Dialog>
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="destructive" size="sm">
                 Remove Agent
@@ -160,12 +196,12 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
               <DialogHeader>
                 <DialogTitle>Remove Agent</DialogTitle>
                 <DialogDescription>
-                  Remove <strong>{agent.card.name}</strong> from this workspace?
+                  Remove <strong>{agent.displayName ?? agent.card.name}</strong> from this workspace?
                   Chat history will be kept but no new chats can be started.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
-                <Button variant="outline" onClick={() => {}}>
+                <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button variant="destructive" onClick={handleDelete}>
@@ -181,10 +217,34 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
       <div className="px-6 py-6 max-w-2xl">
         <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList>
+            <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="auth">Authentication</TabsTrigger>
             <TabsTrigger value="headers">Custom Headers</TabsTrigger>
             <TabsTrigger value="card">Agent Card</TabsTrigger>
           </TabsList>
+
+          {/* ── General ─────────────────────────────────────────────── */}
+          <TabsContent value="general" className="mt-6 space-y-6">
+            <Muted>Customize how this agent appears in the UI.</Muted>
+            <FieldGroup>
+              <Field>
+                <Label htmlFor="display-name">Display Name</Label>
+                <Input
+                  id="display-name"
+                  placeholder={agent.card.name}
+                  value={displayName}
+                  onChange={(e) => {
+                    setDisplayName(e.target.value);
+                    setDisplayNameSaved(false);
+                  }}
+                />
+              </Field>
+            </FieldGroup>
+            <Button onClick={saveDisplayName} className="gap-2">
+              <SaveIcon className="size-4" />
+              {displayNameSaved ? "Saved!" : "Save"}
+            </Button>
+          </TabsContent>
 
           {/* ── Authentication ──────────────────────────────────────── */}
           <TabsContent value="auth" className="mt-6 space-y-6">
@@ -342,6 +402,24 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
           </TabsContent>
           {/* ── Agent Card ──────────────────────────────────────── */}
           <TabsContent value="card" className="mt-6 space-y-8">
+
+            {/* Re-fetch controls */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleRefetchCard}
+                disabled={refetching}
+              >
+                <RefreshCwIcon className={`size-4 ${refetching ? "animate-spin" : ""}`} />
+                {refetching ? "Fetching…" : "Re-fetch Agent Card"}
+              </Button>
+              {refetchSuccess && (
+                <Caption className="text-green-600 inline">Card updated.</Caption>
+              )}
+              {refetchError && <ErrorText>{refetchError}</ErrorText>}
+            </div>
 
             {/* Capabilities */}
             <div className="space-y-3">

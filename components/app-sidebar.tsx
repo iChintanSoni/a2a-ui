@@ -92,11 +92,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <SidebarMenuButton
                         asChild
                         isActive={isActive}
-                        tooltip={agent.card.name}
+                        tooltip={agent.displayName ?? agent.card.name}
                       >
                         <Link href={settingsHref}>
                           <BotIcon className="size-4 shrink-0" />
-                          <span className="truncate">{agent.card.name}</span>
+                          <span className="truncate">{agent.displayName ?? agent.card.name}</span>
                           <CircleIcon
                             className={`ms-auto size-2 shrink-0 fill-current ${
                               agent.status === "connected"
@@ -114,7 +114,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <TooltipTrigger asChild>
                           <SidebarMenuAction
                             onClick={() =>
-                              startChat(agent.url, agent.id, agent.card.name)
+                              startChat(agent.url, agent.id, agent.displayName ?? agent.card.name)
                             }
                             aria-label="New chat"
                           >
