@@ -21,7 +21,7 @@ const agentCard: AgentCard = {
   version: "1.0.0",
   protocolVersion: "0.3.0",
   defaultInputModes: ["text", "image/*"],
-  defaultOutputModes: ["text"],
+  defaultOutputModes: ["text", "image/*"],
   capabilities: {
     streaming: true,
   },
@@ -36,6 +36,13 @@ const agentCard: AgentCard = {
       description: "Conversational responses with optional web search.",
       tags: ["chat", "search"],
       examples: ["What is the capital of France?", "Search for the latest news on AI"],
+    },
+    {
+      id: "image-generation",
+      name: "Image Generation",
+      description: "Generate images from text prompts using a local Ollama image model.",
+      tags: ["image", "generation", "creative"],
+      examples: ["Generate an image of a sunset over mountains", "Draw a futuristic city at night"],
     },
   ],
 };

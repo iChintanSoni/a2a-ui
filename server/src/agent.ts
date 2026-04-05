@@ -4,10 +4,15 @@ import { createAgent, type ReactAgent } from "langchain";
 import { MemorySaver } from "@langchain/langgraph";
 import { ChatOllama } from "@langchain/ollama";
 import { TavilySearch } from "@langchain/tavily";
+import { DynamicStructuredTool } from "@langchain/core/tools";
+import { z } from "zod";
+
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+const IMAGE_GEN_MODEL = process.env.OLLAMA_IMAGE_GEN_MODEL || "x/flux2-klein:4b";
 
 const model = new ChatOllama({
   model: process.env.OLLAMA_MODEL || "qwen3.5:4b",
-  baseUrl: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+  baseUrl: OLLAMA_BASE_URL,
   temperature: 0.7,
 });
 
@@ -15,11 +20,40 @@ const checkpointer = new MemorySaver();
 
 const tavilySearch = new TavilySearch({ maxResults: 3 });
 
+const generateImageTool = new DynamicStructuredTool({
+  name: "generate_image",
+  description:
+    "Generate an image from a text prompt using AI. Use this when the user asks to create, draw, render, or generate an image.",
+  schema: z.object({
+    prompt: z.string().describe("The text description of the image to generate"),
+  }),
+  func: async ({ prompt }) => {
+    const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: IMAGE_GEN_MODEL, prompt, stream: false }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Image generation failed: ${response.status} ${response.statusText}`);
+    }
+
+    const data = (await response.json()) as { images?: string[] };
+
+    if (data.images && data.images.length > 0) {
+      return JSON.stringify({ success: true, image_base64: data.images[0] });
+    }
+
+    return JSON.stringify({ success: false, error: "No image returned by model" });
+  },
+});
+
 const SYSTEM_PROMPT =
   "You are a helpful assistant. Use the search tool when you need up-to-date information. " +
   "At the end of every response that references any sources, facts, or search results, " +
   "include a '**References**' section with a numbered markdown list of links in the format: " +
-  "1. [Title](URL). Only include this section when you have actual URLs to cite.";
+  "1. [Title](URL). Only include this section when you have actual URLs to cite. " +
+  "When the user asks to generate or create an image, use the generate_image tool.";
 
 const agent = createAgent({
   model,
@@ -27,7 +61,7 @@ const agent = createAgent({
     SYSTEM_PROMPT +
     " When the user provides an image, describe and analyse it as part of your response.",
   checkpointer,
-  tools: [tavilySearch],
+  tools: [tavilySearch, generateImageTool],
 });
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -101,7 +135,7 @@ async function streamAgentResponse(
     { configurable: { thread_id: contextId }, streamMode: "updates" }
   );
 
-  const toolQueryMap = new Map<string, string>();
+  const toolQueryMap = new Map<string, { toolName: string; query: string }>();
   let responseText = "";
 
   for await (const chunk of stream) {
@@ -114,7 +148,7 @@ async function streamAgentResponse(
         for (const tc of lastMsg.tool_calls) {
           const query =
             typeof tc.args?.query === "string" ? tc.args.query : JSON.stringify(tc.args);
-          toolQueryMap.set(tc.id, query);
+          toolQueryMap.set(tc.id, { toolName: tc.name, query });
           eventBus.publish({
             kind: "artifact-update",
             taskId,
@@ -134,13 +168,48 @@ async function streamAgentResponse(
     } else if (step === "tools") {
       for (const msg of messages) {
         if (!msg.tool_call_id) continue;
-        const query = toolQueryMap.get(msg.tool_call_id) ?? "";
+        const { toolName: resolvedToolName, query } = toolQueryMap.get(msg.tool_call_id) ?? { toolName: "unknown", query: "" };
         toolQueryMap.delete(msg.tool_call_id);
+
+        const rawContent = typeof msg.content === "string" ? msg.content : "";
+
+        // Handle image generation tool result
+        if (resolvedToolName === "generate_image") {
+          try {
+            const parsed = JSON.parse(rawContent) as { success: boolean; image_base64?: string; error?: string };
+            if (parsed.success && parsed.image_base64) {
+              eventBus.publish({
+                kind: "artifact-update",
+                taskId,
+                contextId,
+                append: false,
+                lastChunk: true,
+                artifact: {
+                  artifactId: msg.tool_call_id,
+                  name: "generated-image",
+                  description: `Generated image for: ${query}`,
+                  parts: [
+                    {
+                      kind: "file",
+                      file: {
+                        name: "generated-image.png",
+                        mimeType: "image/png",
+                        bytes: parsed.image_base64,
+                      },
+                    },
+                  ],
+                },
+              });
+            }
+          } catch {
+            // parse error — fall through to generic tool-call event
+          }
+          continue;
+        }
+
         let resultCount = 0;
         try {
-          const parsed = JSON.parse(
-            typeof msg.content === "string" ? msg.content : ""
-          ) as Record<string, unknown>;
+          const parsed = JSON.parse(rawContent) as Record<string, unknown>;
           const results = Array.isArray(parsed) ? parsed : parsed.results;
           resultCount = Array.isArray(results) ? results.length : 0;
         } catch {
@@ -158,7 +227,7 @@ async function streamAgentResponse(
             parts: [
               {
                 kind: "data",
-                data: { phase: "done", toolName: "tavily_search", query, resultCount },
+                data: { phase: "done", toolName: resolvedToolName, query, resultCount },
               },
             ],
           },
