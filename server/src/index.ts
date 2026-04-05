@@ -20,7 +20,7 @@ const agentCard: AgentCard = {
   url: `${BASE_URL}/a2a/jsonrpc`,
   version: "1.0.0",
   protocolVersion: "0.3.0",
-  defaultInputModes: ["text"],
+  defaultInputModes: ["text", "image/*"],
   defaultOutputModes: ["text"],
   capabilities: {
     streaming: true,

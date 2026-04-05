@@ -7,6 +7,7 @@ import type {
   Message,
   TaskStatusUpdateEvent,
   TaskArtifactUpdateEvent,
+  Part,
 } from "@a2a-js/sdk";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
@@ -28,10 +29,15 @@ import {
 
 export interface ChatSessionState {
   isStreaming: boolean;
+  isInputRequired: boolean;
   error: string | null;
   transportMethod: string | null;
   logs: LogEntry[];
-  sendMessage: (text: string) => Promise<void>;
+  sendMessage: (
+    text: string,
+    metadata?: Record<string, string>,
+    attachments?: File[]
+  ) => Promise<void>;
   newSession: () => void;
   clearLogs: () => void;
 }
@@ -82,19 +88,71 @@ export function useChatSession(chatId: string): ChatSessionState {
     return client;
   }, [agent]);
 
+  // Derive whether the chat is currently awaiting user input
+  const pendingInputTask = chat?.items
+    .filter((it) => it.kind === "task-status")
+    .findLast((it) => it.kind === "task-status") as
+    | import("@/lib/features/chats/chatsSlice").TaskStatusItem
+    | undefined;
+  const isInputRequired = pendingInputTask?.state === "input-required";
+  const inputRequiredTaskId = isInputRequired ? pendingInputTask?.taskId : undefined;
+
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (text: string, metadata?: Record<string, string>, attachments?: File[]) => {
       if (!chat || !agent) return;
       setError(null);
       setIsStreaming(true);
 
       const messageId = crypto.randomUUID();
-      dispatch(addUserMessage({ chatId, id: messageId, text }));
+
+      // Encode files as base64 FileParts
+      let fileParts: import("@/lib/features/chats/chatsSlice").FilePartData[] = [];
+      if (attachments && attachments.length > 0) {
+        fileParts = await Promise.all(
+          attachments.map(
+            (file) =>
+              new Promise<import("@/lib/features/chats/chatsSlice").FilePartData>(
+                (resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    const dataUrl = reader.result as string;
+                    const base64 = dataUrl.split(",")[1];
+                    resolve({
+                      kind: "file",
+                      file: { name: file.name, mimeType: file.type, bytes: base64 },
+                    });
+                  };
+                  reader.onerror = reject;
+                  reader.readAsDataURL(file);
+                }
+              )
+          )
+        );
+      }
+
+      dispatch(
+        addUserMessage({
+          chatId,
+          id: messageId,
+          text,
+          attachments: fileParts.length > 0 ? fileParts : undefined,
+          metadata: metadata && Object.keys(metadata).length > 0 ? metadata : undefined,
+          isInputResponse: inputRequiredTaskId != null,
+        })
+      );
 
       abortRef.current = new AbortController();
 
       try {
         const client = await getClient();
+
+        const parts: Part[] = [
+          { kind: "text", text },
+          ...fileParts.map((fp) => ({
+            kind: "file" as const,
+            file: fp.file as import("@a2a-js/sdk").FilePart["file"],
+          })),
+        ];
 
         const stream = client.sendMessageStream({
           message: {
@@ -102,7 +160,9 @@ export function useChatSession(chatId: string): ChatSessionState {
             messageId,
             role: "user",
             contextId: chatId,
-            parts: [{ kind: "text", text }],
+            ...(inputRequiredTaskId ? { taskId: inputRequiredTaskId } : {}),
+            ...(metadata && Object.keys(metadata).length > 0 ? { metadata } : {}),
+            parts,
           },
         });
 
@@ -216,6 +276,7 @@ export function useChatSession(chatId: string): ChatSessionState {
 
   return {
     isStreaming,
+    isInputRequired,
     error,
     transportMethod,
     logs,

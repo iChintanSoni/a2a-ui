@@ -27,6 +27,9 @@ export type UserMessageItem = {
   kind: "user-message";
   id: string;
   text: string;
+  attachments?: FilePartData[];
+  metadata?: Record<string, string>;
+  isInputResponse?: boolean; // true when this message continues an input-required task
   timestamp: number;
 };
 
@@ -82,7 +85,7 @@ export interface Chat {
   items: ChatItem[];
 }
 
-interface ChatsState {
+export interface ChatsState {
   chats: Chat[];
   activeChatId: string | null;
 }
@@ -131,7 +134,14 @@ export const chatsSlice = createSlice({
 
     addUserMessage: (
       state,
-      action: PayloadAction<{ chatId: string; id: string; text: string }>
+      action: PayloadAction<{
+        chatId: string;
+        id: string;
+        text: string;
+        attachments?: FilePartData[];
+        metadata?: Record<string, string>;
+        isInputResponse?: boolean;
+      }>
     ) => {
       const chat = findChat(state, action.payload.chatId);
       if (!chat) return;
@@ -139,6 +149,9 @@ export const chatsSlice = createSlice({
         kind: "user-message",
         id: action.payload.id,
         text: action.payload.text,
+        attachments: action.payload.attachments,
+        metadata: action.payload.metadata,
+        isInputResponse: action.payload.isInputResponse,
         timestamp: Date.now(),
       };
       chat.items.push(item);

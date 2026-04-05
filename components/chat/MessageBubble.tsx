@@ -4,8 +4,20 @@ import { PartRenderer } from "./PartRenderer";
 export function UserBubble({ item }: { item: UserMessageItem }) {
   return (
     <div className="flex justify-end">
-      <div className="max-w-[75%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
-        <span className="whitespace-pre-wrap">{item.text}</span>
+      <div className="flex max-w-[75%] flex-col items-end gap-1.5">
+        {/* Attachment previews above the text bubble */}
+        {item.attachments && item.attachments.length > 0 && (
+          <div className="flex flex-wrap justify-end gap-1.5">
+            {item.attachments.map((part, i) => (
+              <div key={i} className="rounded-xl border bg-muted/50 overflow-hidden">
+                <PartRenderer part={part} />
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
+          <span className="whitespace-pre-wrap">{item.text}</span>
+        </div>
       </div>
     </div>
   );

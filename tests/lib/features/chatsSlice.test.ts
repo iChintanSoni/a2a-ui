@@ -9,9 +9,10 @@ import reducer, {
   applyToolCall,
   applyAgentMessage,
   type Chat,
+  type ChatsState,
 } from "@/lib/features/chats/chatsSlice";
 
-const INITIAL_STATE = { chats: [], activeChatId: null };
+const INITIAL_STATE: ChatsState = { chats: [], activeChatId: null };
 
 function makeChat(overrides: Partial<Omit<Chat, "items">> = {}): Omit<Chat, "items"> {
   return {

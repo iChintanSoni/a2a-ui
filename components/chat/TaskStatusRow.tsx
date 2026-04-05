@@ -72,6 +72,29 @@ export function TaskStatusRow({ item }: Props) {
   const config = STATE_CONFIG[item.state] ?? STATE_CONFIG.unknown;
   const Icon = config.icon;
 
+  // Render a prominent callout card for input-required state
+  if (item.state === "input-required") {
+    return (
+      <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-950/40">
+        <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-xs font-medium mb-1">
+          <AlertCircle className="size-3.5 shrink-0" />
+          <span>Agent needs your input</span>
+        </div>
+        {item.statusMessage && item.statusMessage.parts.length > 0 ? (
+          <div className="text-sm text-blue-900 dark:text-blue-200">
+            {item.statusMessage.parts.map((part, i) => (
+              <PartRenderer key={i} part={part} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Please provide additional information to continue.
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-1 py-1">
       <div className={`flex items-center gap-1.5 text-xs ${config.className}`}>
