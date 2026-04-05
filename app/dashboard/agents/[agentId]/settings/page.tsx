@@ -36,6 +36,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { PageTitle, SectionTitle, Caption, Muted, Mono, Small } from "@/components/typography";
 
 interface PageProps {
   params: Promise<{ agentId: string }>;
@@ -64,8 +65,8 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
 
   if (!agent) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground p-8">
-        <p>Agent not found.</p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8">
+        <Muted>Agent not found.</Muted>
         <button
           className="text-sm underline"
           onClick={() => router.push("/dashboard")}
@@ -133,19 +134,19 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
       <div className="border-b px-6 py-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold">{agent.card.name}</h1>
-            <p className="text-muted-foreground text-sm font-mono break-all">
+            <PageTitle>{agent.card.name}</PageTitle>
+            <Mono className="text-muted-foreground break-all">
               {agent.url}
-            </p>
+            </Mono>
             <div className="flex items-center gap-2 pt-1">
               <Badge
                 variant={agent.status === "connected" ? "default" : "destructive"}
               >
                 {agent.status}
               </Badge>
-              <span className="text-muted-foreground text-xs">
+              <Caption className="inline">
                 Protocol v{agent.card.protocolVersion} · Agent v{agent.card.version}
-              </span>
+              </Caption>
             </div>
           </div>
 
@@ -187,9 +188,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
 
           {/* ── Authentication ──────────────────────────────────────── */}
           <TabsContent value="auth" className="mt-6 space-y-6">
-            <p className="text-muted-foreground text-sm">
-              Credentials are applied to every request sent to this agent.
-            </p>
+            <Muted>Credentials are applied to every request sent to this agent.</Muted>
 
             <FieldGroup>
               <Field>
@@ -292,15 +291,11 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
 
           {/* ── Custom Headers ──────────────────────────────────────── */}
           <TabsContent value="headers" className="mt-6 space-y-4">
-            <p className="text-muted-foreground text-sm">
-              Additional headers sent with every request to this agent.
-            </p>
+            <Muted>Additional headers sent with every request to this agent.</Muted>
 
             <div className="space-y-2">
               {headers.length === 0 && (
-                <p className="text-muted-foreground text-sm py-2">
-                  No custom headers configured.
-                </p>
+                <Muted className="py-2">No custom headers configured.</Muted>
               )}
               {headers.map((row, i) => (
                 <div key={i} className="flex items-center gap-2">
@@ -350,7 +345,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
 
             {/* Capabilities */}
             <div className="space-y-3">
-              <h3 className="text-sm font-medium">Capabilities</h3>
+              <SectionTitle>Capabilities</SectionTitle>
               <AgentCapabilitiesBadges
                 capabilities={agent.card.capabilities}
                 defaultInputModes={agent.card.defaultInputModes}
@@ -361,19 +356,15 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
             {/* Skills */}
             {agent.card.skills && agent.card.skills.length > 0 && (
               <div className="space-y-3">
-                <h3 className="text-sm font-medium">
-                  Skills ({agent.card.skills.length})
-                </h3>
+                <SectionTitle>Skills ({agent.card.skills.length})</SectionTitle>
                 <div className="space-y-2">
                   {agent.card.skills.map((skill) => (
                     <div
                       key={skill.id}
                       className="rounded-md border px-3 py-2 text-sm"
                     >
-                      <div className="font-medium">{skill.name}</div>
-                      <div className="text-muted-foreground text-xs mt-0.5">
-                        {skill.description}
-                      </div>
+                      <Small>{skill.name}</Small>
+                      <Caption className="mt-0.5">{skill.description}</Caption>
                     </div>
                   ))}
                 </div>
@@ -383,10 +374,10 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
             {/* Compliance */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-medium">A2A Spec Compliance</h3>
-                <span className="text-xs text-muted-foreground">
+                <SectionTitle>A2A Spec Compliance</SectionTitle>
+                <Caption className="inline">
                   {compliance.passCount}/{compliance.checks.length} checks passed
-                </span>
+                </Caption>
               </div>
               <div className="space-y-1.5">
                 {compliance.checks.map((c) => (
@@ -397,7 +388,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                       <XCircleIcon className="size-3.5 mt-0.5 shrink-0 text-destructive" />
                     )}
                     <span className={c.pass ? "" : "text-destructive"}>
-                      <span className="font-mono">{c.label}</span>
+                      <Mono className="text-xs">{c.label}</Mono>
                       {!c.pass && (
                         <span className="text-muted-foreground">
                           {" "}— {c.message}
@@ -411,7 +402,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
 
             {/* Raw JSON viewer */}
             <div className="space-y-2">
-              <h3 className="text-sm font-medium">Raw Agent Card</h3>
+              <SectionTitle>Raw Agent Card</SectionTitle>
               <AgentCardViewer card={agent.card} />
             </div>
 

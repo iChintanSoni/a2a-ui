@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { XIcon, Trash2Icon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LogEntry, LogType } from "@/lib/utils/debugInterceptor";
+import { Caption, Small } from "@/components/typography";
 
 hljs.registerLanguage("json", json);
 
@@ -60,16 +61,12 @@ function LogRow({ entry }: { entry: LogEntry }) {
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-start gap-2 px-3 py-1.5 text-left hover:bg-muted/40 transition-colors"
       >
-        <span className="mt-0.5 shrink-0 font-mono text-[10px] text-muted-foreground">
-          {time}
-        </span>
+        <Caption className="mt-0.5 shrink-0 font-mono">{time}</Caption>
         <TypeBadge type={entry.type} />
-        <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/80">
+        <Caption className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/80">
           {entry.method}
-        </span>
-        <span className="shrink-0 text-[10px] text-muted-foreground">
-          {open ? "▲" : "▼"}
-        </span>
+        </Caption>
+        <Caption className="shrink-0">{open ? "▲" : "▼"}</Caption>
       </button>
 
       {open && (
@@ -164,9 +161,7 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
 
       {/* Toolbar */}
       <div className="flex items-center gap-1 border-b px-3 py-1.5 shrink-0">
-        <span className="text-xs font-semibold text-foreground/70 mr-1">
-          Debug Console
-        </span>
+        <Small className="text-foreground/70 mr-1">Debug Console</Small>
 
         {/* Filter buttons */}
         <div className="flex gap-0.5">
@@ -220,9 +215,9 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
       {/* Log list */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <p className="p-4 text-center text-xs text-muted-foreground">
+          <Caption className="p-4 text-center">
             No {filter === "all" ? "" : filter + " "}logs yet.
-          </p>
+          </Caption>
         ) : (
           filtered.map((entry) => <LogRow key={entry.id} entry={entry} />)
         )}

@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { Caption, Small } from "@/components/typography";
 import type { AgentCapabilities } from "@/lib/features/agents/agentsSlice";
 
 interface AgentCapabilitiesProps {
@@ -45,18 +46,18 @@ export function AgentCapabilitiesBadges({
         ))}
       </div>
       {(defaultInputModes?.length || defaultOutputModes?.length) ? (
-        <div className="text-xs text-muted-foreground space-y-1">
+        <div className="space-y-1">
           {defaultInputModes && defaultInputModes.length > 0 && (
-            <div>
-              <span className="font-medium text-foreground">Input modes:</span>{" "}
+            <Caption>
+              <Small className="text-foreground">Input modes:</Small>{" "}
               {defaultInputModes.join(", ")}
-            </div>
+            </Caption>
           )}
           {defaultOutputModes && defaultOutputModes.length > 0 && (
-            <div>
-              <span className="font-medium text-foreground">Output modes:</span>{" "}
+            <Caption>
+              <Small className="text-foreground">Output modes:</Small>{" "}
               {defaultOutputModes.join(", ")}
-            </div>
+            </Caption>
           )}
         </div>
       ) : null}

@@ -11,6 +11,7 @@ import { DebugPanel } from "@/components/chat/DebugPanel";
 import { Button } from "@/components/ui/button";
 import { SquarePenIcon, BugIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Caption, Small, Muted } from "@/components/typography";
 
 interface PageProps {
   params: Promise<{ chatId: string }>;
@@ -32,8 +33,8 @@ export default function ChatPage({ params }: PageProps) {
 
   if (!chat) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground">
-        <p>Chat not found.</p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-3">
+        <Muted>Chat not found.</Muted>
         <button
           className="text-sm underline"
           onClick={() => router.push("/dashboard")}
@@ -52,12 +53,8 @@ export default function ChatPage({ params }: PageProps) {
       {/* Header */}
       <div className="flex items-center gap-2 border-b px-4 py-3">
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate font-medium text-sm leading-tight">
-            {chat.title}
-          </span>
-          <span className="truncate text-xs text-muted-foreground">
-            {chat.agentName}
-          </span>
+          <Small className="truncate leading-tight">{chat.title}</Small>
+          <Caption className="truncate">{chat.agentName}</Caption>
         </div>
 
         <Button

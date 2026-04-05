@@ -1,5 +1,6 @@
 import type { ToolCallItem } from "@/lib/features/chats/chatsSlice";
 import { Search, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Small, Caption } from "@/components/typography";
 
 interface Props {
   item: ToolCallItem;
@@ -21,11 +22,11 @@ export function ToolCallBlock({ item }: Props) {
     <div className="flex items-start gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground w-fit max-w-sm">
       <Search className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
       <div className="flex flex-col gap-1 min-w-0">
-        <span className="font-medium text-foreground/70">{toolName}</span>
-        <span className="truncate">
+        <Small className="text-foreground/70">{toolName}</Small>
+        <Caption className="truncate">
           <span className="text-muted-foreground/60">query: </span>
           {query}
-        </span>
+        </Caption>
         <div className="flex items-center gap-1">
           {icon}
           {phase === "running" && <span>searching…</span>}

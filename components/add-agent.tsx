@@ -7,6 +7,7 @@ import { useAppDispatch } from "@/lib/hooks";
 import { addAgent, type AuthConfig, type CustomHeader } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
 import { Button } from "@/components/ui/button";
+import { Muted, ErrorText } from "@/components/typography";
 import {
   Dialog,
   DialogContent,
@@ -251,9 +252,7 @@ export function AddAgent() {
             {/* ── Custom Headers ─────────────────────────────────────── */}
             <TabsContent value="headers" className="mt-4 space-y-3">
               {headers.length === 0 && (
-                <p className="text-muted-foreground text-sm">
-                  No custom headers. Add key-value pairs below.
-                </p>
+                <Muted>No custom headers. Add key-value pairs below.</Muted>
               )}
               {headers.map((row, i) => (
                 <div key={i} className="flex items-center gap-2">
@@ -296,9 +295,7 @@ export function AddAgent() {
             </TabsContent>
           </Tabs>
 
-          {error && (
-            <p className="mt-3 text-sm font-medium text-destructive">{error}</p>
-          )}
+          {error && <ErrorText className="mt-3">{error}</ErrorText>}
 
           <DialogFooter className="mt-6">
             <Button

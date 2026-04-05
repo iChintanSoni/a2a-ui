@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import type { TaskStatusItem } from "@/lib/features/chats/chatsSlice";
 import { PartRenderer } from "./PartRenderer";
+import { Muted } from "@/components/typography";
 
 interface Props {
   item: TaskStatusItem;
@@ -78,11 +79,11 @@ export function TaskStatusRow({ item }: Props) {
         <span>{config.label}</span>
       </div>
       {item.statusMessage && item.statusMessage.parts.length > 0 && (
-        <div className="ms-5 text-sm text-muted-foreground">
+        <Muted className="ms-5">
           {item.statusMessage.parts.map((part, i) => (
             <PartRenderer key={i} part={part} />
           ))}
-        </div>
+        </Muted>
       )}
     </div>
   );

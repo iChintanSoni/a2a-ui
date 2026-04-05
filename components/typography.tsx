@@ -53,3 +53,38 @@ export function Small({ className, ...props }: React.ComponentProps<"small">) {
 export function Muted({ className, ...props }: React.ComponentProps<"p">) {
   return <p className={cn("text-muted-foreground text-sm", className)} {...props} />;
 }
+
+/** App-level page heading (dashboard, settings pages). Smaller than prose H1/H2. */
+export function PageTitle({ className, ...props }: React.ComponentProps<"h1">) {
+  return <h1 className={cn("text-xl font-semibold", className)} {...props} />;
+}
+
+/** Within-card or within-panel subsection label. */
+export function SectionTitle({ className, ...props }: React.ComponentProps<"h3">) {
+  return <h3 className={cn("text-sm font-medium", className)} {...props} />;
+}
+
+/** Metadata, timestamps, captions — smallest readable text. */
+export function Caption({ className, ...props }: React.ComponentProps<"p">) {
+  return <p className={cn("text-xs text-muted-foreground", className)} {...props} />;
+}
+
+/** Monospace inline text for URLs, IDs, protocol values, code snippets. */
+export function Mono({ className, ...props }: React.ComponentProps<"span">) {
+  return <span className={cn("font-mono text-sm", className)} {...props} />;
+}
+
+/** Validation / form error text. */
+export function ErrorText({ className, ...props }: React.ComponentProps<"p">) {
+  return <p className={cn("text-sm font-medium text-destructive", className)} {...props} />;
+}
+
+/** Uppercase tracking label used in dense UI bars (session info, debug panel). */
+export function MicroLabel({ className, ...props }: React.ComponentProps<"span">) {
+  return (
+    <span
+      className={cn("text-[10px] font-medium uppercase tracking-wide text-foreground/60", className)}
+      {...props}
+    />
+  );
+}

@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AddAgent } from "@/components/add-agent";
-import { H2, Muted, P } from "@/components/typography";
+import { H2, Muted, P, Caption, Mono } from "@/components/typography";
 import { addChat } from "@/lib/features/chats/chatsSlice";
 import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
 import { checkCompliance } from "@/lib/utils/compliance";
@@ -69,8 +69,8 @@ export default function DashboardPage() {
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                 <div className="space-y-1">
                   <CardTitle className="text-xl">{agent.card.name}</CardTitle>
-                  <CardDescription className="max-w-50 truncate text-xs font-mono">
-                    {agent.url}
+                  <CardDescription className="max-w-50 truncate">
+                    <Mono className="text-xs">{agent.url}</Mono>
                   </CardDescription>
                 </div>
                 <Badge
@@ -82,18 +82,16 @@ export default function DashboardPage() {
                 </Badge>
               </CardHeader>
               <CardContent className="pt-4">
-                <p className="text-muted-foreground text-sm">
+                <Muted>
                   {agent.card.description ||
                     "No description provided by this agent."}
-                </p>
-                <div className="text-muted-foreground mt-4 flex items-center space-x-2 text-xs">
-                  <span className="text-foreground font-medium">Protocol:</span>
-                  <span>v{agent.card.protocolVersion}</span>
-                  <span className="border-l px-2">
-                    <span className="text-foreground pr-1 font-medium">
-                      Agent:
-                    </span>
-                    v{agent.card.version}
+                </Muted>
+                <div className="mt-4 flex items-center space-x-2">
+                  <Caption className="inline text-foreground font-medium">Protocol:</Caption>
+                  <Caption className="inline">v{agent.card.protocolVersion}</Caption>
+                  <span className="border-l px-2 flex items-center gap-1">
+                    <Caption className="inline text-foreground font-medium">Agent:</Caption>
+                    <Caption className="inline">v{agent.card.version}</Caption>
                   </span>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">

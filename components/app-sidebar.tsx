@@ -30,6 +30,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { addChat, setActiveChat } from "@/lib/features/chats/chatsSlice";
 import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
 import { AddAgent } from "@/components/add-agent";
+import { Caption } from "@/components/typography";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
@@ -79,9 +80,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <SidebarMenu>
               {agents.length === 0 ? (
-                <p className="text-muted-foreground px-2 py-1 text-xs">
-                  No agents connected.
-                </p>
+                <Caption className="px-2 py-1">No agents connected.</Caption>
               ) : (
                 agents.map((agent) => {
                   const settingsHref = `/dashboard/agents/${agent.id}/settings`;
@@ -138,9 +137,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <SidebarMenu>
               {chats.length === 0 ? (
-                <p className="text-muted-foreground px-2 py-1 text-xs">
-                  No recent chats.
-                </p>
+                <Caption className="px-2 py-1">No recent chats.</Caption>
               ) : (
                 chats.map((chat) => (
                   <SidebarMenuItem key={chat.id}>
@@ -153,9 +150,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <span className="truncate text-sm leading-tight">
                           {chat.title}
                         </span>
-                        <span className="text-muted-foreground truncate text-xs">
-                          {chat.agentName}
-                        </span>
+                        <Caption className="truncate">{chat.agentName}</Caption>
                       </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

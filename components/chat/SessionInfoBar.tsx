@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CopyIcon, CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Caption, MicroLabel } from "@/components/typography";
 
 interface SessionInfoBarProps {
   contextId: string;
@@ -34,7 +35,7 @@ export function SessionInfoBar({
     <div className="border-b bg-muted/30">
       {/* Summary row — always visible */}
       <div className="flex items-center gap-2 px-4 py-1.5 text-xs text-muted-foreground">
-        <span className="font-medium text-foreground/60 uppercase tracking-wide text-[10px]">Session</span>
+        <MicroLabel>Session</MicroLabel>
 
         {/* Context ID */}
         <button
@@ -59,9 +60,9 @@ export function SessionInfoBar({
 
         {/* Modalities — collapsed: show count; expanded: see below */}
         {!expanded && (inputModes.length > 0 || outputModes.length > 0) && (
-          <span className="text-[10px] text-muted-foreground">
+          <Caption className="text-[10px]">
             {inputModes.length + outputModes.length} modalities
-          </span>
+          </Caption>
         )}
 
         {/* Expand toggle */}
@@ -86,7 +87,7 @@ export function SessionInfoBar({
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 pb-2 text-xs text-muted-foreground">
           {inputModes.length > 0 && (
             <div className="flex items-center gap-1.5">
-              <span className="font-medium text-foreground/60 uppercase tracking-wide text-[10px]">In</span>
+              <MicroLabel>In</MicroLabel>
               {inputModes.map((m) => (
                 <Badge key={m} variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
                   {m}
@@ -96,7 +97,7 @@ export function SessionInfoBar({
           )}
           {outputModes.length > 0 && (
             <div className="flex items-center gap-1.5">
-              <span className="font-medium text-foreground/60 uppercase tracking-wide text-[10px]">Out</span>
+              <MicroLabel>Out</MicroLabel>
               {outputModes.map((m) => (
                 <Badge key={m} variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
                   {m}
