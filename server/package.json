@@ -8,13 +8,14 @@
   },
   "dependencies": {
     "@a2a-js/sdk": "^0",
+    "@langchain/google": "^0",
     "@langchain/community": "^1",
     "@langchain/core": "^1",
-    "@langchain/ollama": "^1",
     "@langchain/tavily": "^1",
     "cors": "^2",
     "express": "^5",
     "langchain": "^1",
+    "mime": "^4.1.0",
     "zod": "^4"
   },
   "imports": {

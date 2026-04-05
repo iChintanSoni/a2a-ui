@@ -2,18 +2,22 @@ import { type AgentExecutor, type ExecutionEventBus, RequestContext } from "@a2a
 import { type Part } from "@a2a-js/sdk";
 import { createAgent, type ReactAgent } from "langchain";
 import { MemorySaver } from "@langchain/langgraph";
-import { ChatOllama } from "@langchain/ollama";
 import { TavilySearch } from "@langchain/tavily";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
+import { ChatGoogle } from "@langchain/google/node";
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
-const IMAGE_GEN_MODEL = process.env.OLLAMA_IMAGE_GEN_MODEL || "x/flux2-klein:4b";
-
-const model = new ChatOllama({
-  model: process.env.OLLAMA_MODEL || "qwen3.5:4b",
-  baseUrl: OLLAMA_BASE_URL,
+const model = new ChatGoogle({
+  model: process.env.GEMINI_LLM_MODEL || "gemini-2.5-flash",
+  apiKey: process.env.GEMINI_API_KEY,
   temperature: 0.7,
+});
+
+const imageModel = new ChatGoogle({
+  model: process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image",
+  apiKey: process.env.GEMINI_API_KEY,
+  temperature: 0.5,
+  responseModalities: ["IMAGE", "TEXT"],
 });
 
 const checkpointer = new MemorySaver();
@@ -28,20 +32,13 @@ const generateImageTool = new DynamicStructuredTool({
     prompt: z.string().describe("The text description of the image to generate"),
   }),
   func: async ({ prompt }) => {
-    const response = await fetch(`${OLLAMA_BASE_URL}/api/generate`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: IMAGE_GEN_MODEL, prompt, stream: false }),
-    });
+    const res = await imageModel.invoke(prompt);
 
-    if (!response.ok) {
-      throw new Error(`Image generation failed: ${response.status} ${response.statusText}`);
-    }
-
-    const data = (await response.json()) as { images?: string[] };
-
-    if (data.images && data.images.length > 0) {
-      return JSON.stringify({ success: true, image_base64: data.images[0] });
+    for (const block of res.contentBlocks ?? []) {
+      if (block.type === "file" && block.data) {
+        const mimeType = ((block.mimeType as string) || "image/png").split(";")[0];
+        return JSON.stringify({ success: true, image_base64: block.data, mimeType });
+      }
     }
 
     return JSON.stringify({ success: false, error: "No image returned by model" });
@@ -67,7 +64,9 @@ const agent = createAgent({
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ToolCall = { id: string; name: string; args: Record<string, unknown> };
-type StepUpdate = { messages: Array<{ content: unknown; tool_calls?: ToolCall[]; tool_call_id?: string }> };
+type StepUpdate = {
+  messages: Array<{ content: unknown; tool_calls?: ToolCall[]; tool_call_id?: string }>;
+};
 
 // LangChain multimodal content block types
 type TextBlock = { type: "text"; text: string };
@@ -96,9 +95,7 @@ function buildMessageContent(parts: Part[]): string | ContentBlock[] {
 
       if (mimeType.startsWith("image/")) {
         const url =
-          "uri" in file
-            ? file.uri
-            : `data:${mimeType};base64,${"bytes" in file ? file.bytes : ""}`;
+          "uri" in file ? file.uri : `data:${mimeType};base64,${"bytes" in file ? file.bytes : ""}`;
         blocks.push({ type: "image_url", image_url: { url } });
       } else {
         // Non-image file — mention it as text so the model is aware
@@ -127,19 +124,19 @@ async function streamAgentResponse(
   content: string | ContentBlock[],
   contextId: string,
   taskId: string,
-  eventBus: ExecutionEventBus
+  eventBus: ExecutionEventBus,
 ) {
   const stream = await agentInstance.stream(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     { messages: [{ role: "human", content }] } as any,
-    { configurable: { thread_id: contextId }, streamMode: "updates" }
+    { configurable: { thread_id: contextId }, streamMode: "updates" },
   );
 
   const toolQueryMap = new Map<string, { toolName: string; query: string }>();
   let responseText = "";
 
   for await (const chunk of stream) {
-    const [step, update] = (Object.entries(chunk)[0] as unknown) as [string, StepUpdate];
+    const [step, update] = Object.entries(chunk)[0] as unknown as [string, StepUpdate];
     const messages = update.messages ?? [];
     const lastMsg = messages[messages.length - 1];
 
@@ -168,7 +165,10 @@ async function streamAgentResponse(
     } else if (step === "tools") {
       for (const msg of messages) {
         if (!msg.tool_call_id) continue;
-        const { toolName: resolvedToolName, query } = toolQueryMap.get(msg.tool_call_id) ?? { toolName: "unknown", query: "" };
+        const { toolName: resolvedToolName, query } = toolQueryMap.get(msg.tool_call_id) ?? {
+          toolName: "unknown",
+          query: "",
+        };
         toolQueryMap.delete(msg.tool_call_id);
 
         const rawContent = typeof msg.content === "string" ? msg.content : "";
@@ -176,8 +176,15 @@ async function streamAgentResponse(
         // Handle image generation tool result
         if (resolvedToolName === "generate_image") {
           try {
-            const parsed = JSON.parse(rawContent) as { success: boolean; image_base64?: string; error?: string };
+            const parsed = JSON.parse(rawContent) as {
+              success: boolean;
+              image_base64?: string;
+              mimeType?: string;
+              error?: string;
+            };
             if (parsed.success && parsed.image_base64) {
+              const mimeType = parsed.mimeType ?? "image/png";
+              const ext = mimeType.split("/")[1] ?? "png";
               eventBus.publish({
                 kind: "artifact-update",
                 taskId,
@@ -192,8 +199,8 @@ async function streamAgentResponse(
                     {
                       kind: "file",
                       file: {
-                        name: "generated-image.png",
-                        mimeType: "image/png",
+                        name: `generated-image.${ext}`,
+                        mimeType,
                         bytes: parsed.image_base64,
                       },
                     },
@@ -257,13 +264,7 @@ export const chatAgentExecutor: AgentExecutor = {
     });
 
     try {
-      const responseText = await streamAgentResponse(
-        agent,
-        content,
-        contextId,
-        taskId,
-        eventBus
-      );
+      const responseText = await streamAgentResponse(agent, content, contextId, taskId, eventBus);
 
       eventBus.publish({
         kind: "artifact-update",

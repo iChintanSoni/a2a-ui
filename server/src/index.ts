@@ -9,14 +9,14 @@ import {
 } from "@a2a-js/sdk/server/express";
 import type { AgentCard } from "@a2a-js/sdk";
 import { AGENT_CARD_PATH } from "@a2a-js/sdk";
-import { chatAgentExecutor } from "./agent.ts";
+import { chatAgentExecutor } from "#src/agent.ts";
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
 
 const agentCard: AgentCard = {
   name: "Chat Agent",
-  description: "A conversational agent powered by Ollama with Tavily search.",
+  description: "A conversational agent powered by Google Gemini with Tavily search.",
   url: `${BASE_URL}/a2a/jsonrpc`,
   version: "1.0.0",
   protocolVersion: "0.3.0",
@@ -40,7 +40,7 @@ const agentCard: AgentCard = {
     {
       id: "image-generation",
       name: "Image Generation",
-      description: "Generate images from text prompts using a local Ollama image model.",
+      description: "Generate images from text prompts using Google Gemini.",
       tags: ["image", "generation", "creative"],
       examples: ["Generate an image of a sunset over mountains", "Draw a futuristic city at night"],
     },
