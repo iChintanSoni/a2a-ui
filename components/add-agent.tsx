@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useAppDispatch } from "@/lib/hooks";
 import { addAgent, type AuthConfig, type CustomHeader } from "@/lib/features/agents/agentsSlice";
@@ -45,6 +45,22 @@ export function AddAgent() {
 
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Pre-fill from share link: ?agentUrl=...&authType=...
+  useEffect(() => {
+    const agentUrl = searchParams.get("agentUrl");
+    const authType = searchParams.get("authType") as AuthConfig["type"] | null;
+    if (agentUrl) {
+      setUrl(agentUrl);
+      if (authType && ["none", "bearer", "api-key", "basic"].includes(authType)) {
+        setAuth({ type: authType });
+      }
+      setOpen(true);
+      // Clean URL so refreshing doesn't re-open the dialog
+      router.replace("/dashboard");
+    }
+  }, [searchParams, router]);
 
   const handleAuthTypeChange = (type: AuthConfig["type"]) => {
     setAuth({ type });

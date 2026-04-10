@@ -107,6 +107,9 @@ export const chatsSlice = createSlice({
   name: "chats",
   initialState,
   reducers: {
+    hydrateChats: (_state, action: PayloadAction<Chat[]>) => {
+      return { chats: action.payload, activeChatId: null };
+    },
     addChat: (state, action: PayloadAction<Omit<Chat, "items">>) => {
       const existing = state.chats.findIndex((c) => c.id === action.payload.id);
       const chat: Chat = { ...action.payload, items: [] };
@@ -304,6 +307,7 @@ export const chatsSlice = createSlice({
 });
 
 export const {
+  hydrateChats,
   addChat,
   setActiveChat,
   removeChat,

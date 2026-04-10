@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
@@ -16,14 +17,29 @@ import { Button } from "@/components/ui/button";
 import { AddAgent } from "@/components/add-agent";
 import { H2, Muted, P, Caption, Mono } from "@/components/typography";
 import { addChat } from "@/lib/features/chats/chatsSlice";
-import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
+import { addAgent, setActiveAgent, type Agent } from "@/lib/features/agents/agentsSlice";
 import { checkCompliance } from "@/lib/utils/compliance";
-import { MessageSquarePlusIcon, SettingsIcon } from "lucide-react";
+import { MessageSquarePlusIcon, SettingsIcon, DownloadIcon, UploadIcon } from "lucide-react";
+
+// ─── Import/export helpers ────────────────────────────────────────────────────
+
+function exportAgents(agents: Agent[]) {
+  const blob = new Blob([JSON.stringify(agents, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "a2a-agents.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const agents = useAppSelector((state) => state.agents.agents);
+  const importRef = useRef<HTMLInputElement>(null);
 
   const startChat = (agentUrl: string, agentName: string) => {
     dispatch(setActiveAgent(agentUrl));
@@ -41,11 +57,56 @@ export default function DashboardPage() {
     router.push(`/dashboard/chat/${chatId}`);
   };
 
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const imported = JSON.parse(reader.result as string) as Agent[];
+        if (!Array.isArray(imported)) throw new Error("Expected an array.");
+        for (const raw of imported) {
+          if (!raw.id || !raw.url || !raw.card) continue;
+          dispatch(
+            addAgent({
+              ...raw,
+              id: crypto.randomUUID(), // avoid ID collisions
+              status: "disconnected",
+              error: undefined,
+            })
+          );
+        }
+      } catch {
+        // silently ignore malformed files
+      }
+    };
+    reader.readAsText(file);
+    // Reset so same file can be re-imported
+    e.target.value = "";
+  };
+
   return (
     <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+      {/* Single hidden file input for import — shared across empty and populated states */}
+      <input ref={importRef} type="file" accept=".json,application/json" className="hidden" onChange={handleImport} />
+
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <H2>Connected Agents</H2>
-        <AddAgent />
+        <div className="flex items-center gap-2">
+          {agents.length > 0 && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => exportAgents(agents)} title="Export all agents as JSON">
+                <DownloadIcon className="size-4" />
+                Export
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => importRef.current?.click()} title="Import agents from JSON">
+                <UploadIcon className="size-4" />
+                Import
+              </Button>
+            </>
+          )}
+          <AddAgent />
+        </div>
       </div>
 
       {agents.length === 0 ? (
@@ -55,7 +116,11 @@ export default function DashboardPage() {
             Connect an agent compatible with the A2A standard to get started.
             You can provide the URL of any A2A server.
           </P>
-          <div className="mt-6">
+          <div className="mt-6 flex items-center gap-2">
+            <Button variant="outline" onClick={() => importRef.current?.click()}>
+              <UploadIcon className="size-4" />
+              Import agents
+            </Button>
             <AddAgent />
           </div>
         </div>

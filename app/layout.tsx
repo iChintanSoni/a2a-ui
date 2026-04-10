@@ -5,6 +5,7 @@ import "highlight.js/styles/github.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import StoreProvider from "./StoreProvider";
+import { ToastProvider } from "@/lib/toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,9 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <StoreProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <TooltipProvider>{children}</TooltipProvider>
+            <TooltipProvider>
+              <ToastProvider>{children}</ToastProvider>
+            </TooltipProvider>
           </ThemeProvider>
         </StoreProvider>
       </body>

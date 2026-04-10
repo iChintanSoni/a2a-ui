@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PlusIcon, Trash2Icon, SaveIcon, CheckCircle2Icon, XCircleIcon, RefreshCwIcon } from "lucide-react";
+import { PlusIcon, Trash2Icon, SaveIcon, CheckCircle2Icon, XCircleIcon, RefreshCwIcon, LinkIcon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   updateAgentAuth,
@@ -71,6 +71,17 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
   const [refetchError, setRefetchError] = useState<string | null>(null);
   const [refetchSuccess, setRefetchSuccess] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const copyShareLink = () => {
+    const url = new URL(window.location.origin + "/dashboard");
+    url.searchParams.set("agentUrl", agent?.url ?? "");
+    url.searchParams.set("authType", agent?.auth.type ?? "none");
+    navigator.clipboard.writeText(url.toString()).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    });
+  };
 
   if (!agent) {
     return (
@@ -186,6 +197,12 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
             </div>
           </div>
 
+          <div className="flex items-center gap-2 shrink-0">
+            <Button variant="outline" size="sm" onClick={copyShareLink} className="gap-2">
+              <LinkIcon className="size-3.5" />
+              {linkCopied ? "Copied!" : "Copy Link"}
+            </Button>
+
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="destructive" size="sm">
@@ -210,6 +227,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
       </div>
 

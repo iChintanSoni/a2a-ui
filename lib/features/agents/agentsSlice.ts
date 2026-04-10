@@ -56,7 +56,7 @@ export interface Agent {
   customHeaders: CustomHeader[];
 }
 
-interface AgentsState {
+export interface AgentsState {
   agents: Agent[];
   activeAgentUrl: string | null;
 }
@@ -70,6 +70,9 @@ export const agentsSlice = createSlice({
   name: "agents",
   initialState,
   reducers: {
+    hydrateAgents: (_state, action: PayloadAction<Agent[]>) => {
+      return { agents: action.payload, activeAgentUrl: null };
+    },
     addAgent: (state, action: PayloadAction<Agent>) => {
       const existingIndex = state.agents.findIndex(
         (a) => a.url === action.payload.url
@@ -148,6 +151,7 @@ export const agentsSlice = createSlice({
 });
 
 export const {
+  hydrateAgents,
   addAgent,
   removeAgent,
   setActiveAgent,
