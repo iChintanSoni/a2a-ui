@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { Provider } from "react-redux";
 import { makeStore, type AppStore } from "@/lib/store";
 import { loadPersistedState, persistAgents, persistChats } from "@/lib/persistence";
-import { hydrateAgents } from "@/lib/features/agents/agentsSlice";
+import { hydrateAgents, updateAgentCard, updateAgentStatus } from "@/lib/features/agents/agentsSlice";
+import { createClientFactory } from "@/lib/utils/auth";
 import { hydrateChats } from "@/lib/features/chats/chatsSlice";
 
 export default function StoreProvider({ children }: { children: React.ReactNode }) {
@@ -17,6 +18,20 @@ export default function StoreProvider({ children }: { children: React.ReactNode 
       .then(({ agents, chats }) => {
         s.dispatch(hydrateAgents(agents));
         s.dispatch(hydrateChats(chats));
+
+        const disconnected = agents.filter((a) => a.status === "disconnected");
+        for (const agent of disconnected) {
+          const factory = createClientFactory(agent.auth, agent.customHeaders);
+          factory
+            .createFromUrl(agent.url)
+            .then((client) => client.getAgentCard())
+            .then((card) => {
+              s.dispatch(updateAgentCard({ agentId: agent.id, card }));
+            })
+            .catch(() => {
+              s.dispatch(updateAgentStatus({ url: agent.url, status: "error", error: "Unreachable" }));
+            });
+        }
       })
       .catch(() => {
         // IndexedDB unavailable — start with empty state (already the default)
