@@ -147,6 +147,7 @@ async function streamAgentResponse(
           const query =
             typeof tc.args?.query === "string" ? tc.args.query : JSON.stringify(tc.args);
           toolQueryMap.set(tc.id, { toolName: tc.name, query });
+          console.log(`[Tool Call] ${tc.name} executing with args:`, query);
           eventBus.publish({
             kind: "artifact-update",
             taskId,
@@ -163,6 +164,11 @@ async function streamAgentResponse(
       } else if (typeof lastMsg.content === "string" && lastMsg.content) {
         responseText = lastMsg.content;
       }
+      
+      // Attempt to capture and log model token usage from metadata payload
+      if (lastMsg.usage_metadata) {
+        console.log(`[Observatory - Token Usage]`, lastMsg.usage_metadata);
+      }
     } else if (step === "tools") {
       for (const msg of messages) {
         if (!msg.tool_call_id) continue;
@@ -173,6 +179,10 @@ async function streamAgentResponse(
         toolQueryMap.delete(msg.tool_call_id);
 
         const rawContent = typeof msg.content === "string" ? msg.content : "";
+        console.log(
+          `[Tool Result] ${resolvedToolName}:`,
+          rawContent.substring(0, 200) + (rawContent.length > 200 ? "..." : "")
+        );
 
         // Handle image generation tool result
         if (resolvedToolName === "generate_image") {
@@ -255,6 +265,9 @@ export const chatAgentExecutor: AgentExecutor = {
   async execute(requestContext: RequestContext, eventBus: ExecutionEventBus) {
     const { taskId, contextId, userMessage } = requestContext;
 
+    console.log(`\n--- [Task Initiated] Context ID: ${contextId} | Task ID: ${taskId} ---`);
+    console.log(`[Input]`, JSON.stringify(userMessage.parts, null, 2));
+
     // Build multimodal content from all message parts
     const content = buildMessageContent(userMessage.parts as Part[]);
 
@@ -278,6 +291,9 @@ export const chatAgentExecutor: AgentExecutor = {
         eventBus,
         abortController.signal
       );
+      
+      console.log(`[Final Response]`, responseText);
+      console.log(`--- [Task Complete] Context ID: ${contextId} | Task ID: ${taskId} ---\n`);
 
       eventBus.publish({
         kind: "artifact-update",
