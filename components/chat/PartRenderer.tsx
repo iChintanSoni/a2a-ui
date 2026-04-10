@@ -20,6 +20,52 @@ export function PartRenderer({ part }: Props) {
       return <img src={src} alt={name} className="max-w-xs rounded border" />;
     }
 
+    if (file.mimeType?.startsWith("audio/")) {
+      return (
+        <audio
+          controls
+          src={src}
+          className="max-w-xs rounded"
+          aria-label={name}
+        />
+      );
+    }
+
+    if (file.mimeType?.startsWith("video/")) {
+      return (
+        <video
+          controls
+          src={src}
+          className="max-w-sm rounded border"
+          aria-label={name}
+        />
+      );
+    }
+
+    if (file.mimeType === "application/pdf") {
+      return (
+        <div className="flex flex-col gap-1">
+          <object
+            data={src}
+            type="application/pdf"
+            className="w-full rounded border"
+            style={{ height: "480px" }}
+            aria-label={name}
+          >
+            <a
+              href={src}
+              download={name}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline text-sm"
+            >
+              {name} (download PDF)
+            </a>
+          </object>
+        </div>
+      );
+    }
+
     return (
       <a
         href={src}

@@ -4,14 +4,15 @@ import { Caption, MicroLabel } from "@/components/typography";
 
 interface Props {
   item: ArtifactItem;
+  onInspect?: () => void;
 }
 
-export function ArtifactBlock({ item }: Props) {
+export function ArtifactBlock({ item, onInspect }: Props) {
   const label = item.name ?? "Artifact";
   const hasOnlyText = item.parts.every((p) => p.kind === "text");
 
   return (
-    <div className="my-1 rounded-lg border bg-card overflow-hidden text-sm">
+    <div className="my-1 rounded-lg border bg-card overflow-hidden text-sm group relative">
       <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <MicroLabel>{label}</MicroLabel>
         {item.description && (
@@ -32,6 +33,15 @@ export function ArtifactBlock({ item }: Props) {
           <Caption className="animate-pulse">…</Caption>
         )}
       </div>
+      {onInspect && (
+        <button
+          onClick={onInspect}
+          className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
+          title="Inspect raw JSON"
+        >
+          {"{}"}
+        </button>
+      )}
     </div>
   );
 }

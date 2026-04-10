@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Client } from "@a2a-js/sdk/client";
 import type {
@@ -17,6 +17,7 @@ import {
   applyArtifactUpdate,
   applyToolCall,
   applyAgentMessage,
+  sanitizeStaleStreaming,
   type PartData,
 } from "@/lib/features/chats/chatsSlice";
 import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
@@ -87,6 +88,16 @@ export function useChatSession(chatId: string): ChatSessionState {
 
     return client;
   }, [agent]);
+
+  // On mount (or when chatId/agent changes): sanitize any stale in-flight state
+  // left from a previous session, then eagerly connect so transportMethod is
+  // populated before the user sends the first message.
+  useEffect(() => {
+    dispatch(sanitizeStaleStreaming(chatId));
+    if (agent) {
+      getClient().catch(() => {}); // errors will surface on the next sendMessage
+    }
+  }, [chatId, agent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Derive whether the chat is currently awaiting user input
   const pendingInputTask = chat?.items

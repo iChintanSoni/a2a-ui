@@ -14,6 +14,7 @@ import { Muted } from "@/components/typography";
 
 interface Props {
   item: TaskStatusItem;
+  onInspect?: () => void;
 }
 
 const STATE_CONFIG: Record<
@@ -68,14 +69,14 @@ const STATE_CONFIG: Record<
   },
 };
 
-export function TaskStatusRow({ item }: Props) {
+export function TaskStatusRow({ item, onInspect }: Props) {
   const config = STATE_CONFIG[item.state] ?? STATE_CONFIG.unknown;
   const Icon = config.icon;
 
   // Render a prominent callout card for input-required state
   if (item.state === "input-required") {
     return (
-      <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-950/40">
+      <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-950/40 group relative">
         <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-xs font-medium mb-1">
           <AlertCircle className="size-3.5 shrink-0" />
           <span>Agent needs your input</span>
@@ -91,12 +92,21 @@ export function TaskStatusRow({ item }: Props) {
             Please provide additional information to continue.
           </p>
         )}
+        {onInspect && (
+          <button
+            onClick={onInspect}
+            className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
+            title="Inspect raw JSON"
+          >
+            {"{}"}
+          </button>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-1 py-1">
+    <div className="flex flex-col gap-1 py-1 group relative">
       <div className={`flex items-center gap-1.5 text-xs ${config.className}`}>
         <Icon className={`size-3.5 ${config.spin ? "animate-spin" : ""}`} />
         <span>{config.label}</span>
@@ -107,6 +117,15 @@ export function TaskStatusRow({ item }: Props) {
             <PartRenderer key={i} part={part} />
           ))}
         </Muted>
+      )}
+      {onInspect && (
+        <button
+          onClick={onInspect}
+          className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
+          title="Inspect raw JSON"
+        >
+          {"{}"}
+        </button>
       )}
     </div>
   );

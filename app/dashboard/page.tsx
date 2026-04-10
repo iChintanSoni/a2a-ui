@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppSelector, useAppDispatch } from "@/lib/hooks";
@@ -17,8 +17,9 @@ import { Button } from "@/components/ui/button";
 import { AddAgent } from "@/components/add-agent";
 import { H2, Muted, P, Caption, Mono } from "@/components/typography";
 import { addChat } from "@/lib/features/chats/chatsSlice";
-import { addAgent, setActiveAgent, type Agent } from "@/lib/features/agents/agentsSlice";
+import { addAgent, setActiveAgent, updateAgentCard, updateAgentStatus, type Agent } from "@/lib/features/agents/agentsSlice";
 import { checkCompliance } from "@/lib/utils/compliance";
+import { createClientFactory } from "@/lib/utils/auth";
 import { MessageSquarePlusIcon, SettingsIcon, DownloadIcon, UploadIcon } from "lucide-react";
 
 // ─── Import/export helpers ────────────────────────────────────────────────────
@@ -40,6 +41,25 @@ export default function DashboardPage() {
   const dispatch = useAppDispatch();
   const agents = useAppSelector((state) => state.agents.agents);
   const importRef = useRef<HTMLInputElement>(null);
+
+  // Re-validate all disconnected agents on mount (persistence always resets status to "disconnected").
+  useEffect(() => {
+    const disconnected = agents.filter((a) => a.status === "disconnected");
+    if (disconnected.length === 0) return;
+
+    for (const agent of disconnected) {
+      const factory = createClientFactory(agent.auth, agent.customHeaders);
+      factory
+        .createFromUrl(agent.url)
+        .then((client) => client.getAgentCard())
+        .then((card) => {
+          dispatch(updateAgentCard({ agentId: agent.id, card }));
+        })
+        .catch(() => {
+          dispatch(updateAgentStatus({ url: agent.url, status: "error", error: "Unreachable" }));
+        });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startChat = (agentUrl: string, agentName: string) => {
     dispatch(setActiveAgent(agentUrl));
@@ -140,10 +160,14 @@ export default function DashboardPage() {
                 </div>
                 <Badge
                   variant={
-                    agent.status === "connected" ? "default" : "destructive"
+                    agent.status === "connected"
+                      ? "default"
+                      : agent.status === "error"
+                        ? "destructive"
+                        : "secondary"
                   }
                 >
-                  {agent.status}
+                  {agent.status === "disconnected" ? "connecting…" : agent.status}
                 </Badge>
               </CardHeader>
               <CardContent className="pt-4">

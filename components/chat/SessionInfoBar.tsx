@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CopyIcon, CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import { CopyIcon, CheckIcon, ChevronDownIcon, ChevronUpIcon, FileTextIcon, ImageIcon, MicIcon, VideoIcon, FileIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Caption, MicroLabel } from "@/components/typography";
 
@@ -12,6 +12,15 @@ interface SessionInfoBarProps {
   transportMethod: string | null;
   inputModes: string[];
   outputModes: string[];
+}
+
+function ModalityIcon({ mimeType }: { mimeType: string }) {
+  const cls = "size-3";
+  if (mimeType.startsWith("text/") || mimeType === "text") return <FileTextIcon className={cls} />;
+  if (mimeType.startsWith("image/")) return <ImageIcon className={cls} />;
+  if (mimeType.startsWith("audio/")) return <MicIcon className={cls} />;
+  if (mimeType.startsWith("video/")) return <VideoIcon className={cls} />;
+  return <FileIcon className={cls} />;
 }
 
 export function SessionInfoBar({
@@ -89,7 +98,8 @@ export function SessionInfoBar({
             <div className="flex items-center gap-1.5">
               <MicroLabel>In</MicroLabel>
               {inputModes.map((m) => (
-                <Badge key={m} variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                <Badge key={m} variant="secondary" className="text-[10px] px-1.5 py-0 h-4 flex items-center gap-1">
+                  <ModalityIcon mimeType={m} />
                   {m}
                 </Badge>
               ))}
@@ -99,7 +109,8 @@ export function SessionInfoBar({
             <div className="flex items-center gap-1.5">
               <MicroLabel>Out</MicroLabel>
               {outputModes.map((m) => (
-                <Badge key={m} variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                <Badge key={m} variant="secondary" className="text-[10px] px-1.5 py-0 h-4 flex items-center gap-1">
+                  <ModalityIcon mimeType={m} />
                   {m}
                 </Badge>
               ))}

@@ -4,6 +4,7 @@ import { Small, Caption } from "@/components/typography";
 
 interface Props {
   item: ToolCallItem;
+  onInspect?: () => void;
 }
 
 // Maps a tool name to { gerund, base } where gerund is used while running
@@ -41,7 +42,7 @@ function getToolIcon(toolName: string) {
   return <Wrench className={cls} />;
 }
 
-export function ToolCallBlock({ item }: Props) {
+export function ToolCallBlock({ item, onInspect }: Props) {
   const { toolName, query, resultCount, phase } = item;
 
   const { gerund, base } = getToolVerbs(toolName);
@@ -58,7 +59,7 @@ export function ToolCallBlock({ item }: Props) {
     );
 
   return (
-    <div className="flex items-start gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground w-fit max-w-sm">
+    <div className="relative flex items-start gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground w-fit max-w-sm group">
       {getToolIcon(toolName)}
       <div className="flex flex-col gap-1 min-w-0">
         <Small className="text-foreground/70">{toolName}</Small>
@@ -73,6 +74,15 @@ export function ToolCallBlock({ item }: Props) {
           {phase === "error" && <span className="text-red-500">{base} failed</span>}
         </div>
       </div>
+      {onInspect && (
+        <button
+          onClick={onInspect}
+          className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
+          title="Inspect raw JSON"
+        >
+          {"{}"}
+        </button>
+      )}
     </div>
   );
 }

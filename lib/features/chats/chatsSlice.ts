@@ -303,6 +303,25 @@ export const chatsSlice = createSlice({
       };
       chat.items.push(item);
     },
+
+    // Called on chat page mount to clear stale in-flight state left by a
+    // previous session that ended mid-stream (e.g. browser refresh).
+    sanitizeStaleStreaming: (state, action: PayloadAction<string>) => {
+      const chat = findChat(state, action.payload);
+      if (!chat) return;
+      for (const item of chat.items) {
+        if (item.kind === "artifact" && item.isStreaming) {
+          item.isStreaming = false;
+        }
+        // Mark any dangling non-terminal task state as unknown so the spinner stops.
+        if (
+          item.kind === "task-status" &&
+          (item.state === "working" || item.state === "submitted")
+        ) {
+          item.state = "unknown";
+        }
+      }
+    },
   },
 });
 
@@ -316,6 +335,7 @@ export const {
   applyArtifactUpdate,
   applyToolCall,
   applyAgentMessage,
+  sanitizeStaleStreaming,
 } = chatsSlice.actions;
 
 export default chatsSlice.reducer;

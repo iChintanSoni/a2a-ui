@@ -39,6 +39,35 @@ export function ChatInput({ onSend, disabled, isInputRequired, inputModes = [] }
   // Attachments state
   const [attachments, setAttachments] = useState<AttachmentPreview[]>([]);
 
+  // Drag-and-drop state
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (!showFilePicker) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    if (!showFilePicker) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    const previews: AttachmentPreview[] = files.map((file) => ({
+      file,
+      previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+    }));
+    setAttachments((prev) => [...prev, ...previews]);
+  };
+
   const handleSend = () => {
     const trimmed = text.trim();
     if (!trimmed || disabled) return;
@@ -116,7 +145,15 @@ export function ChatInput({ onSend, disabled, isInputRequired, inputModes = [] }
   };
 
   return (
-    <div className="border-t bg-background px-4 py-3 flex flex-col gap-2">
+    <div
+      className={cn(
+        "border-t bg-background px-4 py-3 flex flex-col gap-2 transition-colors",
+        isDragging && showFilePicker && "bg-primary/5 border-primary"
+      )}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* input-required banner */}
       {isInputRequired && (
         <div className="flex items-center gap-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-1.5 text-xs text-blue-700 dark:text-blue-300">
