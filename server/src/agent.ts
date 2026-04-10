@@ -6,19 +6,32 @@ import { TavilySearch } from "@langchain/tavily";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 import { z } from "zod";
 import { ChatGoogle } from "@langchain/google/node";
+import { ChatOllama } from "@langchain/ollama";
+import { env } from "#src/env.ts";
 
-const model = new ChatGoogle({
-  model: process.env.GEMINI_LLM_MODEL || "gemini-2.5-flash",
-  apiKey: process.env.GEMINI_API_KEY,
-  temperature: 0.7,
-});
+const aiProvider = env.AI_PROVIDER;
 
-const imageModel = new ChatGoogle({
-  model: process.env.GEMINI_IMAGE_MODEL || "gemini-2.5-flash-image",
-  apiKey: process.env.GEMINI_API_KEY,
-  temperature: 0.5,
-  responseModalities: ["IMAGE", "TEXT"],
-});
+const model =
+  aiProvider === "ollama"
+    ? new ChatOllama({
+        model: env.OLLAMA_LLM_MODEL,
+        temperature: 0.7,
+      })
+    : new ChatGoogle({
+        model: env.GEMINI_LLM_MODEL,
+        apiKey: env.GEMINI_API_KEY,
+        temperature: 0.7,
+      });
+
+const imageModel =
+  aiProvider === "ollama"
+    ? null
+    : new ChatGoogle({
+        model: env.GEMINI_IMAGE_MODEL,
+        apiKey: env.GEMINI_API_KEY,
+        temperature: 0.5,
+        responseModalities: ["IMAGE", "TEXT"],
+      });
 
 const checkpointer = new MemorySaver();
 
@@ -32,16 +45,57 @@ const generateImageTool = new DynamicStructuredTool({
     prompt: z.string().describe("The text description of the image to generate"),
   }),
   func: async ({ prompt }) => {
-    const res = await imageModel.invoke(prompt);
+    if (aiProvider === "ollama") {
+      try {
+        const ollamaHost = env.OLLAMA_HOST;
+        const ollamaImageModelName = env.OLLAMA_IMAGE_MODEL;
+        
+        const response = await fetch(`${ollamaHost}/api/generate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: ollamaImageModelName,
+            prompt,
+            stream: false
+          })
+        });
 
-    for (const block of res.contentBlocks ?? []) {
-      if (block.type === "file" && block.data) {
-        const mimeType = ((block.mimeType as string) || "image/png").split(";")[0];
-        return JSON.stringify({ success: true, image_base64: block.data, mimeType });
+        if (!response.ok) {
+          const body = await response.text();
+          return JSON.stringify({ success: false, error: `Ollama image gen failed: ${body}` });
+        }
+
+        const data = await response.json();
+        let base64Image = data.images?.[0];
+        if (!base64Image && typeof data.response === "string") {
+            // standard ollama generate api might put the base64 output here for certain models if images array is not used
+            base64Image = data.response;
+        }
+        
+        if (base64Image) {
+           if (base64Image.startsWith("data:")) {
+               base64Image = base64Image.split(",")[1];
+           }
+           return JSON.stringify({ success: true, image_base64: base64Image, mimeType: "image/png" });
+        }
+        
+        return JSON.stringify({ success: false, error: "No image found in Ollama response." });
+      } catch (error) {
+        return JSON.stringify({ success: false, error: String(error) });
       }
-    }
+    } else {
+      if (!imageModel) return JSON.stringify({ success: false, error: "Image model not initialized" });
+      const res = await imageModel.invoke(prompt);
 
-    return JSON.stringify({ success: false, error: "No image returned by model" });
+      for (const block of res.contentBlocks ?? []) {
+        if (block.type === "file" && block.data) {
+          const mimeType = ((block.mimeType as string) || "image/png").split(";")[0];
+          return JSON.stringify({ success: true, image_base64: block.data, mimeType });
+        }
+      }
+
+      return JSON.stringify({ success: false, error: "No image returned by model" });
+    }
   },
 });
 
@@ -65,7 +119,12 @@ const agent = createAgent({
 
 type ToolCall = { id: string; name: string; args: Record<string, unknown> };
 type StepUpdate = {
-  messages: Array<{ content: unknown; tool_calls?: ToolCall[]; tool_call_id?: string }>;
+  messages: Array<{
+    content: unknown;
+    tool_calls?: ToolCall[];
+    tool_call_id?: string;
+    usage_metadata?: Record<string, unknown>;
+  }>;
 };
 
 // LangChain multimodal content block types

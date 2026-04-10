@@ -10,9 +10,10 @@ import {
 import type { AgentCard } from "@a2a-js/sdk";
 import { AGENT_CARD_PATH } from "@a2a-js/sdk";
 import { chatAgentExecutor } from "#src/agent.ts";
+import { env } from "#src/env.ts";
 
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3001;
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+const PORT = env.PORT;
+const BASE_URL = env.BASE_URL || `http://localhost:${PORT}`;
 
 const agentCard: AgentCard = {
   name: "Chat Agent",

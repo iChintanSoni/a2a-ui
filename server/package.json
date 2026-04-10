@@ -8,9 +8,10 @@
   },
   "dependencies": {
     "@a2a-js/sdk": "^0",
-    "@langchain/google": "^0",
     "@langchain/community": "^1",
     "@langchain/core": "^1",
+    "@langchain/google": "^0",
+    "@langchain/ollama": "^1.2.6",
     "@langchain/tavily": "^1",
     "cors": "^2",
     "express": "^5",
