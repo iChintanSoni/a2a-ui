@@ -125,11 +125,12 @@ async function streamAgentResponse(
   contextId: string,
   taskId: string,
   eventBus: ExecutionEventBus,
+  signal?: AbortSignal
 ) {
   const stream = await agentInstance.stream(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     { messages: [{ role: "human", content }] } as any,
-    { configurable: { thread_id: contextId }, streamMode: "updates" },
+    { configurable: { thread_id: contextId }, streamMode: "updates", signal },
   );
 
   const toolQueryMap = new Map<string, { toolName: string; query: string }>();
@@ -248,6 +249,8 @@ async function streamAgentResponse(
 
 // ─── Agent executor ───────────────────────────────────────────────────────────
 
+const activeAbortControllers = new Map<string, AbortController>();
+
 export const chatAgentExecutor: AgentExecutor = {
   async execute(requestContext: RequestContext, eventBus: ExecutionEventBus) {
     const { taskId, contextId, userMessage } = requestContext;
@@ -263,8 +266,18 @@ export const chatAgentExecutor: AgentExecutor = {
       status: { state: "working", timestamp: new Date().toISOString() },
     });
 
+    const abortController = new AbortController();
+    activeAbortControllers.set(taskId, abortController);
+
     try {
-      const responseText = await streamAgentResponse(agent, content, contextId, taskId, eventBus);
+      const responseText = await streamAgentResponse(
+        agent,
+        content,
+        contextId,
+        taskId,
+        eventBus,
+        abortController.signal
+      );
 
       eventBus.publish({
         kind: "artifact-update",
@@ -309,12 +322,20 @@ export const chatAgentExecutor: AgentExecutor = {
           },
         },
       });
+    } finally {
+      activeAbortControllers.delete(taskId);
     }
 
     eventBus.finished();
   },
 
   async cancelTask(taskId: string, eventBus: ExecutionEventBus) {
+    const controller = activeAbortControllers.get(taskId);
+    if (controller) {
+      controller.abort();
+      activeAbortControllers.delete(taskId);
+    }
+
     eventBus.publish({
       kind: "status-update",
       taskId,

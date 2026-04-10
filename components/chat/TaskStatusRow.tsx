@@ -7,14 +7,17 @@ import {
   Ban,
   ShieldAlert,
   HelpCircle,
+  RotateCcw,
 } from "lucide-react";
 import type { TaskStatusItem } from "@/lib/features/chats/chatsSlice";
 import { PartRenderer } from "./PartRenderer";
 import { Muted } from "@/components/typography";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   item: TaskStatusItem;
   onInspect?: () => void;
+  onRetry?: () => void;
 }
 
 const STATE_CONFIG: Record<
@@ -69,7 +72,7 @@ const STATE_CONFIG: Record<
   },
 };
 
-export function TaskStatusRow({ item, onInspect }: Props) {
+export function TaskStatusRow({ item, onInspect, onRetry }: Props) {
   const config = STATE_CONFIG[item.state] ?? STATE_CONFIG.unknown;
   const Icon = config.icon;
 
@@ -117,6 +120,14 @@ export function TaskStatusRow({ item, onInspect }: Props) {
             <PartRenderer key={i} part={part} />
           ))}
         </Muted>
+      )}
+      {item.state === "canceled" && onRetry && (
+        <div className="ms-5 mt-1">
+          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={onRetry}>
+            <RotateCcw className="size-3" />
+            Retry
+          </Button>
+        </div>
       )}
       {onInspect && (
         <button

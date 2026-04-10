@@ -34,6 +34,7 @@ export interface ChatSessionState {
   error: string | null;
   transportMethod: string | null;
   logs: LogEntry[];
+  cancelStream: () => void;
   sendMessage: (
     text: string,
     metadata?: Record<string, string>,
@@ -53,6 +54,7 @@ export function useChatSession(chatId: string): ChatSessionState {
   );
 
   const [isStreaming, setIsStreaming] = useState(false);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [transportMethod, setTransportMethod] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -107,6 +109,29 @@ export function useChatSession(chatId: string): ChatSessionState {
     | undefined;
   const isInputRequired = pendingInputTask?.state === "input-required";
   const inputRequiredTaskId = isInputRequired ? pendingInputTask?.taskId : undefined;
+
+  const cancelStream = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+    }
+    if (activeTaskId) {
+      dispatch(
+        applyStatusUpdate({
+          chatId,
+          taskId: activeTaskId,
+          state: "canceled",
+        })
+      );
+      if (clientRef.current) {
+        // We use fetch directly if the client doesn't export a raw cancelTask, but the SDK has sendRequest.
+        // Actually the SDK standard JSON RPC transport supports requests, but for simplicity we rely on the object or fallback.
+        // Since we explicitly use A2A SDK, let's just attempt to call cancelTask if available, or fetch directly.
+        (clientRef.current as any).cancelTask?.(activeTaskId).catch(() => {});
+      }
+    }
+    setIsStreaming(false);
+    setActiveTaskId(null);
+  }, [activeTaskId, chatId, dispatch]);
 
   const sendMessage = useCallback(
     async (text: string, metadata?: Record<string, string>, attachments?: File[]) => {
@@ -182,6 +207,7 @@ export function useChatSession(chatId: string): ChatSessionState {
 
           if (event.kind === "status-update") {
             const ev = event as TaskStatusUpdateEvent;
+            setActiveTaskId(ev.taskId);
             dispatch(
               applyStatusUpdate({
                 chatId,
@@ -260,6 +286,7 @@ export function useChatSession(chatId: string): ChatSessionState {
         }
       } finally {
         setIsStreaming(false);
+        setActiveTaskId(null);
         abortRef.current = null;
       }
     },
@@ -291,6 +318,7 @@ export function useChatSession(chatId: string): ChatSessionState {
     error,
     transportMethod,
     logs,
+    cancelStream,
     sendMessage,
     newSession,
     clearLogs: () => setLogs([]),

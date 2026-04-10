@@ -8,9 +8,10 @@ import { JsonInspectModal } from "./JsonInspectModal";
 
 interface Props {
   chat: Chat;
+  onRetry?: (text: string) => void;
 }
 
-export function ChatMessages({ chat }: Props) {
+export function ChatMessages({ chat, onRetry }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [inspectData, setInspectData] = useState<unknown>(null);
 
@@ -28,7 +29,7 @@ export function ChatMessages({ chat }: Props) {
 
   return (
     <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
-      {chat.items.map((item) => {
+      {chat.items.map((item, index) => {
         if (item.kind === "user-message") {
           return <UserBubble key={item.id} item={item} onInspect={() => setInspectData(item)} />;
         }
@@ -36,7 +37,26 @@ export function ChatMessages({ chat }: Props) {
           return <AgentBubble key={item.id} item={item} onInspect={() => setInspectData(item)} />;
         }
         if (item.kind === "task-status") {
-          return <TaskStatusRow key={`${item.taskId}-${item.state}`} item={item} onInspect={() => setInspectData(item)} />;
+          return (
+            <TaskStatusRow
+              key={`${item.taskId}-${item.state}`}
+              item={item}
+              onInspect={() => setInspectData(item)}
+              onRetry={
+                onRetry
+                  ? () => {
+                      for (let i = index - 1; i >= 0; i--) {
+                        const prev = chat.items[i];
+                        if (prev.kind === "user-message") {
+                          onRetry(prev.text);
+                          break;
+                        }
+                      }
+                    }
+                  : undefined
+              }
+            />
+          );
         }
         if (item.kind === "artifact") {
           return <ArtifactBlock key={`${item.taskId}-${item.id}`} item={item} onInspect={() => setInspectData(item)} />;

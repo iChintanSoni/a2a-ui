@@ -1,5 +1,5 @@
 import { useState, useRef, type KeyboardEvent } from "react";
-import { SendIcon, PaperclipIcon, SlidersHorizontalIcon, XIcon, PlusIcon } from "lucide-react";
+import { SendIcon, PaperclipIcon, SlidersHorizontalIcon, XIcon, PlusIcon, SquareIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -16,13 +16,15 @@ interface AttachmentPreview {
 
 interface Props {
   onSend: (text: string, metadata?: Record<string, string>, attachments?: File[]) => void;
+  onCancel?: () => void;
   disabled?: boolean;
+  isStreaming?: boolean;
   isInputRequired?: boolean;
   /** Agent's defaultInputModes — controls whether the file picker is shown and which types are accepted */
   inputModes?: string[];
 }
 
-export function ChatInput({ onSend, disabled, isInputRequired, inputModes = [] }: Props) {
+export function ChatInput({ onSend, onCancel, disabled, isStreaming, isInputRequired, inputModes = [] }: Props) {
   // Derive file-picker visibility and accepted MIME types from inputModes.
   // Any entry that isn't "text" is treated as an allowed attachment MIME type.
   const acceptedMimeTypes = inputModes.filter((m) => m !== "text");
@@ -280,14 +282,25 @@ export function ChatInput({ onSend, disabled, isInputRequired, inputModes = [] }
           <SlidersHorizontalIcon className="size-4" />
         </button>
 
-        <Button
-          size="icon"
-          className="size-8 shrink-0"
-          onClick={handleSend}
-          disabled={!text.trim() || disabled}
-        >
-          <SendIcon className="size-4" />
-        </Button>
+        {isStreaming ? (
+          <Button
+            size="icon"
+            className="size-8 shrink-0 bg-red-500 text-white hover:bg-red-600"
+            onClick={onCancel}
+            title="Stop generating"
+          >
+            <SquareIcon className="size-3.5 fill-current" />
+          </Button>
+        ) : (
+          <Button
+            size="icon"
+            className="size-8 shrink-0"
+            onClick={handleSend}
+            disabled={!text.trim() || disabled}
+          >
+            <SendIcon className="size-4" />
+          </Button>
+        )}
       </div>
     </div>
   );

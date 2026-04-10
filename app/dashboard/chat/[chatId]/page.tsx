@@ -100,7 +100,7 @@ export default function ChatPage({ params }: PageProps) {
     s.agents.agents.find((a) => a.url === chat?.agentUrl)
   );
 
-  const { isStreaming, isInputRequired, error, transportMethod, logs, sendMessage, newSession, clearLogs } =
+  const { isStreaming, isInputRequired, error, transportMethod, logs, cancelStream, sendMessage, newSession, clearLogs } =
     useChatSession(chatId);
 
   const [debugOpen, setDebugOpen] = useState(false);
@@ -210,10 +210,17 @@ export default function ChatPage({ params }: PageProps) {
       />
 
       {/* Messages */}
-      <ChatMessages chat={chat} />
+      <ChatMessages chat={chat} onRetry={sendMessage} />
 
       {/* Input */}
-      <ChatInput onSend={sendMessage} disabled={isStreaming} isInputRequired={isInputRequired} inputModes={inputModes} />
+      <ChatInput
+        onSend={sendMessage}
+        onCancel={cancelStream}
+        isStreaming={isStreaming}
+        disabled={isStreaming}
+        isInputRequired={isInputRequired}
+        inputModes={inputModes}
+      />
 
       {/* Debug console */}
       {debugOpen && (
