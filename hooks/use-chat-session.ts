@@ -250,6 +250,7 @@ export function useChatSession(chatId: string): ChatSessionState {
                   name: ev.artifact.name,
                   description: ev.artifact.description,
                   parts: ev.artifact.parts as PartData[],
+                  metadata: ev.artifact.metadata,
                   append: ev.append ?? false,
                   lastChunk: ev.lastChunk ?? false,
                 })

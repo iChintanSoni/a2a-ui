@@ -135,6 +135,7 @@ async function streamAgentResponse(
 
   const toolQueryMap = new Map<string, { toolName: string; query: string }>();
   let responseText = "";
+  let usageMetadata: Record<string, unknown> | undefined;
 
   for await (const chunk of stream) {
     const [step, update] = Object.entries(chunk)[0] as unknown as [string, StepUpdate];
@@ -167,6 +168,7 @@ async function streamAgentResponse(
       
       // Attempt to capture and log model token usage from metadata payload
       if (lastMsg.usage_metadata) {
+        usageMetadata = lastMsg.usage_metadata;
         console.log(`[Observatory - Token Usage]`, lastMsg.usage_metadata);
       }
     } else if (step === "tools") {
@@ -254,7 +256,7 @@ async function streamAgentResponse(
     }
   }
 
-  return responseText;
+  return { responseText, usageMetadata };
 }
 
 // ─── Agent executor ───────────────────────────────────────────────────────────
@@ -283,7 +285,7 @@ export const chatAgentExecutor: AgentExecutor = {
     activeAbortControllers.set(taskId, abortController);
 
     try {
-      const responseText = await streamAgentResponse(
+      const { responseText, usageMetadata } = await streamAgentResponse(
         agent,
         content,
         contextId,
@@ -306,6 +308,7 @@ export const chatAgentExecutor: AgentExecutor = {
           name: "response",
           description: "Agent response",
           parts: [{ kind: "text", text: responseText }],
+          metadata: usageMetadata ? { usage: usageMetadata } : undefined,
         },
       });
 

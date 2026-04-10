@@ -46,9 +46,9 @@ export type ArtifactItem = {
   kind: "artifact";
   id: string; // artifactId
   taskId: string;
-  name?: string;
   description?: string;
   parts: PartData[];
+  metadata?: Record<string, unknown>;
   isStreaming: boolean;
   timestamp: number;
 };
@@ -202,6 +202,7 @@ export const chatsSlice = createSlice({
         name?: string;
         description?: string;
         parts: PartData[];
+        metadata?: Record<string, unknown>;
         append: boolean;
         lastChunk: boolean;
       }>
@@ -234,6 +235,9 @@ export const chatsSlice = createSlice({
           if (action.payload.name) existing.name = action.payload.name;
           if (action.payload.description) existing.description = action.payload.description;
         }
+        if (action.payload.metadata !== undefined) {
+          existing.metadata = action.payload.metadata;
+        }
         existing.isStreaming = !action.payload.lastChunk;
         existing.timestamp = now;
       } else {
@@ -244,6 +248,7 @@ export const chatsSlice = createSlice({
           name: action.payload.name,
           description: action.payload.description,
           parts: action.payload.parts,
+          metadata: action.payload.metadata,
           isStreaming: !action.payload.lastChunk,
           timestamp: now,
         };
