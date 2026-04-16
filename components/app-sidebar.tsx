@@ -3,13 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  BotIcon,
-  MessageSquareIcon,
-  CircleIcon,
-  SettingsIcon,
-  MessageSquarePlusIcon,
-} from "lucide-react";
+import { BotIcon, MessageSquareIcon, CircleIcon, MessageSquarePlusIcon } from "lucide-react";
 
 import {
   Sidebar,
@@ -37,11 +31,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
 
-  const agents = useAppSelector((state) => state.agents.agents);
-  const chats = useAppSelector((state) => state.chats.chats);
-  const activeChatId = useAppSelector((state) => state.chats.activeChatId);
+  const agents = useAppSelector(state => state.agents.agents);
+  const chats = useAppSelector(state => state.chats.chats);
+  const activeChatId = useAppSelector(state => state.chats.activeChatId);
 
-  const startChat = (agentUrl: string, agentId: string, agentName: string) => {
+  const startChat = (agentUrl: string, agentName: string) => {
     dispatch(setActiveAgent(agentUrl));
     const chatId = crypto.randomUUID();
     dispatch(
@@ -51,8 +45,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         agentUrl,
         agentName,
         lastMessage: "",
-        timestamp: Date.now(),
-      })
+        timestamp: Number(new Date()),
+      }),
     );
     router.push(`/dashboard/chat/${chatId}`);
   };
@@ -67,7 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="px-4 py-3">
         <Link
           href="/dashboard"
-          className="text-base font-semibold tracking-tight hover:opacity-80 transition-opacity"
+          className="text-base font-semibold tracking-tight transition-opacity hover:opacity-80"
         >
           A2A UI
         </Link>
@@ -82,11 +76,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {agents.length === 0 ? (
                 <Caption className="px-2 py-1">No agents connected.</Caption>
               ) : (
-                agents.map((agent) => {
+                agents.map(agent => {
                   const settingsHref = `/dashboard/agents/${agent.id}/settings`;
-                  const isActive = pathname.startsWith(
-                    `/dashboard/agents/${agent.id}`
-                  );
+                  const isActive = pathname.startsWith(`/dashboard/agents/${agent.id}`);
                   return (
                     <SidebarMenuItem key={agent.id}>
                       <SidebarMenuButton
@@ -114,7 +106,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <TooltipTrigger asChild>
                           <SidebarMenuAction
                             onClick={() =>
-                              startChat(agent.url, agent.id, agent.displayName ?? agent.card.name)
+                              startChat(agent.url, agent.displayName ?? agent.card.name)
                             }
                             aria-label="New chat"
                           >
@@ -139,7 +131,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               {chats.length === 0 ? (
                 <Caption className="px-2 py-1">No recent chats.</Caption>
               ) : (
-                chats.map((chat) => (
+                chats.map(chat => (
                   <SidebarMenuItem key={chat.id}>
                     <SidebarMenuButton
                       isActive={chat.id === activeChatId}
@@ -147,9 +139,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     >
                       <MessageSquareIcon className="size-4 shrink-0" />
                       <div className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm leading-tight">
-                          {chat.title}
-                        </span>
+                        <span className="truncate text-sm leading-tight">{chat.title}</span>
                         <Caption className="truncate">{chat.agentName}</Caption>
                       </div>
                     </SidebarMenuButton>

@@ -1,5 +1,15 @@
 import type { ToolCallItem } from "@/lib/features/chats/chatsSlice";
-import { Search, Image, Download, Upload, Plus, Wrench, Loader2, CheckCircle, XCircle } from "lucide-react";
+import {
+  Search,
+  ImageIcon,
+  Download,
+  Upload,
+  Plus,
+  Wrench,
+  Loader2,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import { Small, Caption } from "@/components/typography";
 
 interface Props {
@@ -12,17 +22,17 @@ interface Props {
 function getToolVerbs(toolName: string): { gerund: string; base: string } {
   const firstWord = toolName.toLowerCase().split("_")[0];
   const map: Record<string, { gerund: string; base: string }> = {
-    search:   { gerund: "searching",   base: "search" },
-    generate: { gerund: "generating",  base: "generate" },
-    fetch:    { gerund: "fetching",    base: "fetch" },
-    get:      { gerund: "fetching",    base: "fetch" },
-    create:   { gerund: "creating",    base: "create" },
-    upload:   { gerund: "uploading",   base: "upload" },
+    search: { gerund: "searching", base: "search" },
+    generate: { gerund: "generating", base: "generate" },
+    fetch: { gerund: "fetching", base: "fetch" },
+    get: { gerund: "fetching", base: "fetch" },
+    create: { gerund: "creating", base: "create" },
+    upload: { gerund: "uploading", base: "upload" },
     download: { gerund: "downloading", base: "download" },
-    send:     { gerund: "sending",     base: "send" },
-    run:      { gerund: "running",     base: "run" },
-    execute:  { gerund: "executing",   base: "execute" },
-    process:  { gerund: "processing",  base: "process" },
+    send: { gerund: "sending", base: "send" },
+    run: { gerund: "running", base: "run" },
+    execute: { gerund: "executing", base: "execute" },
+    process: { gerund: "processing", base: "process" },
   };
   if (map[firstWord]) return map[firstWord];
   // Generic fallback: strip trailing "e" before adding "ing" (e.g. "write" → "writing")
@@ -35,7 +45,7 @@ function getToolIcon(toolName: string) {
   const lower = toolName.toLowerCase();
   const cls = "mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/70";
   if (lower.includes("search")) return <Search className={cls} />;
-  if (lower.includes("image") || lower.includes("generate")) return <Image className={cls} />;
+  if (lower.includes("image") || lower.includes("generate")) return <ImageIcon className={cls} />;
   if (lower.includes("upload")) return <Upload className={cls} />;
   if (lower.includes("download") || lower.includes("fetch")) return <Download className={cls} />;
   if (lower.includes("create")) return <Plus className={cls} />;
@@ -47,7 +57,8 @@ export function ToolCallBlock({ item, onInspect }: Props) {
 
   const { gerund, base } = getToolVerbs(toolName);
   // Past-tense label shown when done (e.g. "searched", "generated")
-  const doneLabel = resultCount != null ? `${resultCount} result${resultCount !== 1 ? "s" : ""}` : "done";
+  const doneLabel =
+    resultCount != null ? `${resultCount} result${resultCount !== 1 ? "s" : ""}` : "done";
 
   const icon =
     phase === "running" ? (
@@ -59,9 +70,9 @@ export function ToolCallBlock({ item, onInspect }: Props) {
     );
 
   return (
-    <div className="relative flex items-start gap-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground w-fit max-w-sm group">
+    <div className="bg-muted/40 text-muted-foreground group relative flex w-fit max-w-sm items-start gap-2 rounded-lg border px-3 py-2 text-xs">
       {getToolIcon(toolName)}
-      <div className="flex flex-col gap-1 min-w-0">
+      <div className="flex min-w-0 flex-col gap-1">
         <Small className="text-foreground/70">{toolName}</Small>
         <Caption className="truncate">
           <span className="text-muted-foreground/60">query: </span>
@@ -77,7 +88,7 @@ export function ToolCallBlock({ item, onInspect }: Props) {
       {onInspect && (
         <button
           onClick={onInspect}
-          className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
+          className="bg-background text-muted-foreground hover:text-foreground absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border font-mono text-[10px] shadow-sm group-hover:flex"
           title="Inspect raw JSON"
         >
           {"{}"}

@@ -46,6 +46,7 @@ export type ArtifactItem = {
   kind: "artifact";
   id: string; // artifactId
   taskId: string;
+  name?: string;
   description?: string;
   parts: PartData[];
   metadata?: Record<string, unknown>;
@@ -71,7 +72,12 @@ export type ToolCallItem = {
   timestamp: number;
 };
 
-export type ChatItem = UserMessageItem | TaskStatusItem | ArtifactItem | AgentMessageItem | ToolCallItem;
+export type ChatItem =
+  | UserMessageItem
+  | TaskStatusItem
+  | ArtifactItem
+  | AgentMessageItem
+  | ToolCallItem;
 
 // ─── Chat ────────────────────────────────────────────────────────────────────
 
@@ -98,7 +104,7 @@ const initialState: ChatsState = {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function findChat(state: ChatsState, chatId: string): Chat | undefined {
-  return state.chats.find((c) => c.id === chatId);
+  return state.chats.find(c => c.id === chatId);
 }
 
 // ─── Slice ───────────────────────────────────────────────────────────────────
@@ -111,7 +117,7 @@ export const chatsSlice = createSlice({
       return { chats: action.payload, activeChatId: null };
     },
     addChat: (state, action: PayloadAction<Omit<Chat, "items">>) => {
-      const existing = state.chats.findIndex((c) => c.id === action.payload.id);
+      const existing = state.chats.findIndex(c => c.id === action.payload.id);
       const chat: Chat = { ...action.payload, items: [] };
       if (existing >= 0) {
         state.chats[existing] = { ...state.chats[existing], ...action.payload };
@@ -127,7 +133,7 @@ export const chatsSlice = createSlice({
     },
 
     removeChat: (state, action: PayloadAction<string>) => {
-      state.chats = state.chats.filter((c) => c.id !== action.payload);
+      state.chats = state.chats.filter(c => c.id !== action.payload);
       if (state.activeChatId === action.payload) {
         state.activeChatId = state.chats.length > 0 ? state.chats[0].id : null;
       }
@@ -144,7 +150,7 @@ export const chatsSlice = createSlice({
         attachments?: FilePartData[];
         metadata?: Record<string, string>;
         isInputResponse?: boolean;
-      }>
+      }>,
     ) => {
       const chat = findChat(state, action.payload.chatId);
       if (!chat) return;
@@ -169,14 +175,14 @@ export const chatsSlice = createSlice({
         taskId: string;
         state: TaskState;
         statusMessage?: { parts: PartData[] };
-      }>
+      }>,
     ) => {
       const chat = findChat(state, action.payload.chatId);
       if (!chat) return;
       const now = Date.now();
       // Upsert: find existing status item for this task or add new one
       const idx = chat.items.findLastIndex(
-        (it) => it.kind === "task-status" && it.taskId === action.payload.taskId
+        it => it.kind === "task-status" && it.taskId === action.payload.taskId,
       );
       const item: TaskStatusItem = {
         kind: "task-status",
@@ -205,13 +211,13 @@ export const chatsSlice = createSlice({
         metadata?: Record<string, unknown>;
         append: boolean;
         lastChunk: boolean;
-      }>
+      }>,
     ) => {
       const chat = findChat(state, action.payload.chatId);
       if (!chat) return;
       const now = Date.now();
       const idx = chat.items.findLastIndex(
-        (it) => it.kind === "artifact" && it.id === action.payload.artifactId
+        it => it.kind === "artifact" && it.id === action.payload.artifactId,
       );
 
       if (idx >= 0) {
@@ -265,12 +271,12 @@ export const chatsSlice = createSlice({
         query: string;
         resultCount?: number;
         phase: "running" | "done" | "error";
-      }>
+      }>,
     ) => {
       const chat = findChat(state, action.payload.chatId);
       if (!chat) return;
       const idx = chat.items.findLastIndex(
-        (it) => it.kind === "tool-call" && it.id === action.payload.runId
+        it => it.kind === "tool-call" && it.id === action.payload.runId,
       );
       const item: ToolCallItem = {
         kind: "tool-call",
@@ -295,7 +301,7 @@ export const chatsSlice = createSlice({
         messageId: string;
         taskId?: string;
         parts: PartData[];
-      }>
+      }>,
     ) => {
       const chat = findChat(state, action.payload.chatId);
       if (!chat) return;

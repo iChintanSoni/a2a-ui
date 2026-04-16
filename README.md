@@ -14,6 +14,7 @@ A web-based tool for developers to inspect, debug, and validate A2A (Agent2Agent
 - Export and import all agent configurations as JSON
 
 **Authentication Support:**
+
 - None (open endpoints)
 - Bearer Token (OAuth/JWT)
 - API Key (custom header-based)
@@ -47,9 +48,10 @@ A web-based tool for developers to inspect, debug, and validate A2A (Agent2Agent
 - Multiple concurrent chat sessions across different agents
 - Persistent message history (stored in IndexedDB, survives page reload)
 - Recent chats list in sidebar (last 10 chats)
-- Chat title customization and export (JSON or Markdown)
+- Auto-generated chat titles and chat export (JSON or Markdown)
 
 **Message Input:**
+
 - Auto-expanding multi-line textarea
 - Keyboard shortcuts: `Enter` to send, `Shift+Enter` for newline, `Cmd/Ctrl+Shift+N` for new session
 - Drag-and-drop or click-to-attach file uploads with image thumbnails
@@ -58,6 +60,7 @@ A web-based tool for developers to inspect, debug, and validate A2A (Agent2Agent
 - "Input Required" banner when the agent requests additional user input
 
 **Message Rendering:**
+
 - User and agent message bubbles with timestamps
 - Markdown rendering with GitHub Flavored Markdown (GFM) and code syntax highlighting
 - Task status messages with icons (submitted, working, input required, completed, failed, etc.)
@@ -125,6 +128,32 @@ npm run dev
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### Demo Server
+
+This repo includes a sample A2A server in `server/`.
+
+```bash
+cd server
+cp .env.example .env
+npm install
+npm run dev
+```
+
+The demo server listens on [http://localhost:3001](http://localhost:3001) by default. Use `AI_PROVIDER=ollama` for a local Ollama path, or keep `AI_PROVIDER=gemini` and set `GEMINI_API_KEY` in `server/.env`.
+
+### Docker
+
+Run the UI and bundled demo server together:
+
+```bash
+cp .env.example .env
+cp server/.env.example server/.env
+docker compose up --build
+```
+
+- UI: [http://localhost:3000](http://localhost:3000)
+- Demo server: [http://localhost:3001](http://localhost:3001)
+
 ### Usage
 
 1. **Connect to an Agent**: Click "Add Agent" in the sidebar and enter the base URL of your A2A agent server.
@@ -142,8 +171,10 @@ npm run dev
 - `npm run build` — Build for production
 - `npm run start` — Start production server
 - `npm run lint` — Run ESLint
+- `npm run typecheck` — Run TypeScript without emitting files
 - `npm run format` — Format code with Prettier
 - `npm run test` — Run tests with Vitest
+- `npm run test:e2e` — Run Playwright smoke tests
 - `npm run test:watch` — Run tests in watch mode
 - `npm run test:coverage` — Run tests with coverage report
 
@@ -151,19 +182,19 @@ npm run dev
 
 ```
 a2a-ui/
+├── .github/workflows/      # CI workflow
 ├── app/                    # Next.js app directory
 │   ├── globals.css         # Global styles
 │   ├── layout.tsx          # Root layout
-│   └── page.tsx            # Main page
+│   └── page.tsx            # Home page
 ├── components/             # React components
-│   ├── agent/              # Agent connection & settings
 │   ├── chat/               # Chat UI and message rendering
-│   ├── debug/              # Debug console
 │   └── ui/                 # Shared UI primitives (shadcn/ui)
+├── e2e/                    # Playwright smoke tests
 ├── lib/                    # Utility functions and helpers
-├── store/                  # Redux Toolkit state management
 ├── public/                 # Static assets
-└── types/                  # TypeScript definitions
+├── server/                 # Bundled demo A2A server
+└── tests/                  # Vitest unit and integration tests
 ```
 
 ### Technologies Used

@@ -3,12 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import type { Client } from "@a2a-js/sdk/client";
-import type {
-  Message,
-  TaskStatusUpdateEvent,
-  TaskArtifactUpdateEvent,
-  Part,
-} from "@a2a-js/sdk";
+import type { Message, TaskStatusUpdateEvent, TaskArtifactUpdateEvent, Part } from "@a2a-js/sdk";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   addChat,
@@ -22,11 +17,7 @@ import {
 } from "@/lib/features/chats/chatsSlice";
 import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
-import {
-  DebugInterceptor,
-  appendLog,
-  type LogEntry,
-} from "@/lib/utils/debugInterceptor";
+import { DebugInterceptor, appendLog, type LogEntry } from "@/lib/utils/debugInterceptor";
 
 export interface ChatSessionState {
   isStreaming: boolean;
@@ -38,7 +29,7 @@ export interface ChatSessionState {
   sendMessage: (
     text: string,
     metadata?: Record<string, string>,
-    attachments?: File[]
+    attachments?: File[],
   ) => Promise<void>;
   newSession: () => void;
   clearLogs: () => void;
@@ -48,10 +39,8 @@ export function useChatSession(chatId: string): ChatSessionState {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const chat = useAppSelector((s) => s.chats.chats.find((c) => c.id === chatId));
-  const agent = useAppSelector((s) =>
-    s.agents.agents.find((a) => a.url === chat?.agentUrl)
-  );
+  const chat = useAppSelector(s => s.chats.chats.find(c => c.id === chatId));
+  const agent = useAppSelector(s => s.agents.agents.find(a => a.url === chat?.agentUrl));
 
   const [isStreaming, setIsStreaming] = useState(false);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
@@ -61,12 +50,11 @@ export function useChatSession(chatId: string): ChatSessionState {
 
   // Stable log adder so the interceptor never needs to be re-created
   const addLogRef = useRef<(entry: LogEntry) => void>(() => {});
-  addLogRef.current = (entry: LogEntry) =>
-    setLogs((prev) => appendLog(prev, entry));
+  addLogRef.current = (entry: LogEntry) => setLogs(prev => appendLog(prev, entry));
 
   // One interceptor per mount — routes through addLogRef
   const interceptorRef = useRef<DebugInterceptor>(
-    new DebugInterceptor((entry) => addLogRef.current(entry))
+    new DebugInterceptor(entry => addLogRef.current(entry)),
   );
 
   // Cached SDK client — reset on error or new session
@@ -77,15 +65,13 @@ export function useChatSession(chatId: string): ChatSessionState {
     if (clientRef.current) return clientRef.current;
     if (!agent) throw new Error("Agent not found");
 
-    const factory = createClientFactory(agent.auth, agent.customHeaders, [
-      interceptorRef.current,
-    ]);
+    const factory = createClientFactory(agent.auth, agent.customHeaders, [interceptorRef.current]);
     const client = await factory.createFromUrl(agent.url);
     clientRef.current = client;
 
-    const proto = (
-      client as unknown as { transport?: { protocolName?: string } }
-    ).transport?.protocolName ?? null;
+    const proto =
+      (client as unknown as { transport?: { protocolName?: string } }).transport?.protocolName ??
+      null;
     setTransportMethod(proto);
 
     return client;
@@ -103,8 +89,8 @@ export function useChatSession(chatId: string): ChatSessionState {
 
   // Derive whether the chat is currently awaiting user input
   const pendingInputTask = chat?.items
-    .filter((it) => it.kind === "task-status")
-    .findLast((it) => it.kind === "task-status") as
+    .filter(it => it.kind === "task-status")
+    .findLast(it => it.kind === "task-status") as
     | import("@/lib/features/chats/chatsSlice").TaskStatusItem
     | undefined;
   const isInputRequired = pendingInputTask?.state === "input-required";
@@ -120,13 +106,10 @@ export function useChatSession(chatId: string): ChatSessionState {
           chatId,
           taskId: activeTaskId,
           state: "canceled",
-        })
+        }),
       );
       if (clientRef.current) {
-        // We use fetch directly if the client doesn't export a raw cancelTask, but the SDK has sendRequest.
-        // Actually the SDK standard JSON RPC transport supports requests, but for simplicity we rely on the object or fallback.
-        // Since we explicitly use A2A SDK, let's just attempt to call cancelTask if available, or fetch directly.
-        (clientRef.current as any).cancelTask?.(activeTaskId).catch(() => {});
+        clientRef.current.cancelTask({ id: activeTaskId }).catch(() => {});
       }
     }
     setIsStreaming(false);
@@ -146,7 +129,7 @@ export function useChatSession(chatId: string): ChatSessionState {
       if (attachments && attachments.length > 0) {
         fileParts = await Promise.all(
           attachments.map(
-            (file) =>
+            file =>
               new Promise<import("@/lib/features/chats/chatsSlice").FilePartData>(
                 (resolve, reject) => {
                   const reader = new FileReader();
@@ -160,9 +143,9 @@ export function useChatSession(chatId: string): ChatSessionState {
                   };
                   reader.onerror = reject;
                   reader.readAsDataURL(file);
-                }
-              )
-          )
+                },
+              ),
+          ),
         );
       }
 
@@ -174,7 +157,7 @@ export function useChatSession(chatId: string): ChatSessionState {
           attachments: fileParts.length > 0 ? fileParts : undefined,
           metadata: metadata && Object.keys(metadata).length > 0 ? metadata : undefined,
           isInputResponse: inputRequiredTaskId != null,
-        })
+        }),
       );
 
       abortRef.current = new AbortController();
@@ -184,7 +167,7 @@ export function useChatSession(chatId: string): ChatSessionState {
 
         const parts: Part[] = [
           { kind: "text", text },
-          ...fileParts.map((fp) => ({
+          ...fileParts.map(fp => ({
             kind: "file" as const,
             file: fp.file as import("@a2a-js/sdk").FilePart["file"],
           })),
@@ -217,7 +200,7 @@ export function useChatSession(chatId: string): ChatSessionState {
                 statusMessage: ev.status.message
                   ? { parts: ev.status.message.parts as PartData[] }
                   : undefined,
-              })
+              }),
             );
           } else if (event.kind === "artifact-update") {
             const ev = event as TaskArtifactUpdateEvent;
@@ -238,7 +221,7 @@ export function useChatSession(chatId: string): ChatSessionState {
                     query: d.query,
                     resultCount: d.resultCount,
                     phase: d.phase,
-                  })
+                  }),
                 );
               }
             } else {
@@ -253,7 +236,7 @@ export function useChatSession(chatId: string): ChatSessionState {
                   metadata: ev.artifact.metadata,
                   append: ev.append ?? false,
                   lastChunk: ev.lastChunk ?? false,
-                })
+                }),
               );
             }
           } else if (event.kind === "message") {
@@ -265,7 +248,7 @@ export function useChatSession(chatId: string): ChatSessionState {
                   messageId: ev.messageId,
                   taskId: ev.taskId,
                   parts: ev.parts as PartData[],
-                })
+                }),
               );
             }
           }
@@ -275,14 +258,14 @@ export function useChatSession(chatId: string): ChatSessionState {
           const msg = err.message || "Something went wrong.";
           setError(msg);
           clientRef.current = null;
-          setLogs((prev) =>
+          setLogs(prev =>
             appendLog(prev, {
               id: crypto.randomUUID(),
               timestamp: Date.now(),
               type: "error",
               method: "sendMessageStream",
               payload: { message: msg },
-            })
+            }),
           );
         }
       } finally {
@@ -291,7 +274,7 @@ export function useChatSession(chatId: string): ChatSessionState {
         abortRef.current = null;
       }
     },
-    [chat, agent, chatId, dispatch, getClient]
+    [chat, agent, chatId, dispatch, getClient, inputRequiredTaskId],
   );
 
   const newSession = useCallback(() => {
@@ -305,8 +288,8 @@ export function useChatSession(chatId: string): ChatSessionState {
         agentUrl: agent.url,
         agentName: agent.card.name,
         lastMessage: "",
-        timestamp: Date.now(),
-      })
+        timestamp: Number(new Date()),
+      }),
     );
     clientRef.current = null;
     setTransportMethod(null);

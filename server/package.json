@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --experimental-transform-types --env-file=.env --watch-path=./src src/index.ts"
+    "dev": "node --experimental-transform-types --env-file=.env --watch-path=./src src/index.ts",
+    "start": "node --experimental-transform-types --env-file=.env src/index.ts"
   },
   "dependencies": {
     "@a2a-js/sdk": "^0",
