@@ -88,6 +88,7 @@ export interface Chat {
   agentName: string;
   lastMessage: string;
   timestamp: number;
+  archived?: boolean;
   items: ChatItem[];
 }
 
@@ -114,7 +115,14 @@ export const chatsSlice = createSlice({
   initialState,
   reducers: {
     hydrateChats: (_state, action: PayloadAction<Chat[]>) => {
-      return { chats: action.payload, activeChatId: null };
+      return {
+        chats: action.payload.map((chat) => ({
+          ...chat,
+          archived: chat.archived ?? false,
+          items: chat.items ?? [],
+        })),
+        activeChatId: null,
+      };
     },
     addChat: (state, action: PayloadAction<Omit<Chat, "items">>) => {
       const existing = state.chats.findIndex(c => c.id === action.payload.id);
@@ -123,9 +131,22 @@ export const chatsSlice = createSlice({
         state.chats[existing] = { ...state.chats[existing], ...action.payload };
       } else {
         state.chats.unshift(chat);
-        if (state.chats.length > 10) state.chats = state.chats.slice(0, 10);
       }
       state.activeChatId = action.payload.id;
+    },
+
+    importChat: (state, action: PayloadAction<Chat>) => {
+      const chat: Chat = {
+        ...action.payload,
+        archived: action.payload.archived ?? false,
+        items: action.payload.items ?? [],
+      };
+      const existing = state.chats.findIndex(c => c.id === chat.id);
+      if (existing >= 0) {
+        state.chats[existing] = chat;
+      } else {
+        state.chats.unshift(chat);
+      }
     },
 
     setActiveChat: (state, action: PayloadAction<string | null>) => {
@@ -136,6 +157,27 @@ export const chatsSlice = createSlice({
       state.chats = state.chats.filter(c => c.id !== action.payload);
       if (state.activeChatId === action.payload) {
         state.activeChatId = state.chats.length > 0 ? state.chats[0].id : null;
+      }
+    },
+
+    renameChat: (state, action: PayloadAction<{ chatId: string; title: string }>) => {
+      const chat = findChat(state, action.payload.chatId);
+      if (chat && action.payload.title.trim()) {
+        chat.title = action.payload.title.trim();
+        chat.timestamp = Date.now();
+      }
+    },
+
+    setChatArchived: (
+      state,
+      action: PayloadAction<{ chatId: string; archived: boolean }>
+    ) => {
+      const chat = findChat(state, action.payload.chatId);
+      if (!chat) return;
+      chat.archived = action.payload.archived;
+      chat.timestamp = Date.now();
+      if (action.payload.archived && state.activeChatId === action.payload.chatId) {
+        state.activeChatId = null;
       }
     },
 
@@ -339,8 +381,11 @@ export const chatsSlice = createSlice({
 export const {
   hydrateChats,
   addChat,
+  importChat,
   setActiveChat,
   removeChat,
+  renameChat,
+  setChatArchived,
   addUserMessage,
   applyStatusUpdate,
   applyArtifactUpdate,

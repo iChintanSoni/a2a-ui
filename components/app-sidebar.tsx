@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BotIcon, MessageSquareIcon, CircleIcon, MessageSquarePlusIcon } from "lucide-react";
+import { ArchiveIcon, BotIcon, LibraryIcon, MessageSquareIcon, CircleIcon, MessageSquarePlusIcon } from "lucide-react";
 
 import {
   Sidebar,
@@ -33,6 +33,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const agents = useAppSelector(state => state.agents.agents);
   const chats = useAppSelector(state => state.chats.chats);
+  const recentChats = chats.filter(chat => !chat.archived).slice(0, 10);
   const activeChatId = useAppSelector(state => state.chats.activeChatId);
 
   const startChat = (agentUrl: string, agentName: string) => {
@@ -68,6 +69,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/dashboard/agents"}>
+                  <Link href="/dashboard/agents">
+                    <LibraryIcon className="size-4 shrink-0" />
+                    <span>Agent Library</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/dashboard/conversations"}>
+                  <Link href="/dashboard/conversations">
+                    <ArchiveIcon className="size-4 shrink-0" />
+                    <span>Conversations</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {/* Agents */}
         <SidebarGroup>
           <SidebarGroupLabel>Agents</SidebarGroupLabel>
@@ -128,10 +153,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupLabel>Recent Chats</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {chats.length === 0 ? (
+              {recentChats.length === 0 ? (
                 <Caption className="px-2 py-1">No recent chats.</Caption>
               ) : (
-                chats.map(chat => (
+                recentChats.map(chat => (
                   <SidebarMenuItem key={chat.id}>
                     <SidebarMenuButton
                       isActive={chat.id === activeChatId}

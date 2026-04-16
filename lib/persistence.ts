@@ -27,10 +27,17 @@ export async function loadPersistedState(): Promise<{ agents: Agent[]; chats: Ch
   // Reset runtime-only fields: status is re-evaluated on each page load
   const restoredAgents = agents.map((a) => ({
     ...a,
+    tags: a.tags ?? [],
+    favorite: a.favorite ?? false,
     status: "disconnected" as const,
     error: undefined,
   }));
-  return { agents: restoredAgents, chats };
+  const restoredChats = chats.map((c) => ({
+    ...c,
+    archived: c.archived ?? false,
+    items: c.items ?? [],
+  }));
+  return { agents: restoredAgents, chats: restoredChats };
 }
 
 export async function persistAgents(agents: Agent[]): Promise<void> {

@@ -59,6 +59,8 @@ export interface Agent {
   id: string;
   url: string;
   displayName?: string;
+  tags?: string[];
+  favorite?: boolean;
   card: AgentCard;
   status: "connected" | "disconnected" | "error";
   error?: string;
@@ -81,19 +83,31 @@ export const agentsSlice = createSlice({
   initialState,
   reducers: {
     hydrateAgents: (_state, action: PayloadAction<Agent[]>) => {
-      return { agents: action.payload, activeAgentUrl: null };
+      return {
+        agents: action.payload.map((agent) => ({
+          ...agent,
+          tags: agent.tags ?? [],
+          favorite: agent.favorite ?? false,
+        })),
+        activeAgentUrl: null,
+      };
     },
     addAgent: (state, action: PayloadAction<Agent>) => {
+      const nextAgent = {
+        ...action.payload,
+        tags: action.payload.tags ?? [],
+        favorite: action.payload.favorite ?? false,
+      };
       const existingIndex = state.agents.findIndex(
-        (a) => a.url === action.payload.url
+        (a) => a.url === nextAgent.url
       );
       if (existingIndex >= 0) {
-        state.agents[existingIndex] = action.payload;
+        state.agents[existingIndex] = nextAgent;
       } else {
-        state.agents.push(action.payload);
+        state.agents.push(nextAgent);
       }
-      if (state.agents.length === 1 && action.payload.status === "connected") {
-        state.activeAgentUrl = action.payload.url;
+      if (state.agents.length === 1 && nextAgent.status === "connected") {
+        state.activeAgentUrl = nextAgent.url;
       }
     },
     removeAgent: (state, action: PayloadAction<string>) => {
@@ -146,6 +160,23 @@ export const agentsSlice = createSlice({
         agent.displayName = action.payload.displayName || undefined;
       }
     },
+    updateAgentTags: (
+      state,
+      action: PayloadAction<{ agentId: string; tags: string[] }>
+    ) => {
+      const agent = state.agents.find((a) => a.id === action.payload.agentId);
+      if (agent) {
+        agent.tags = Array.from(
+          new Set(action.payload.tags.map((tag) => tag.trim()).filter(Boolean))
+        );
+      }
+    },
+    toggleAgentFavorite: (state, action: PayloadAction<string>) => {
+      const agent = state.agents.find((a) => a.id === action.payload);
+      if (agent) {
+        agent.favorite = !agent.favorite;
+      }
+    },
     updateAgentCard: (
       state,
       action: PayloadAction<{ agentId: string; card: AgentCard }>
@@ -169,6 +200,8 @@ export const {
   updateAgentAuth,
   updateAgentHeaders,
   updateAgentDisplayName,
+  updateAgentTags,
+  toggleAgentFavorite,
   updateAgentCard,
 } = agentsSlice.actions;
 

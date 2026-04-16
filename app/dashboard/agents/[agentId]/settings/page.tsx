@@ -2,12 +2,14 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PlusIcon, Trash2Icon, SaveIcon, CheckCircle2Icon, XCircleIcon, RefreshCwIcon, LinkIcon, DownloadIcon, AlertTriangleIcon } from "lucide-react";
+import { PlusIcon, Trash2Icon, SaveIcon, CheckCircle2Icon, XCircleIcon, RefreshCwIcon, LinkIcon, DownloadIcon, AlertTriangleIcon, StarIcon, StarOffIcon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   updateAgentAuth,
   updateAgentHeaders,
   updateAgentDisplayName,
+  updateAgentTags,
+  toggleAgentFavorite,
   updateAgentCard,
   removeAgent,
   type AuthConfig,
@@ -59,6 +61,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
 
   // Local copies for editing
   const [displayName, setDisplayName] = useState(agent?.displayName ?? "");
+  const [tagText, setTagText] = useState((agent?.tags ?? []).join(", "));
   const [displayNameSaved, setDisplayNameSaved] = useState(false);
   const [auth, setAuth] = useState<AuthConfig>(
     agent?.auth ?? { type: "none" }
@@ -100,6 +103,12 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
 
   const saveDisplayName = () => {
     dispatch(updateAgentDisplayName({ agentId, displayName }));
+    dispatch(
+      updateAgentTags({
+        agentId,
+        tags: tagText.split(",").map((tag) => tag.trim()).filter(Boolean),
+      })
+    );
     setDisplayNameSaved(true);
     setTimeout(() => setDisplayNameSaved(false), 2000);
   };
@@ -226,6 +235,15 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
               <LinkIcon className="size-3.5" />
               {linkCopied ? "Copied!" : "Copy Link"}
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => dispatch(toggleAgentFavorite(agent.id))}
+              className="gap-2"
+            >
+              {agent.favorite ? <StarIcon className="size-3.5 fill-current" /> : <StarOffIcon className="size-3.5" />}
+              {agent.favorite ? "Favorited" : "Favorite"}
+            </Button>
 
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
@@ -280,6 +298,19 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                     setDisplayNameSaved(false);
                   }}
                 />
+              </Field>
+              <Field>
+                <Label htmlFor="agent-tags">Tags</Label>
+                <Input
+                  id="agent-tags"
+                  placeholder="local, demo, research"
+                  value={tagText}
+                  onChange={(e) => {
+                    setTagText(e.target.value);
+                    setDisplayNameSaved(false);
+                  }}
+                />
+                <Caption>Separate tags with commas.</Caption>
               </Field>
             </FieldGroup>
             <Button onClick={saveDisplayName} className="gap-2">

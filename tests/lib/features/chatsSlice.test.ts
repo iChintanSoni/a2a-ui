@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import reducer, {
   addChat,
+  importChat,
   setActiveChat,
   removeChat,
+  renameChat,
+  setChatArchived,
   addUserMessage,
   applyStatusUpdate,
   applyArtifactUpdate,
@@ -45,12 +48,12 @@ describe("chatsSlice", () => {
       expect(state.chats[0].id).toBe("c2");
     });
 
-    it("caps the list at 10 chats", () => {
+    it("keeps all chats in state", () => {
       let state = INITIAL_STATE;
       for (let i = 0; i < 12; i++) {
         state = reducer(state, addChat(makeChat({ id: `c${i}` })));
       }
-      expect(state.chats).toHaveLength(10);
+      expect(state.chats).toHaveLength(12);
     });
 
     it("updates metadata when the same id is added again (no items reset)", () => {
@@ -62,6 +65,19 @@ describe("chatsSlice", () => {
       expect(state.chats).toHaveLength(1);
       expect(state.chats[0].title).toBe("New");
       // items should be preserved
+      expect(state.chats[0].items).toHaveLength(1);
+    });
+  });
+
+  describe("importChat", () => {
+    it("adds a full chat with existing items", () => {
+      const state = reducer(
+        INITIAL_STATE,
+        importChat({
+          ...makeChat({ id: "imported" }),
+          items: [{ kind: "user-message", id: "m1", text: "hello", timestamp: 1 }],
+        })
+      );
       expect(state.chats[0].items).toHaveLength(1);
     });
   });
@@ -97,6 +113,24 @@ describe("chatsSlice", () => {
       let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1" })));
       state = reducer(state, removeChat("c1"));
       expect(state.activeChatId).toBeNull();
+    });
+  });
+
+  describe("renameChat / setChatArchived", () => {
+    it("renames a chat", () => {
+      let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1", title: "Old" })));
+      state = reducer(state, renameChat({ chatId: "c1", title: "New name" }));
+      expect(state.chats[0].title).toBe("New name");
+    });
+
+    it("archives and restores a chat", () => {
+      let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1" })));
+      state = reducer(state, setActiveChat("c1"));
+      state = reducer(state, setChatArchived({ chatId: "c1", archived: true }));
+      expect(state.chats[0].archived).toBe(true);
+      expect(state.activeChatId).toBeNull();
+      state = reducer(state, setChatArchived({ chatId: "c1", archived: false }));
+      expect(state.chats[0].archived).toBe(false);
     });
   });
 

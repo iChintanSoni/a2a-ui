@@ -6,6 +6,8 @@ import reducer, {
   updateAgentStatus,
   updateAgentAuth,
   updateAgentHeaders,
+  updateAgentTags,
+  toggleAgentFavorite,
   type Agent,
 } from "@/lib/features/agents/agentsSlice";
 
@@ -143,6 +145,23 @@ describe("agentsSlice", () => {
         updateAgentHeaders({ agentId: "a1", headers: [{ key: "X-Foo", value: "bar" }] })
       );
       expect(state.agents[0].customHeaders).toEqual([{ key: "X-Foo", value: "bar" }]);
+    });
+  });
+
+  describe("tags and favorites", () => {
+    it("updates tags with trimming and de-duplication", () => {
+      let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1" })));
+      state = reducer(
+        state,
+        updateAgentTags({ agentId: "a1", tags: [" demo ", "local", "demo", ""] })
+      );
+      expect(state.agents[0].tags).toEqual(["demo", "local"]);
+    });
+
+    it("toggles favorite", () => {
+      let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1", favorite: false })));
+      state = reducer(state, toggleAgentFavorite("a1"));
+      expect(state.agents[0].favorite).toBe(true);
     });
   });
 });
