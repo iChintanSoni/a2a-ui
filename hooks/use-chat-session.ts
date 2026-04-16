@@ -18,6 +18,11 @@ import {
 import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
 import { DebugInterceptor, appendLog, type LogEntry } from "@/lib/utils/debugInterceptor";
+import {
+  validateIncomingEvent,
+  validateOutgoingMessage,
+  type ValidationWarning,
+} from "@/lib/utils/compliance";
 
 export interface ChatSessionState {
   isStreaming: boolean;
@@ -25,6 +30,7 @@ export interface ChatSessionState {
   error: string | null;
   transportMethod: string | null;
   logs: LogEntry[];
+  validationWarnings: ValidationWarning[];
   cancelStream: () => void;
   sendMessage: (
     text: string,
@@ -47,6 +53,7 @@ export function useChatSession(chatId: string): ChatSessionState {
   const [error, setError] = useState<string | null>(null);
   const [transportMethod, setTransportMethod] = useState<string | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [validationWarnings, setValidationWarnings] = useState<ValidationWarning[]>([]);
 
   // Stable log adder so the interceptor never needs to be re-created
   const addLogRef = useRef<(entry: LogEntry) => void>(() => {});
@@ -65,7 +72,12 @@ export function useChatSession(chatId: string): ChatSessionState {
     if (clientRef.current) return clientRef.current;
     if (!agent) throw new Error("Agent not found");
 
-    const factory = createClientFactory(agent.auth, agent.customHeaders, [interceptorRef.current]);
+    const factory = createClientFactory(
+      agent.auth,
+      agent.customHeaders,
+      [interceptorRef.current],
+      entry => addLogRef.current(entry),
+    );
     const client = await factory.createFromUrl(agent.url);
     clientRef.current = client;
 
@@ -173,20 +185,49 @@ export function useChatSession(chatId: string): ChatSessionState {
           })),
         ];
 
+        const outgoingMessage = {
+          kind: "message" as const,
+          messageId,
+          role: "user" as const,
+          contextId: chatId,
+          ...(inputRequiredTaskId ? { taskId: inputRequiredTaskId } : {}),
+          ...(metadata && Object.keys(metadata).length > 0 ? { metadata } : {}),
+          parts,
+        };
+        const outgoingWarnings = validateOutgoingMessage(outgoingMessage);
+        if (outgoingWarnings.length > 0) {
+          setValidationWarnings(prev => [...prev, ...outgoingWarnings]);
+          setLogs(prev =>
+            appendLog(prev, {
+              id: crypto.randomUUID(),
+              timestamp: Date.now(),
+              type: "validation",
+              method: "message/send",
+              payload: outgoingWarnings,
+            }),
+          );
+        }
+
         const stream = client.sendMessageStream({
-          message: {
-            kind: "message",
-            messageId,
-            role: "user",
-            contextId: chatId,
-            ...(inputRequiredTaskId ? { taskId: inputRequiredTaskId } : {}),
-            ...(metadata && Object.keys(metadata).length > 0 ? { metadata } : {}),
-            parts,
-          },
+          message: outgoingMessage,
         });
 
         for await (const event of stream) {
           if (abortRef.current?.signal.aborted) break;
+
+          const incomingWarnings = validateIncomingEvent(event);
+          if (incomingWarnings.length > 0) {
+            setValidationWarnings(prev => [...prev, ...incomingWarnings]);
+            setLogs(prev =>
+              appendLog(prev, {
+                id: crypto.randomUUID(),
+                timestamp: Date.now(),
+                type: "validation",
+                method: String((event as { kind?: unknown }).kind ?? "incoming-event"),
+                payload: incomingWarnings,
+              }),
+            );
+          }
 
           if (event.kind === "status-update") {
             const ev = event as TaskStatusUpdateEvent;
@@ -293,6 +334,7 @@ export function useChatSession(chatId: string): ChatSessionState {
     );
     clientRef.current = null;
     setTransportMethod(null);
+    setValidationWarnings([]);
     router.push(`/dashboard/chat/${newChatId}`);
   }, [agent, dispatch, router]);
 
@@ -302,9 +344,13 @@ export function useChatSession(chatId: string): ChatSessionState {
     error,
     transportMethod,
     logs,
+    validationWarnings,
     cancelStream,
     sendMessage,
     newSession,
-    clearLogs: () => setLogs([]),
+    clearLogs: () => {
+      setLogs([]);
+      setValidationWarnings([]);
+    },
   };
 }

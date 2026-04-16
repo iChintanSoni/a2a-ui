@@ -159,4 +159,50 @@ describe("checkCompliance", () => {
       expect(getCheck(result, "defaultOutputModes").pass).toBe(true);
     });
   });
+
+  describe("expanded protocol checks", () => {
+    it("fails incompatible protocol major versions", () => {
+      const result = checkCompliance(makeCard({ protocolVersion: "2.0" }));
+      expect(getCheck(result, "protocolVersion-compatible").pass).toBe(false);
+    });
+
+    it("validates additionalInterfaces transport and URL pairs", () => {
+      const result = checkCompliance(
+        makeCard({
+          additionalInterfaces: [{ url: "not-a-url", transport: "JSONRPC" }],
+        })
+      );
+      expect(getCheck(result, "additionalInterfaces").pass).toBe(false);
+      expect(getCheck(result, "additionalInterfaces").severity).toBe("warning");
+    });
+
+    it("fails when skill modes are outside defaults", () => {
+      const result = checkCompliance(
+        makeCard({
+          defaultInputModes: ["text/plain"],
+          skills: [
+            {
+              id: "s1",
+              name: "Skill One",
+              description: "Does stuff",
+              tags: [],
+              inputModes: ["image/png"],
+            },
+          ],
+        })
+      );
+      expect(getCheck(result, "skills-inputModes").pass).toBe(false);
+    });
+
+    it("warns when security references an undeclared scheme", () => {
+      const result = checkCompliance(
+        makeCard({
+          security: [{ bearer: [] }],
+          securitySchemes: {},
+        })
+      );
+      expect(getCheck(result, "security-references").pass).toBe(false);
+      expect(result.warningCount).toBeGreaterThan(0);
+    });
+  });
 });

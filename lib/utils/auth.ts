@@ -1,4 +1,5 @@
 import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
+import { createDebugFetch, type LogEntry } from "@/lib/utils/debugInterceptor";
 import {
   ClientFactory,
   ClientFactoryOptions,
@@ -47,10 +48,12 @@ export function buildRequestHeaders(
 
 /** Wrap the global fetch to always inject the given headers. */
 function createFetchWithHeaders(
-  extraHeaders: Record<string, string>
+  extraHeaders: Record<string, string>,
+  onLog?: (entry: LogEntry) => void
 ): typeof fetch {
+  const observedFetch = onLog ? createDebugFetch(fetch, onLog) : fetch;
   return (input, init) =>
-    fetch(input, {
+    observedFetch(input, {
       ...init,
       headers: { ...(init?.headers as Record<string, string>), ...extraHeaders },
     });
@@ -60,14 +63,15 @@ function createFetchWithHeaders(
 export function createClientFactory(
   auth: AuthConfig,
   customHeaders: CustomHeader[],
-  interceptors?: CallInterceptor[]
+  interceptors?: CallInterceptor[],
+  onTransportLog?: (entry: LogEntry) => void
 ): ClientFactory {
   const extraHeaders = buildRequestHeaders(auth, customHeaders);
   const hasHeaders = Object.keys(extraHeaders).length > 0;
   const clientConfig =
     interceptors && interceptors.length > 0 ? { interceptors } : undefined;
 
-  if (!hasHeaders) {
+  if (!hasHeaders && !onTransportLog) {
     return new ClientFactory(
       clientConfig
         ? ClientFactoryOptions.createFrom(ClientFactoryOptions.default, {
@@ -77,7 +81,7 @@ export function createClientFactory(
     );
   }
 
-  const fetchImpl = createFetchWithHeaders(extraHeaders);
+  const fetchImpl = createFetchWithHeaders(extraHeaders, onTransportLog);
   return new ClientFactory(
     ClientFactoryOptions.createFrom(ClientFactoryOptions.default, {
       transports: [

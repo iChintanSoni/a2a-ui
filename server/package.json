@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node --experimental-transform-types --env-file=.env --watch-path=./src src/index.ts",
-    "start": "node --experimental-transform-types --env-file=.env src/index.ts"
+    "start": "node --experimental-transform-types --env-file=.env src/index.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@a2a-js/sdk": "^0",

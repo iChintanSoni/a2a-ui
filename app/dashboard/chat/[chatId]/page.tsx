@@ -20,6 +20,8 @@ import { cn } from "@/lib/utils";
 import { Caption, Small, Muted } from "@/components/typography";
 import { useToast } from "@/lib/toast";
 import type { Chat, ArtifactItem, AgentMessageItem, TextPartData } from "@/lib/features/chats/chatsSlice";
+import { checkCompliance } from "@/lib/utils/compliance";
+import { buildProtocolReport, protocolReportFilename } from "@/lib/utils/protocolReport";
 
 interface PageProps {
   params: Promise<{ chatId: string }>;
@@ -100,7 +102,7 @@ export default function ChatPage({ params }: PageProps) {
     s.agents.agents.find((a) => a.url === chat?.agentUrl)
   );
 
-  const { isStreaming, isInputRequired, error, transportMethod, logs, cancelStream, sendMessage, newSession, clearLogs } =
+  const { isStreaming, isInputRequired, error, transportMethod, logs, validationWarnings, cancelStream, sendMessage, newSession, clearLogs } =
     useChatSession(chatId);
 
   const [debugOpen, setDebugOpen] = useState(false);
@@ -149,6 +151,22 @@ export default function ChatPage({ params }: PageProps) {
 
   const inputModes = agent?.card.defaultInputModes ?? [];
   const outputModes = agent?.card.defaultOutputModes ?? [];
+  const compliance = agent ? checkCompliance(agent.card) : null;
+  const exportProtocolReport = () => {
+    if (!agent || !compliance) return;
+    const report = buildProtocolReport({
+      agent,
+      chat,
+      compliance,
+      logs,
+      validationWarnings,
+    });
+    downloadFile(
+      protocolReportFilename(agent.displayName ?? agent.card.name),
+      JSON.stringify(report, null, 2),
+      "application/json"
+    );
+  };
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -173,6 +191,11 @@ export default function ChatPage({ params }: PageProps) {
             <DropdownMenuItem onClick={() => exportAsMarkdown(chat)}>
               Export as Markdown
             </DropdownMenuItem>
+            {agent && (
+              <DropdownMenuItem onClick={exportProtocolReport}>
+                Export Protocol Report
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 

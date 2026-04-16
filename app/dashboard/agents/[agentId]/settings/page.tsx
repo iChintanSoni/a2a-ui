@@ -2,7 +2,7 @@
 
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PlusIcon, Trash2Icon, SaveIcon, CheckCircle2Icon, XCircleIcon, RefreshCwIcon, LinkIcon } from "lucide-react";
+import { PlusIcon, Trash2Icon, SaveIcon, CheckCircle2Icon, XCircleIcon, RefreshCwIcon, LinkIcon, DownloadIcon, AlertTriangleIcon } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   updateAgentAuth,
@@ -15,6 +15,7 @@ import {
 } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
 import { checkCompliance } from "@/lib/utils/compliance";
+import { buildProtocolReport, protocolReportFilename } from "@/lib/utils/protocolReport";
 import { AgentCardViewer } from "@/components/agent-card-viewer";
 import { AgentCapabilitiesBadges } from "@/components/agent-capabilities";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -166,6 +167,16 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
     router.push("/dashboard");
   };
 
+  const downloadFile = (name: string, content: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const activeTab =
     tab === "headers" ? "headers" : tab === "card" ? "card" : tab === "auth" ? "auth" : "general";
 
@@ -174,6 +185,19 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
   };
 
   const compliance = checkCompliance(agent.card);
+  const exportProtocolReport = () => {
+    const report = buildProtocolReport({
+      agent,
+      compliance,
+      logs: [],
+      validationWarnings: [],
+    });
+    downloadFile(
+      protocolReportFilename(agent.displayName ?? agent.card.name),
+      JSON.stringify(report, null, 2),
+      "application/json"
+    );
+  };
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -433,6 +457,10 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                 <RefreshCwIcon className={`size-4 ${refetching ? "animate-spin" : ""}`} />
                 {refetching ? "Fetching…" : "Re-fetch Agent Card"}
               </Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={exportProtocolReport}>
+                <DownloadIcon className="size-4" />
+                Export Protocol Report
+              </Button>
               {refetchSuccess && (
                 <Caption className="text-green-600 inline">Card updated.</Caption>
               )}
@@ -447,6 +475,34 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                 defaultInputModes={agent.card.defaultInputModes}
                 defaultOutputModes={agent.card.defaultOutputModes}
               />
+              {agent.card.preferredTransport && (
+                <Caption>
+                  Preferred transport: <Mono>{agent.card.preferredTransport}</Mono>
+                </Caption>
+              )}
+              {agent.card.additionalInterfaces && agent.card.additionalInterfaces.length > 0 && (
+                <div className="space-y-1">
+                  <Caption>Additional interfaces</Caption>
+                  {agent.card.additionalInterfaces.map((entry, index) => (
+                    <div key={`${entry.url}-${entry.transport}-${index}`} className="flex gap-2 text-xs">
+                      <Badge variant="secondary">{entry.transport}</Badge>
+                      <Mono className="break-all">{entry.url}</Mono>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {agent.card.securitySchemes && Object.keys(agent.card.securitySchemes).length > 0 && (
+                <div className="space-y-1">
+                  <Caption>Security schemes</Caption>
+                  <div className="flex flex-wrap gap-1.5">
+                    {Object.entries(agent.card.securitySchemes).map(([name, scheme]) => (
+                      <Badge key={name} variant="secondary">
+                        {name}: {typeof scheme === "object" && scheme && "type" in scheme ? String(scheme.type) : "unknown"}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Skills */}
@@ -480,10 +536,12 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                   <div key={c.id} className="flex items-start gap-2 text-xs">
                     {c.pass ? (
                       <CheckCircle2Icon className="size-3.5 mt-0.5 shrink-0 text-green-500" />
+                    ) : c.severity === "warning" ? (
+                      <AlertTriangleIcon className="size-3.5 mt-0.5 shrink-0 text-yellow-600" />
                     ) : (
                       <XCircleIcon className="size-3.5 mt-0.5 shrink-0 text-destructive" />
                     )}
-                    <span className={c.pass ? "" : "text-destructive"}>
+                    <span className={c.pass ? "" : c.severity === "warning" ? "text-yellow-700 dark:text-yellow-300" : "text-destructive"}>
                       <Mono className="text-xs">{c.label}</Mono>
                       {!c.pass && (
                         <span className="text-muted-foreground">

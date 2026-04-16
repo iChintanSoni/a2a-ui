@@ -34,6 +34,10 @@ const TYPE_STYLES: Record<LogType, string> = {
     "bg-green-500/15 text-green-600 dark:text-green-400 border border-green-500/20",
   error:
     "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20",
+  transport:
+    "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20",
+  validation:
+    "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300 border border-yellow-500/20",
 };
 
 function TypeBadge({ type }: { type: LogType }) {
@@ -54,6 +58,13 @@ function TypeBadge({ type }: { type: LogType }) {
 function LogRow({ entry }: { entry: LogEntry }) {
   const [open, setOpen] = useState(false);
   const time = new Date(entry.timestamp).toISOString().slice(11, 23); // HH:MM:SS.mmm
+  const transportSummary = [
+    entry.transport?.httpMethod,
+    entry.transport?.status ? String(entry.transport.status) : undefined,
+    entry.transport?.durationMs != null ? `${entry.transport.durationMs}ms` : undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <div className="border-b border-border/50 last:border-0">
@@ -66,12 +77,22 @@ function LogRow({ entry }: { entry: LogEntry }) {
         <Caption className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/80">
           {entry.method}
         </Caption>
+        {transportSummary && (
+          <Caption className="hidden shrink-0 font-mono text-[11px] sm:inline">
+            {transportSummary}
+          </Caption>
+        )}
         <Caption className="shrink-0">{open ? "▲" : "▼"}</Caption>
       </button>
 
       {open && (
         <div className="overflow-x-auto bg-muted/30 px-3 pb-2 pt-1">
-          <JsonView value={entry.payload} />
+          <JsonView
+            value={{
+              ...(entry.transport ? { transport: entry.transport } : {}),
+              payload: entry.payload,
+            }}
+          />
         </div>
       )}
     </div>
@@ -86,6 +107,8 @@ const FILTERS: { label: string; value: Filter }[] = [
   { label: "All", value: "all" },
   { label: "Request", value: "request" },
   { label: "Response", value: "response" },
+  { label: "Transport", value: "transport" },
+  { label: "Validation", value: "validation" },
   { label: "Error", value: "error" },
 ];
 

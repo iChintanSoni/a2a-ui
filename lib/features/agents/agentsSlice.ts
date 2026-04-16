@@ -6,6 +6,11 @@ export interface AgentCapabilities {
   stateTransitionHistory?: boolean;
 }
 
+export interface AgentInterface {
+  url: string;
+  transport: string;
+}
+
 export interface AgentSkill {
   id: string;
   name: string;
@@ -14,12 +19,15 @@ export interface AgentSkill {
   examples?: string[];
   inputModes?: string[];
   outputModes?: string[];
+  security?: Record<string, string[]>[];
 }
 
 export interface AgentCard {
   name: string;
   description: string;
   url?: string;
+  preferredTransport?: string;
+  additionalInterfaces?: AgentInterface[];
   version: string;
   protocolVersion: string;
   author?: string;
@@ -27,6 +35,8 @@ export interface AgentCard {
   skills?: AgentSkill[];
   defaultInputModes?: string[];
   defaultOutputModes?: string[];
+  security?: Record<string, string[]>[];
+  securitySchemes?: Record<string, unknown>;
 }
 
 export type AuthType = "none" | "bearer" | "api-key" | "basic";
