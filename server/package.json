@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@types/cors": "^2",
-    "@types/express": "^5"
+    "@types/express": "^5",
+    "typescript": "^5"
   }
 }

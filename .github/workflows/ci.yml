@@ -23,12 +23,17 @@ jobs:
         run: npm ci
 
       - name: Install server dependencies
-        run: npm --prefix server ci
+        working-directory: server
+        run: npm ci
 
       - name: Lint
         run: npm run lint
 
       - name: Typecheck
+        run: npm run typecheck
+
+      - name: Server typecheck
+        working-directory: server
         run: npm run typecheck
 
       - name: Unit and integration tests
