@@ -176,6 +176,23 @@ describe("checkCompliance", () => {
       expect(getCheck(result, "additionalInterfaces").severity).toBe("warning");
     });
 
+    it("identifies the invalid additionalInterfaces entry", () => {
+      const result = checkCompliance(
+        makeCard({
+          additionalInterfaces: [
+            { url: "http://127.0.0.1:4000/a2a/jsonrpc", transport: "JSONRPC" },
+            { url: "http://127.0.0.1:4000/a2a/rest", transport: "HTTP+JSON" },
+            { url: "127.0.0.1:4001", transport: "GRPC" },
+          ],
+        })
+      );
+
+      const check = getCheck(result, "additionalInterfaces");
+      expect(check.pass).toBe(false);
+      expect(check.message).toContain("additionalInterfaces[2]");
+      expect(check.message).toContain("url must be an absolute URL");
+    });
+
     it("fails when skill modes are outside defaults", () => {
       const result = checkCompliance(
         makeCard({
