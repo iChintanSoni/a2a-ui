@@ -7,6 +7,7 @@ import { useAppDispatch } from "@/lib/hooks";
 import { addAgent, type AuthConfig, type CustomHeader } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
 import { normalizeAgentUrl, getAgentCardUrlFallback } from "@/lib/utils/url";
+import { type Client } from "@a2a-js/sdk/client";
 import { Button } from "@/components/ui/button";
 import { Muted, ErrorText } from "@/components/typography";
 import {
@@ -94,7 +95,7 @@ export function AddAgent() {
       const normalizedUrl = normalizeAgentUrl(url);
       const factory = createClientFactory(auth, headers);
 
-      let client: any;
+      let client: Client;
       let finalUrl = normalizedUrl;
 
       try {

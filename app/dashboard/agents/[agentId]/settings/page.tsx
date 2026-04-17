@@ -17,6 +17,7 @@ import {
 } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
 import { normalizeAgentUrl, getAgentCardUrlFallback } from "@/lib/utils/url";
+import { type Client } from "@a2a-js/sdk/client";
 import { checkCompliance } from "@/lib/utils/compliance";
 import { buildProtocolReport, protocolReportFilename } from "@/lib/utils/protocolReport";
 import { AgentCardViewer } from "@/components/agent-card-viewer";
@@ -123,8 +124,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
       const normalizedUrl = normalizeAgentUrl(agent.url);
       const factory = createClientFactory(agent.auth, agent.customHeaders);
 
-      let client: any;
-      let finalUrl = normalizedUrl;
+      let client: Client;
 
       try {
         client = await factory.createFromUrl(normalizedUrl);
@@ -133,7 +133,6 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
         if (fallbackUrl && fallbackUrl !== normalizedUrl) {
           try {
             client = await factory.createFromUrl(fallbackUrl);
-            finalUrl = fallbackUrl;
           } catch {
             throw err;
           }
