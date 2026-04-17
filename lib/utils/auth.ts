@@ -9,6 +9,26 @@ import {
   type CallInterceptor,
 } from "@a2a-js/sdk/client";
 
+function isHttpUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function shouldProxyRequest(targetUrl: string): boolean {
+  if (typeof window === "undefined") return false;
+  if (!isHttpUrl(targetUrl)) return false;
+
+  try {
+    return new URL(targetUrl).origin !== window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 /** Compute the HTTP headers that correspond to an auth config + custom headers. */
 export function buildRequestHeaders(
   auth: AuthConfig,
@@ -52,11 +72,41 @@ function createFetchWithHeaders(
   onLog?: (entry: LogEntry) => void
 ): typeof fetch {
   const observedFetch = onLog ? createDebugFetch(fetch, onLog) : fetch;
-  return (input, init) =>
-    observedFetch(input, {
-      ...init,
-      headers: { ...(init?.headers as Record<string, string>), ...extraHeaders },
+
+  return async (input, init) => {
+    const request = input instanceof Request ? input : new Request(input, init);
+    const headers = new Headers(request.headers);
+    for (const [key, value] of Object.entries(extraHeaders)) {
+      headers.set(key, value);
+    }
+
+    const body =
+      request.method === "GET" || request.method === "HEAD"
+        ? undefined
+        : await request.clone().arrayBuffer();
+
+    const targetUrl = request.url;
+    const proxyUrl =
+      shouldProxyRequest(targetUrl) && typeof window !== "undefined"
+        ? new URL("/api/proxy", window.location.origin)
+        : null;
+    if (proxyUrl) {
+      proxyUrl.searchParams.set("url", targetUrl);
+      return observedFetch(proxyUrl, {
+        method: request.method,
+        headers,
+        body,
+        signal: request.signal,
+      });
+    }
+
+    return observedFetch(request.url, {
+      method: request.method,
+      headers,
+      body,
+      signal: request.signal,
     });
+  };
 }
 
 /** Build a ClientFactory that injects auth + custom headers into every request. */
@@ -67,19 +117,8 @@ export function createClientFactory(
   onTransportLog?: (entry: LogEntry) => void
 ): ClientFactory {
   const extraHeaders = buildRequestHeaders(auth, customHeaders);
-  const hasHeaders = Object.keys(extraHeaders).length > 0;
   const clientConfig =
     interceptors && interceptors.length > 0 ? { interceptors } : undefined;
-
-  if (!hasHeaders && !onTransportLog) {
-    return new ClientFactory(
-      clientConfig
-        ? ClientFactoryOptions.createFrom(ClientFactoryOptions.default, {
-            clientConfig,
-          })
-        : undefined
-    );
-  }
 
   const fetchImpl = createFetchWithHeaders(extraHeaders, onTransportLog);
   return new ClientFactory(
