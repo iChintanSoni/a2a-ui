@@ -6,6 +6,7 @@ import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useAppDispatch } from "@/lib/hooks";
 import { addAgent, type AuthConfig, type CustomHeader } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
+import { normalizeAgentUrl, getAgentCardUrlFallback } from "@/lib/utils/url";
 import { Button } from "@/components/ui/button";
 import { Muted, ErrorText } from "@/components/typography";
 import {
@@ -90,14 +91,36 @@ export function AddAgent() {
     setError(null);
 
     try {
+      const normalizedUrl = normalizeAgentUrl(url);
       const factory = createClientFactory(auth, headers);
-      const client = await factory.createFromUrl(url);
+
+      let client: any;
+      let finalUrl = normalizedUrl;
+
+      try {
+        client = await factory.createFromUrl(normalizedUrl);
+      } catch (err) {
+        // If normalization changed nothing or already ended in .json, don't fallback
+        const fallbackUrl = getAgentCardUrlFallback(normalizedUrl);
+        if (fallbackUrl && fallbackUrl !== normalizedUrl) {
+          try {
+            client = await factory.createFromUrl(fallbackUrl);
+            finalUrl = fallbackUrl;
+          } catch {
+            // If fallback also fails, throw the original error
+            throw err;
+          }
+        } else {
+          throw err;
+        }
+      }
+
       const card = await client.getAgentCard();
 
       dispatch(
         addAgent({
           id: crypto.randomUUID(),
-          url,
+          url: finalUrl,
           card,
           status: "connected",
           auth,

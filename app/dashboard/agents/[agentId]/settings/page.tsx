@@ -16,6 +16,7 @@ import {
   type CustomHeader,
 } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
+import { normalizeAgentUrl, getAgentCardUrlFallback } from "@/lib/utils/url";
 import { checkCompliance } from "@/lib/utils/compliance";
 import { buildProtocolReport, protocolReportFilename } from "@/lib/utils/protocolReport";
 import { AgentCardViewer } from "@/components/agent-card-viewer";
@@ -119,10 +120,31 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
     setRefetchError(null);
     setRefetchSuccess(false);
     try {
+      const normalizedUrl = normalizeAgentUrl(agent.url);
       const factory = createClientFactory(agent.auth, agent.customHeaders);
-      const client = await factory.createFromUrl(agent.url);
+
+      let client: any;
+      let finalUrl = normalizedUrl;
+
+      try {
+        client = await factory.createFromUrl(normalizedUrl);
+      } catch (err) {
+        const fallbackUrl = getAgentCardUrlFallback(normalizedUrl);
+        if (fallbackUrl && fallbackUrl !== normalizedUrl) {
+          try {
+            client = await factory.createFromUrl(fallbackUrl);
+            finalUrl = fallbackUrl;
+          } catch {
+            throw err;
+          }
+        } else {
+          throw err;
+        }
+      }
+
       const card = await client.getAgentCard();
       dispatch(updateAgentCard({ agentId, card }));
+
       setRefetchSuccess(true);
       setTimeout(() => setRefetchSuccess(false), 3000);
     } catch (err: unknown) {
