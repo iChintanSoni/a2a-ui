@@ -33,6 +33,16 @@ function toArray(v: unknown): unknown[] {
   return Array.isArray(v) ? v : [];
 }
 
+function hasValidUrl(v: unknown): boolean {
+  if (!isNonEmptyString(v)) return false;
+  try {
+    new URL(String(v));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function normalizeMode(mode: string): string {
   if (mode === "text") return "text/plain";
   if (mode === "json") return "application/json";
@@ -137,27 +147,26 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
   );
 
   const interfaces = toArray(raw.additionalInterfaces);
-  const interfacesValid =
-    interfaces.length === 0 ||
-    interfaces.every((entry) => {
-      if (!isRecord(entry)) return false;
-      const hasInterfaceUrl = isNonEmptyString(entry.url);
-      const transport = isNonEmptyString(entry.transport)
-        ? String(entry.transport).toUpperCase()
-        : "";
-      if (!hasInterfaceUrl || !KNOWN_TRANSPORTS.has(transport)) return false;
-      try {
-        new URL(String(entry.url));
-        return true;
-      } catch {
-        return false;
-      }
-    });
+  const invalidInterfaces = interfaces.flatMap((entry, index) => {
+    if (!isRecord(entry)) return [`additionalInterfaces[${index}] is not an object`];
+
+    const problems: string[] = [];
+    const transport = isNonEmptyString(entry.transport)
+      ? String(entry.transport).toUpperCase()
+      : "";
+    if (!hasValidUrl(entry.url)) problems.push("url must be an absolute URL");
+    if (!KNOWN_TRANSPORTS.has(transport)) problems.push("transport is unsupported");
+
+    return problems.length > 0
+      ? [`additionalInterfaces[${index}]: ${problems.join(", ")}`]
+      : [];
+  });
+  const interfacesValid = invalidInterfaces.length === 0;
   check(
     "additionalInterfaces",
     "additionalInterfaces declare valid URL/transport pairs",
     interfacesValid,
-    "One or more additionalInterfaces entries are missing a valid url or supported transport",
+    invalidInterfaces.join("; "),
     interfaces.length > 0 ? `${interfaces.length} interface(s) declared` : "No additional interfaces declared",
     "warning"
   );
