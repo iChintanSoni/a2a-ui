@@ -6,6 +6,7 @@ import reducer, {
   updateAgentStatus,
   updateAgentAuth,
   updateAgentHeaders,
+  updateAgentCard,
   updateAgentTags,
   toggleAgentFavorite,
   type Agent,
@@ -63,6 +64,42 @@ describe("agentsSlice", () => {
       let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1", url: "https://first.test" })));
       state = reducer(state, addAgent(makeAgent({ id: "a2", url: "https://second.test" })));
       expect(state.activeAgentUrl).toBe("https://first.test");
+    });
+
+    it("normalizes agent card mode aliases when adding an agent", () => {
+      const state = reducer(
+        INITIAL_STATE,
+        addAgent(
+          makeAgent({
+            card: {
+              ...makeAgent().card,
+              defaultInputModes: ["text", "image/*"],
+              defaultOutputModes: ["json"],
+              skills: [
+                {
+                  id: "chat",
+                  name: "Chat",
+                  description: "Talks",
+                  tags: [],
+                  inputModes: ["text"],
+                  outputModes: ["json"],
+                },
+              ],
+            },
+          })
+        )
+      );
+
+      expect(state.agents[0].card.defaultInputModes).toEqual([
+        "text/plain",
+        "image/*",
+      ]);
+      expect(state.agents[0].card.defaultOutputModes).toEqual([
+        "application/json",
+      ]);
+      expect(state.agents[0].card.skills?.[0].inputModes).toEqual([
+        "text/plain",
+      ]);
     });
   });
 
@@ -134,6 +171,44 @@ describe("agentsSlice", () => {
       let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1" })));
       state = reducer(state, updateAgentAuth({ agentId: "unknown", auth: { type: "bearer" } }));
       expect(state.agents[0].auth.type).toBe("none");
+    });
+  });
+
+  describe("updateAgentCard", () => {
+    it("normalizes snake_case mode fields when refetching a card", () => {
+      let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1" })));
+      state = reducer(
+        state,
+        updateAgentCard({
+          agentId: "a1",
+          card: {
+            name: "Refetched",
+            description: "desc",
+            version: "1.0",
+            protocolVersion: "0.3.0",
+            default_input_modes: ["text"],
+            default_output_modes: ["json"],
+            skills: [
+              {
+                id: "chat",
+                name: "Chat",
+                description: "Talks",
+                tags: [],
+                input_modes: ["text"],
+                output_modes: ["json"],
+              },
+            ],
+          } as unknown as Agent["card"],
+        })
+      );
+
+      expect(state.agents[0].card.defaultInputModes).toEqual(["text/plain"]);
+      expect(state.agents[0].card.defaultOutputModes).toEqual([
+        "application/json",
+      ]);
+      expect(state.agents[0].card.skills?.[0].outputModes).toEqual([
+        "application/json",
+      ]);
     });
   });
 

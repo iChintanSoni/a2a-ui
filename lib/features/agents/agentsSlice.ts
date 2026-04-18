@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { normalizeModes } from "@/lib/utils/modes";
 
 export interface AgentCapabilities {
   streaming?: boolean;
@@ -37,6 +38,17 @@ export interface AgentCard {
   defaultOutputModes?: string[];
   security?: Record<string, string[]>[];
   securitySchemes?: Record<string, unknown>;
+}
+
+interface RawAgentSkill extends AgentSkill {
+  input_modes?: string[];
+  output_modes?: string[];
+}
+
+interface RawAgentCard extends AgentCard {
+  default_input_modes?: string[];
+  default_output_modes?: string[];
+  skills?: RawAgentSkill[];
 }
 
 export type AuthType = "none" | "bearer" | "api-key" | "basic";
@@ -78,26 +90,48 @@ const initialState: AgentsState = {
   activeAgentUrl: null,
 };
 
+function normalizeAgentCard(card: AgentCard): AgentCard {
+  const raw = card as RawAgentCard;
+  const defaultInputModes = normalizeModes(
+    raw.defaultInputModes ?? raw.default_input_modes
+  );
+  const defaultOutputModes = normalizeModes(
+    raw.defaultOutputModes ?? raw.default_output_modes
+  );
+
+  return {
+    ...card,
+    defaultInputModes,
+    defaultOutputModes,
+    skills: raw.skills?.map((skill) => ({
+      ...skill,
+      inputModes: normalizeModes(skill.inputModes ?? skill.input_modes),
+      outputModes: normalizeModes(skill.outputModes ?? skill.output_modes),
+    })),
+  };
+}
+
+function normalizeAgent(agent: Agent): Agent {
+  return {
+    ...agent,
+    card: normalizeAgentCard(agent.card),
+    tags: agent.tags ?? [],
+    favorite: agent.favorite ?? false,
+  };
+}
+
 export const agentsSlice = createSlice({
   name: "agents",
   initialState,
   reducers: {
     hydrateAgents: (_state, action: PayloadAction<Agent[]>) => {
       return {
-        agents: action.payload.map((agent) => ({
-          ...agent,
-          tags: agent.tags ?? [],
-          favorite: agent.favorite ?? false,
-        })),
+        agents: action.payload.map(normalizeAgent),
         activeAgentUrl: null,
       };
     },
     addAgent: (state, action: PayloadAction<Agent>) => {
-      const nextAgent = {
-        ...action.payload,
-        tags: action.payload.tags ?? [],
-        favorite: action.payload.favorite ?? false,
-      };
+      const nextAgent = normalizeAgent(action.payload);
       const existingIndex = state.agents.findIndex(
         (a) => a.url === nextAgent.url
       );
@@ -183,7 +217,7 @@ export const agentsSlice = createSlice({
     ) => {
       const agent = state.agents.find((a) => a.id === action.payload.agentId);
       if (agent) {
-        agent.card = action.payload.card;
+        agent.card = normalizeAgentCard(action.payload.card);
         agent.status = "connected";
         agent.error = undefined;
       }
