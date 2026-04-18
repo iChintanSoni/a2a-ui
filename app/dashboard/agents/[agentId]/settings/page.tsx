@@ -569,6 +569,18 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                     >
                       <Small>{skill.name}</Small>
                       <Caption className="mt-0.5">{skill.description}</Caption>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {(skill.inputModes ?? agent.card.defaultInputModes ?? []).map((mode) => (
+                          <Badge key={`in-${skill.id}-${mode}`} variant="secondary">
+                            In: {mode}
+                          </Badge>
+                        ))}
+                        {(skill.outputModes ?? agent.card.defaultOutputModes ?? []).map((mode) => (
+                          <Badge key={`out-${skill.id}-${mode}`} variant="outline">
+                            Out: {mode}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>

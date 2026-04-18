@@ -3,6 +3,7 @@ import { SendIcon, PaperclipIcon, SlidersHorizontalIcon, XIcon, PlusIcon, Square
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { isAttachmentMode } from "@/lib/utils/modes";
 
 interface MetadataRow {
   key: string;
@@ -26,8 +27,8 @@ interface Props {
 
 export function ChatInput({ onSend, onCancel, disabled, isStreaming, isInputRequired, inputModes = [] }: Props) {
   // Derive file-picker visibility and accepted MIME types from inputModes.
-  // Any entry that isn't "text" is treated as an allowed attachment MIME type.
-  const acceptedMimeTypes = inputModes.filter((m) => m !== "text");
+  // Text modes describe the message body; only non-text modes allow attachments.
+  const acceptedMimeTypes = inputModes.filter(isAttachmentMode);
   const showFilePicker = acceptedMimeTypes.length > 0;
   const acceptAttr = acceptedMimeTypes.join(",");
   const [text, setText] = useState("");

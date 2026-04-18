@@ -1,4 +1,5 @@
 import type { AgentCard } from "@/lib/features/agents/agentsSlice";
+import { normalizeMode } from "@/lib/utils/modes";
 
 export type ComplianceSeverity = "error" | "warning" | "info";
 
@@ -41,12 +42,6 @@ function hasValidUrl(v: unknown): boolean {
   } catch {
     return false;
   }
-}
-
-function normalizeMode(mode: string): string {
-  if (mode === "text") return "text/plain";
-  if (mode === "json") return "application/json";
-  return mode;
 }
 
 function compatibleModes(skillModes: unknown, defaultModes: string[] | undefined): boolean {
