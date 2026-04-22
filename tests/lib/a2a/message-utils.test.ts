@@ -6,6 +6,7 @@ describe("resolveContextConfig", () => {
     const resolved = await resolveContextConfig(
       {
         text: "hello",
+        parts: [{ kind: "text", text: "hello" }],
         contextId: "chat-1",
         agentUrl: "https://agent.test",
         metadata: { tenant: "override", priority: "user" },
@@ -32,6 +33,7 @@ describe("resolveContextConfig", () => {
     const resolved = await resolveContextConfig(
       {
         text: "hello",
+        parts: [{ kind: "text", text: "hello" }],
         contextId: "chat-1",
         agentUrl: "https://agent.test",
       },
@@ -52,7 +54,7 @@ describe("resolveContextConfig", () => {
 describe("buildOutgoingMessage", () => {
   it("injects hidden system context into the outgoing text part", async () => {
     const message = await buildOutgoingMessage({
-      text: "What is the status?",
+      parts: [{ kind: "text", text: "What is the status?" }],
       messageId: "m-1",
       contextId: "c-1",
       agentUrl: "https://agent.test",
@@ -68,15 +70,31 @@ describe("buildOutgoingMessage", () => {
     });
   });
 
+  it("prepends hidden system context when the message has no text parts", async () => {
+    const message = await buildOutgoingMessage({
+      parts: [{ kind: "data", data: { query: "status" } }],
+      messageId: "m-1b",
+      contextId: "c-1b",
+      agentUrl: "https://agent.test",
+      context: {
+        hiddenSystemContext: "Hidden context only.",
+      },
+    });
+
+    expect(message.parts[0]).toEqual({
+      kind: "text",
+      text: '<system_context hidden="true">\nHidden context only.\n</system_context>',
+    });
+    expect(message.parts[1]).toEqual({
+      kind: "data",
+      data: { query: "status" },
+    });
+  });
+
   it("preserves file parts, metadata, and input-required task ids", async () => {
     const message = await buildOutgoingMessage({
-      text: "Please continue",
-      messageId: "m-2",
-      contextId: "c-2",
-      agentUrl: "https://agent.test",
-      inputTaskId: "task-9",
-      metadata: { source: "host" },
-      fileParts: [
+      parts: [
+        { kind: "text", text: "Please continue" },
         {
           kind: "file",
           file: {
@@ -86,6 +104,11 @@ describe("buildOutgoingMessage", () => {
           },
         },
       ],
+      messageId: "m-2",
+      contextId: "c-2",
+      agentUrl: "https://agent.test",
+      inputTaskId: "task-9",
+      metadata: { source: "host" },
     });
 
     expect(message.taskId).toBe("task-9");

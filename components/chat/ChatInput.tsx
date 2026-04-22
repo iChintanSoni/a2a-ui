@@ -1,4 +1,4 @@
-import { useState, useRef, type KeyboardEvent } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import {
   SendIcon,
   PaperclipIcon,
@@ -11,9 +11,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { isAttachmentMode } from "@/lib/utils/modes";
 import type { PromptPreset } from "@/lib/features/workbench/workbenchSlice";
+import type { OutgoingMessagePartInput } from "@/lib/a2a/types";
 
 interface MetadataRow {
   key: string;
@@ -25,8 +27,13 @@ interface AttachmentPreview {
   previewUrl?: string; // only for images
 }
 
+interface DataPartDraft {
+  id: string;
+  value: string;
+}
+
 interface Props {
-  onSend: (text: string, metadata?: Record<string, string>, attachments?: File[]) => void;
+  onSend: (parts: OutgoingMessagePartInput[], metadata?: Record<string, string>) => void;
   onCancel?: () => void;
   disabled?: boolean;
   isStreaming?: boolean;
@@ -75,6 +82,8 @@ export function ChatInput({
 
   // Attachments state
   const [attachments, setAttachments] = useState<AttachmentPreview[]>([]);
+  const [dataParts, setDataParts] = useState<DataPartDraft[]>([]);
+  const [dataErrors, setDataErrors] = useState<Record<string, string>>({});
 
   // Drag-and-drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -106,8 +115,7 @@ export function ChatInput({
   };
 
   const handleSend = () => {
-    const trimmed = text.trim();
-    if (!trimmed || disabled) return;
+    if (disabled) return;
 
     const metadata = metaRows
       .filter((r) => r.key.trim())
@@ -116,16 +124,46 @@ export function ChatInput({
         return acc;
       }, {});
 
-    onSend(
-      trimmed,
-      Object.keys(metadata).length > 0 ? metadata : undefined,
-      attachments.length > 0 ? attachments.map((a) => a.file) : undefined
-    );
+    const nextDataErrors: Record<string, string> = {};
+    const parsedDataParts: Array<{ kind: "data"; data: Record<string, unknown> }> = [];
+    for (const draft of dataParts) {
+      const trimmedValue = draft.value.trim();
+      if (!trimmedValue) {
+        nextDataErrors[draft.id] = "Data parts cannot be empty.";
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(trimmedValue) as unknown;
+        if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+          nextDataErrors[draft.id] = "Data parts must be JSON objects.";
+          continue;
+        }
+        parsedDataParts.push({ kind: "data", data: parsed as Record<string, unknown> });
+      } catch {
+        nextDataErrors[draft.id] = "Enter valid JSON before sending.";
+      }
+    }
+
+    setDataErrors(nextDataErrors);
+    if (Object.keys(nextDataErrors).length > 0) return;
+
+    const trimmedText = text.trim();
+    const parts: OutgoingMessagePartInput[] = [];
+    if (trimmedText) parts.push({ kind: "text", text: trimmedText });
+    if (attachments.length > 0) parts.push(...attachments.map((attachment) => attachment.file));
+    parts.push(...parsedDataParts);
+
+    if (parts.length === 0) return;
+
+    onSend(parts, Object.keys(metadata).length > 0 ? metadata : undefined);
 
     setText("");
     setMetaRows(rowsFromMetadata(defaultMetadata));
     setMetaOpen(false);
-    setAttachments([]);
+    clearAttachments();
+    setDataParts([]);
+    setDataErrors({});
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   };
 
@@ -163,6 +201,15 @@ export function ChatInput({
     });
   };
 
+  const clearAttachments = () => {
+    setAttachments((prev) => {
+      prev.forEach((attachment) => {
+        if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
+      });
+      return [];
+    });
+  };
+
   const updateMetaRow = (index: number, field: "key" | "value", val: string) => {
     setMetaRows((prev) =>
       prev.map((row, i) => (i === index ? { ...row, [field]: val } : row))
@@ -170,6 +217,53 @@ export function ChatInput({
   };
 
   const addMetaRow = () => setMetaRows((prev) => [...prev, { key: "", value: "" }]);
+
+  const addDataPart = () => {
+    const id = crypto.randomUUID();
+    setDataParts((prev) => [...prev, { id, value: "{}" }]);
+    setDataErrors((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const updateDataPart = (id: string, value: string) => {
+    setDataParts((prev) => prev.map((part) => (part.id === id ? { ...part, value } : part)));
+    setDataErrors((prev) => {
+      if (!(id in prev)) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const removeDataPart = (id: string) => {
+    setDataParts((prev) => prev.filter((part) => part.id !== id));
+    setDataErrors((prev) => {
+      if (!(id in prev)) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  };
+
+  const formatDataPart = (id: string) => {
+    const draft = dataParts.find((part) => part.id === id);
+    const trimmedValue = draft?.value.trim();
+    if (!trimmedValue) return;
+
+    try {
+      const parsed = JSON.parse(trimmedValue) as unknown;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        setDataErrors((prev) => ({ ...prev, [id]: "Data parts must be JSON objects." }));
+        return;
+      }
+      updateDataPart(id, JSON.stringify(parsed, null, 2));
+    } catch {
+      setDataErrors((prev) => ({ ...prev, [id]: "Enter valid JSON before sending." }));
+    }
+  };
 
   const removeMetaRow = (index: number) => {
     setMetaRows((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
@@ -191,6 +285,8 @@ export function ChatInput({
   const hasPromptDraft = text.trim().length > 0;
   const hasMetadataDraft = Object.keys(currentMetadata).length > 0;
   const hasDefaultMetadata = Object.keys(defaultMetadata ?? {}).length > 0;
+  const hasDataDraft = dataParts.some((part) => part.value.trim().length > 0);
+  const canSend = hasPromptDraft || attachments.length > 0 || hasDataDraft;
 
   const applyPromptPreset = (preset: PromptPreset) => {
     setText(preset.text);
@@ -262,6 +358,61 @@ export function ChatInput({
               >
                 <XIcon className="size-3" />
               </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {dataParts.length > 0 && (
+        <div className="flex flex-col gap-2 rounded-lg border bg-muted/20 px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-medium text-muted-foreground">Data parts</p>
+            <button
+              onClick={addDataPart}
+              disabled={disabled}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+            >
+              <PlusIcon className="size-3" />
+              Add another
+            </button>
+          </div>
+
+          {dataParts.map((part, index) => (
+            <div key={part.id} className="rounded-lg border bg-background/90 p-2">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-medium">Data part {index + 1}</p>
+                <button
+                  onClick={() => removeDataPart(part.id)}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label={`Remove data part ${index + 1}`}
+                >
+                  <XIcon className="size-3.5" />
+                </button>
+              </div>
+              <Textarea
+                rows={6}
+                value={part.value}
+                onChange={(e) => updateDataPart(part.id, e.target.value)}
+                onBlur={() => formatDataPart(part.id)}
+                spellCheck={false}
+                className="min-h-28 resize-y border-0 bg-transparent px-0 py-0 font-mono text-xs shadow-none focus-visible:ring-0"
+                placeholder={'{\n  "type": "search",\n  "query": "hello"\n}'}
+              />
+              <div className="mt-2 flex items-center justify-between gap-2">
+                <p className="text-[11px] text-muted-foreground">
+                  Sent as an A2A `DataPart`. Use a JSON object payload.
+                </p>
+                <button
+                  onClick={() => formatDataPart(part.id)}
+                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                  disabled={!part.value.trim()}
+                >
+                  Format JSON
+                </button>
+              </div>
+              {dataErrors[part.id] && (
+                <p className="mt-2 text-[11px] text-destructive">{dataErrors[part.id]}</p>
+              )}
             </div>
           ))}
         </div>
@@ -364,6 +515,18 @@ export function ChatInput({
           disabled={disabled}
         />
 
+        <button
+          onClick={addDataPart}
+          disabled={disabled}
+          className={cn(
+            "shrink-0 rounded-md border px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground",
+            disabled && "opacity-50 cursor-not-allowed"
+          )}
+          title="Add a JSON data part"
+        >
+          JSON
+        </button>
+
         {/* Metadata toggle */}
         <button
           onClick={() => setMetaOpen((v) => !v)}
@@ -412,7 +575,7 @@ export function ChatInput({
             size="icon"
             className="size-8 shrink-0"
             onClick={handleSend}
-            disabled={!text.trim() || disabled}
+            disabled={!canSend || disabled}
           >
             <SendIcon className="size-4" />
           </Button>

@@ -9,7 +9,7 @@ import { getTaskTimelineStages } from "@/lib/a2a/execution-events";
 
 interface Props {
   chat: Chat;
-  onRetry?: (text: string) => void;
+  onRetry?: (item: UserMessageItem) => void;
   onRerunMessage?: (item: UserMessageItem) => void;
   onSubmitArtifactRevision?: (item: ArtifactItem, revisedText: string) => Promise<void> | void;
 }
@@ -39,13 +39,7 @@ export function ChatMessages({ chat, onRetry, onRerunMessage, onSubmitArtifactRe
               key={item.id}
               item={item}
               onInspect={() => setInspectData(item)}
-              onRerun={
-                onRerunMessage && item.attachments?.length
-                  ? undefined
-                  : onRerunMessage
-                    ? () => onRerunMessage(item)
-                    : undefined
-              }
+              onRerun={onRerunMessage ? () => onRerunMessage(item) : undefined}
             />
           );
         }
@@ -65,7 +59,7 @@ export function ChatMessages({ chat, onRetry, onRerunMessage, onSubmitArtifactRe
                       for (let i = index - 1; i >= 0; i--) {
                         const prev = chat.items[i];
                         if (prev.kind === "user-message") {
-                          onRetry(prev.text);
+                          onRetry(prev);
                           break;
                         }
                       }

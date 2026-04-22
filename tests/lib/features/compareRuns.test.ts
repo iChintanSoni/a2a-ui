@@ -23,7 +23,7 @@ describe("compareRuns", () => {
         {
           kind: "user-message",
           id: "u1",
-          text: "What is the forecast?",
+          parts: [{ kind: "text", text: "What is the forecast?" }],
           timestamp: 1,
         },
         {
@@ -77,7 +77,7 @@ describe("compareRuns", () => {
         {
           kind: "user-message",
           id: "u2",
-          text: "What is the forecast?",
+          parts: [{ kind: "text", text: "What is the forecast?" }],
           timestamp: 1,
         },
         {

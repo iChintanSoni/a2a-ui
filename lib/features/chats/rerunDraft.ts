@@ -1,5 +1,7 @@
+import type { Part } from "@a2a-js/sdk";
+
 export interface RerunDraft {
-  text: string;
+  parts: Part[];
   metadata?: Record<string, string>;
 }
 

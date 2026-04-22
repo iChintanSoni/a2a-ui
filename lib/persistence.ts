@@ -1,6 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
+import type { Part } from "@a2a-js/sdk";
 import type { Agent } from "./features/agents/agentsSlice";
-import type { Chat } from "./features/chats/chatsSlice";
+import type { Chat, ChatItem } from "./features/chats/chatsSlice";
 import type { WorkbenchState } from "./features/workbench/workbenchSlice";
 
 interface A2ASchema extends DBSchema {
@@ -30,6 +31,25 @@ function getDB(): Promise<IDBPDatabase<A2ASchema>> {
   return _db;
 }
 
+// Migrate items from old format where UserMessageItem had `text` + `attachments`
+// instead of the current `parts` array.
+function migrateItems(items: unknown[]): ChatItem[] {
+  return items.map((item) => {
+    const raw = item as Record<string, unknown>;
+    if (raw.kind === "user-message" && !Array.isArray(raw.parts)) {
+      const parts: Part[] = [];
+      if (typeof raw.text === "string" && raw.text) {
+        parts.push({ kind: "text", text: raw.text });
+      }
+      if (Array.isArray(raw.attachments)) {
+        parts.push(...(raw.attachments as Part[]));
+      }
+      return { ...raw, parts } as ChatItem;
+    }
+    return item as ChatItem;
+  });
+}
+
 export async function loadPersistedState(): Promise<{
   agents: Agent[];
   chats: Chat[];
@@ -53,7 +73,7 @@ export async function loadPersistedState(): Promise<{
     ...c,
     archived: c.archived ?? false,
     pinned: c.pinned ?? false,
-    items: c.items ?? [],
+    items: migrateItems(c.items ?? []),
     executionEvents: c.executionEvents ?? [],
   }));
   return {

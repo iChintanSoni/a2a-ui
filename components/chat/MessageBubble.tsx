@@ -12,19 +12,23 @@ export function UserBubble({ item, onInspect, onRerun }: UserBubbleProps) {
   return (
     <div className="flex justify-end group">
       <div className="relative flex max-w-[75%] flex-col items-end gap-1.5">
-        {/* Attachment previews above the text bubble */}
-        {item.attachments && item.attachments.length > 0 && (
-          <div className="flex flex-wrap justify-end gap-1.5">
-            {item.attachments.map((part, i) => (
-              <div key={i} className="rounded-xl border bg-muted/50 overflow-hidden">
-                <PartRenderer part={part} />
-              </div>
-            ))}
-          </div>
+        {item.parts.map((part, i) =>
+          part.kind === "text" ? (
+            <div
+              key={i}
+              className="rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground"
+            >
+              <PartRenderer part={part} />
+            </div>
+          ) : (
+            <div
+              key={i}
+              className="max-w-full overflow-hidden rounded-2xl border bg-background px-3 py-2 text-sm text-foreground shadow-sm"
+            >
+              <PartRenderer part={part} />
+            </div>
+          ),
         )}
-        <div className="rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
-          <span className="whitespace-pre-wrap">{item.text}</span>
-        </div>
         {onRerun && (
           <button
             onClick={onRerun}
