@@ -3,7 +3,16 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ArchiveIcon, BotIcon, LibraryIcon, MessageSquareIcon, CircleIcon, MessageSquarePlusIcon } from "lucide-react";
+import {
+  ArchiveIcon,
+  BotIcon,
+  LibraryIcon,
+  MessageSquareIcon,
+  CircleIcon,
+  MessageSquarePlusIcon,
+  ListTodoIcon,
+  PinIcon,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -33,7 +42,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const agents = useAppSelector(state => state.agents.agents);
   const chats = useAppSelector(state => state.chats.chats);
-  const recentChats = chats.filter(chat => !chat.archived).slice(0, 10);
+  const recentChats = chats
+    .filter(chat => !chat.archived)
+    .sort((a, b) => {
+      if (Boolean(a.pinned) !== Boolean(b.pinned)) return a.pinned ? -1 : 1;
+      return b.timestamp - a.timestamp;
+    })
+    .slice(0, 10);
   const activeChatId = useAppSelector(state => state.chats.activeChatId);
 
   const startChat = (agentUrl: string, agentName: string) => {
@@ -86,6 +101,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Link href="/dashboard/conversations">
                     <ArchiveIcon className="size-4 shrink-0" />
                     <span>Conversations</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/dashboard/tasks"}>
+                  <Link href="/dashboard/tasks">
+                    <ListTodoIcon className="size-4 shrink-0" />
+                    <span>Tasks</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -164,7 +187,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     >
                       <MessageSquareIcon className="size-4 shrink-0" />
                       <div className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm leading-tight">{chat.title}</span>
+                        <span className="truncate text-sm leading-tight">
+                          {chat.title}
+                          {chat.pinned ? <PinIcon className="ms-1 inline size-3" /> : null}
+                        </span>
                         <Caption className="truncate">{chat.agentName}</Caption>
                       </div>
                     </SidebarMenuButton>

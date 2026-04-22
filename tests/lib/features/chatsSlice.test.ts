@@ -6,6 +6,8 @@ import reducer, {
   removeChat,
   renameChat,
   setChatArchived,
+  setChatPinned,
+  cloneChat,
   addUserMessage,
   applyStatusUpdate,
   applyArtifactUpdate,
@@ -135,6 +137,30 @@ describe("chatsSlice", () => {
       expect(state.activeChatId).toBeNull();
       state = reducer(state, setChatArchived({ chatId: "c1", archived: false }));
       expect(state.chats[0].archived).toBe(false);
+    });
+
+    it("pins and unpins a chat", () => {
+      let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1" })));
+      state = reducer(state, setChatPinned({ chatId: "c1", pinned: true }));
+      expect(state.chats[0].pinned).toBe(true);
+      state = reducer(state, setChatPinned({ chatId: "c1", pinned: false }));
+      expect(state.chats[0].pinned).toBe(false);
+    });
+
+    it("clones a chat into a fresh run with no items", () => {
+      let state = reducer(
+        INITIAL_STATE,
+        addChat(makeChat({ id: "c1", title: "Original chat", lastMessage: "hello" })),
+      );
+      state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", text: "Hello" }));
+      state = reducer(state, cloneChat({ chatId: "c1", newChatId: "c2" }));
+
+      expect(state.activeChatId).toBe("c2");
+      expect(state.chats[0].id).toBe("c2");
+      expect(state.chats[0].sourceChatId).toBe("c1");
+      expect(state.chats[0].items).toEqual([]);
+      expect(state.chats[0].executionEvents).toEqual([]);
+      expect(state.chats[0].title).toBe("New run · Original chat");
     });
   });
 

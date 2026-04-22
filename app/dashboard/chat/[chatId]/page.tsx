@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Part } from "@a2a-js/sdk";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useChatSession } from "@/hooks/use-chat-session";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
@@ -17,10 +17,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SquarePenIcon, BugIcon, DownloadIcon, ActivityIcon } from "lucide-react";
+import {
+  SquarePenIcon,
+  BugIcon,
+  DownloadIcon,
+  ActivityIcon,
+  CopyIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Caption, Small, Muted } from "@/components/typography";
 import { useToast } from "@/lib/toast";
+import { cloneChat } from "@/lib/features/chats/chatsSlice";
 import type { Chat, ArtifactItem, AgentMessageItem } from "@/lib/features/chats/chatsSlice";
 import { checkCompliance } from "@/lib/utils/compliance";
 import { buildProtocolReport, protocolReportFilename } from "@/lib/utils/protocolReport";
@@ -98,6 +105,7 @@ function exportAsMarkdown(chat: Chat) {
 export default function ChatPage({ params }: PageProps) {
   const { chatId } = use(params);
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const chat = useAppSelector((s) => s.chats.chats.find((c) => c.id === chatId));
   const agent = useAppSelector((s) =>
@@ -171,6 +179,12 @@ export default function ChatPage({ params }: PageProps) {
     );
   };
 
+  const cloneRun = () => {
+    const nextChatId = crypto.randomUUID();
+    dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId }));
+    router.push(`/dashboard/chat/${nextChatId}`);
+  };
+
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       {/* Header */}
@@ -225,6 +239,18 @@ export default function ChatPage({ params }: PageProps) {
         </Button>
 
         {/* New Session */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={cloneRun}
+          disabled={isStreaming}
+          className="shrink-0 gap-1.5"
+          title="Clone into a fresh run"
+        >
+          <CopyIcon className="size-3.5" />
+          Clone Run
+        </Button>
+
         <Button
           variant="outline"
           size="sm"
