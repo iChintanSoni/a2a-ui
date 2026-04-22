@@ -70,6 +70,8 @@ export interface Chat {
   lastMessage: string;
   timestamp: number;
   archived?: boolean;
+  pinned?: boolean;
+  sourceChatId?: string;
   items: ChatItem[];
   executionEvents: ExecutionEvent[];
 }
@@ -103,6 +105,7 @@ export const chatsSlice = createSlice({
         chats: action.payload.map((chat) => ({
           ...chat,
           archived: chat.archived ?? false,
+          pinned: chat.pinned ?? false,
           items: chat.items ?? [],
           executionEvents: chat.executionEvents ?? [],
         })),
@@ -111,7 +114,13 @@ export const chatsSlice = createSlice({
     },
     addChat: (state, action: PayloadAction<Omit<Chat, "items" | "executionEvents">>) => {
       const existing = state.chats.findIndex(c => c.id === action.payload.id);
-      const chat: Chat = { ...action.payload, items: [], executionEvents: [] };
+      const chat: Chat = {
+        ...action.payload,
+        archived: action.payload.archived ?? false,
+        pinned: action.payload.pinned ?? false,
+        items: [],
+        executionEvents: [],
+      };
       if (existing >= 0) {
         state.chats[existing] = { ...state.chats[existing], ...action.payload };
       } else {
@@ -124,6 +133,7 @@ export const chatsSlice = createSlice({
       const chat: Chat = {
         ...action.payload,
         archived: action.payload.archived ?? false,
+        pinned: action.payload.pinned ?? false,
         items: action.payload.items ?? [],
         executionEvents: action.payload.executionEvents ?? [],
       };
@@ -165,6 +175,42 @@ export const chatsSlice = createSlice({
       if (action.payload.archived && state.activeChatId === action.payload.chatId) {
         state.activeChatId = null;
       }
+    },
+
+    setChatPinned: (
+      state,
+      action: PayloadAction<{ chatId: string; pinned: boolean }>
+    ) => {
+      const chat = findChat(state, action.payload.chatId);
+      if (!chat) return;
+      chat.pinned = action.payload.pinned;
+      chat.timestamp = Date.now();
+    },
+
+    cloneChat: (
+      state,
+      action: PayloadAction<{ chatId: string; newChatId: string; title?: string }>
+    ) => {
+      const source = findChat(state, action.payload.chatId);
+      if (!source) return;
+
+      const now = Date.now();
+      const cloned: Chat = {
+        id: action.payload.newChatId,
+        title: action.payload.title?.trim() || `New run · ${source.title}`,
+        agentUrl: source.agentUrl,
+        agentName: source.agentName,
+        lastMessage: "",
+        timestamp: now,
+        archived: false,
+        pinned: false,
+        sourceChatId: source.id,
+        items: [],
+        executionEvents: [],
+      };
+
+      state.chats.unshift(cloned);
+      state.activeChatId = cloned.id;
     },
 
     // ── Message actions ──────────────────────────────────────────────────────
@@ -389,6 +435,8 @@ export const {
   removeChat,
   renameChat,
   setChatArchived,
+  setChatPinned,
+  cloneChat,
   addUserMessage,
   applyStatusUpdate,
   applyArtifactUpdate,

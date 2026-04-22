@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BotIcon, MessageSquareIcon, StarIcon } from "lucide-react";
+import { BotIcon, MessageSquareIcon, StarIcon, ListTodoIcon } from "lucide-react";
 import { AddAgent } from "@/components/add-agent";
 import { WorkspaceActions } from "@/components/workspace-actions";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,10 @@ export default function DashboardPage() {
   const chats = useAppSelector((state) => state.chats.chats);
   const activeChats = chats.filter((chat) => !chat.archived);
   const favoriteAgents = agents.filter((agent) => agent.favorite);
+  const taskCount = chats.reduce(
+    (count, chat) => count + chat.items.filter((item) => item.kind === "task-status").length,
+    0,
+  );
 
   return (
     <div className="flex-1 space-y-8 overflow-y-auto p-4 sm:p-6 md:p-8">
@@ -29,7 +33,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <Link href="/dashboard/agents" className="rounded-md border p-4 transition-colors hover:bg-muted/40">
           <div className="flex items-center gap-2">
             <BotIcon className="size-4" />
@@ -45,6 +49,14 @@ export default function DashboardPage() {
           </div>
           <div className="mt-3 text-3xl font-semibold">{activeChats.length}</div>
           <Muted className="mt-1">Rename, archive, delete, and export chats.</Muted>
+        </Link>
+        <Link href="/dashboard/tasks" className="rounded-md border p-4 transition-colors hover:bg-muted/40">
+          <div className="flex items-center gap-2">
+            <ListTodoIcon className="size-4" />
+            <Caption className="font-medium text-foreground">Tasks</Caption>
+          </div>
+          <div className="mt-3 text-3xl font-semibold">{taskCount}</div>
+          <Muted className="mt-1">Review task states, artifacts, and correlated warnings.</Muted>
         </Link>
         <div className="rounded-md border p-4">
           <div className="flex items-center gap-2">
@@ -74,6 +86,9 @@ export default function DashboardPage() {
           </Button>
           <Button variant="outline" asChild>
             <Link href="/dashboard/conversations">Open Conversations</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/tasks">Open Tasks</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link href="/dashboard/embed">Open Embed Demo</Link>

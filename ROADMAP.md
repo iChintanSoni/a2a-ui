@@ -1,419 +1,440 @@
 # A2A UI Roadmap
 
-This roadmap turns the repo comparison into a product and engineering plan for making this project the strongest open-source A2A UI: part inspector, part agent browser, part debugging workbench, and part rich interactive agent canvas.
+`a2a-ui` already covers the core of an A2A developer workbench:
 
-## Product Positioning
+- multi-agent connection and auth
+- agent card inspection and compliance checks
+- persistent chat sessions with artifacts, tool calls, and debug logs
+- workspace import/export
+- a bundled Ollama-based demo server
 
-Most competing repos are strong in one lane:
+The next step is not adding random surface area. It is turning the current app into a stronger platform:
 
-- `a2aproject/a2a-inspector`: protocol inspection and validation
-- `a2a-community/a2a-ui`: polished chat plus Phoenix tracing
-- `a2anet/a2a-ui`: clean A2A SDK browser model with contexts, tasks, artifacts, and tool calls
-- `vishalmysore/simplea2ui`: A2UI rich interactive component rendering
-- `pjordan/a2a-ui`: simple raw request playground
-- `egor-baranov/a2a-ui`: product shell, auth, account, pricing, marketplace-style pages
+1. reusable and embeddable
+2. more observable
+3. better for iteration and QA
+4. ready for richer local-first workflows later
 
-Our goal is to combine the useful developer features into one coherent app:
+## Product Direction
 
-> The best local-first A2A workbench for connecting, validating, debugging, tracing, and interacting with any A2A agent.
+The goal is to make `a2a-ui` the best local-first A2A workbench for:
 
-## Current Advantages To Preserve
+- connecting to agents
+- validating protocol behavior
+- debugging transport and event flow
+- inspecting task, artifact, and tool execution
+- embedding A2A chat and inspection into other apps
 
-- Per-agent authentication: none, bearer, API key, basic auth
-- Per-agent custom HTTP headers
-- Multiple saved agents with status indicators
-- Agent settings route with display name, auth, headers, card re-fetch, share link, and remove flow
-- A2A SDK client using JSON-RPC and REST transports
-- Streaming chat with `contextId`, task status updates, artifacts, and agent messages
-- File attachments with previews and MIME filtering from agent input modes
-- Message metadata editor
-- Tool-call rendering convention
-- Debug console with request/response/error filtering
-- Raw JSON inspection for chat items
-- Chat export as JSON or Markdown
-- IndexedDB persistence for agents and chats
-- Built-in sample A2A server with LangChain, Gemini/Ollama paths, Tavily search, and image generation
-- Vitest coverage for slices/auth/compliance utilities
+## What We Should Optimize For
 
-## Strategic Pillars
+- Keep the current dashboard strong before chasing new modalities.
+- Prefer structured observability over exposing chain-of-thought.
+- Prefer local-first and secret-safe exports by default.
+- Build extensibility in layers: hooks first, components second, integrations third.
+- Treat browser-only local tool execution as a later step. Use a safer bridge model first.
 
-### 1. Inspector-Grade Protocol Confidence
+## Current Strengths To Preserve
 
-Make the app the fastest way to answer: "Is this agent actually A2A-compatible, and what exactly happened over the wire?"
+- per-agent auth and custom headers
+- saved agents, tags, favorites, and workspace persistence
+- agent card viewer with compliance reporting
+- streaming chat with artifacts, statuses, and tool calls
+- file attachments with MIME-aware filtering
+- debug console with transport and validation logs
+- JSON inspection and protocol report export
+- conversation management and workspace import/export
+- bundled demo server using Ollama and Tavily
 
-Deliverables:
+## Priority Order
 
-- Expand agent-card compliance beyond required field checks:
-  - protocol version compatibility
-  - transport interface validation
-  - `additionalInterfaces` validation
-  - default input/output mode consistency
-  - skill input/output mode inheritance
-  - auth/security scheme display if present
-- Add message/task/event validation:
-  - validate outgoing message parts before send
-  - validate incoming status, artifact, message, and error events
-  - surface warnings inline and in debug console
-- Add raw transport visibility:
-  - HTTP method, URL, status code, duration
-  - resolved transport protocol
-  - request/response headers with secrets masked
-  - JSON-RPC id/method correlation
-- Add a "Protocol Report" export:
-  - agent card
-  - compliance result
-  - transports detected
-  - failed requests and validation warnings
+### Now
 
-Why it matters:
+- embeddable core and headless state
+- structured observability and trace-ready event model
+- better task, event, and artifact workflows
 
-This beats basic chat UIs and moves us closer to `a2a-inspector`, while keeping our stronger multi-agent/session UX.
+### Next
 
-### 2. Rich Interaction With A2UI
+- QA and regression tooling
+- editable artifacts and compare-runs workflows
+- A2UI and richer structured surfaces where protocol support exists
 
-Support agents that return interactive UI surfaces, not just text and files.
+### Later
 
-Deliverables:
+- local tool execution through a companion bridge
+- richer modalities like voice and live media
+- optional catalogs, sharing, and hosted collaboration features
 
-- Add an A2UI/Text mode toggle per chat or per agent.
-- Send A2UI extension headers when enabled:
-  - `X-A2A-Extensions: https://a2ui.org/a2a-extension/a2ui/v0.8`
-- Detect A2UI data parts:
-  - `metadata.mimeType === "application/json+a2ui"`
-  - compatible variants in `data`/metadata payloads
-- Render A2UI surfaces:
-  - start with safe read-only rendering for common components
-  - then add forms, buttons, selection controls, cards, lists, charts
-- Send UI events back to the agent:
-  - button clicks
-  - form submissions
-  - selection changes
-  - component action payloads
-- Add fixture examples:
-  - flight booking
-  - analytics dashboard
-  - ecommerce product picker
-  - graph/knowledge map
+## Implementation Phases
 
-Why it matters:
+### Phase 1: Embeddable Core
 
-This is the largest unique feature in `simplea2ui`. Adding it makes the project more than a chat client.
+Status:
+Complete.
 
-### 3. Trace And Observability Workbench
+Objective:
+Turn the current app from a dashboard-only product into a reusable A2A client foundation.
 
-Make conversations inspectable at the agent/tool/span level.
+Why first:
+This multiplies the value of the code already in the repo. It also makes every later feature usable in both the dashboard and an embeddable widget.
 
 Deliverables:
 
-- Add Observability settings:
-  - enable/disable tracing
-  - Phoenix URL, default `http://localhost:6006`
-  - project/session mapping strategy
-- Add trace sidebar in chat:
-  - spans for the current context/session
-  - duration timeline
-  - status/error badges
-  - span attributes/details JSON
-- Add Jaeger-style timeline view.
-- Add graph view:
-  - agent/tool/model relationships
-  - parent-child spans
-  - error highlighting
-- Link chat items to trace spans when IDs/metadata match.
-- Support manual refresh first, then polling/live mode.
-
-Why it matters:
-
-This closes the biggest gap with `a2a-community/a2a-ui` and pairs naturally with our debug console.
-
-### 4. Advanced Request Playground
-
-Add a raw protocol lab for unsupported methods and low-level debugging.
-
-Deliverables:
-
-- New "Playground" page or debug tab.
-- Endpoint URL, method, headers, and JSON body editor.
-- Presets:
-  - fetch agent card
-  - `message/send`
-  - `message/stream`
-  - task lookup
-  - task cancel
-- Response panel with:
-  - status
+- Extract session and transport behavior into stable hooks:
+  - `useA2AConnection`
+  - `useA2ASession`
+  - `useA2AMessages`
+  - `useA2ADebug`
+- Separate headless session logic from page composition.
+- Introduce an embeddable chat surface:
+  - `A2AChat`
+  - `A2AAgentCard`
+  - `A2ADebugPanel`
+- Add host-controlled props for:
+  - agent URL
+  - auth
   - headers
-  - raw body
-  - formatted JSON
-  - copy/export
-- Optional "Use selected agent credentials" toggle.
+  - initial context metadata
+  - session persistence mode
+- Add a context injection API for host apps:
+  - initial metadata
+  - hidden system context
+  - per-message context enrichers
+- Keep the dashboard using the same primitives internally.
 
-Why it matters:
+Repo areas:
 
-This absorbs the useful simplicity of `pjordan/a2a-ui` without weakening the main chat experience.
+- [hooks](/Users/chintansoni/Github/a2a-ui/hooks)
+- [components/chat](/Users/chintansoni/Github/a2a-ui/components/chat)
+- [lib/features](/Users/chintansoni/Github/a2a-ui/lib/features)
+- [app/dashboard](/Users/chintansoni/Github/a2a-ui/app/dashboard)
 
-### 5. Agent Library And Discovery
+Implementation steps:
 
-Turn "saved agents" into a usable local registry.
+1. Move chat session orchestration out of the route layer and into dedicated hooks.
+2. Create a transport/session adapter interface so UI components stop depending on page-local orchestration.
+3. Refactor current dashboard chat screen to consume the new hooks.
+4. Add a minimal embeddable example page in-app or under a demo route.
+5. Add tests around host-supplied auth, headers, and context injection.
 
-Deliverables:
+Exit criteria:
 
-- Dedicated agents page:
-  - searchable list
-  - filters by status, transport, skill tag, input/output modes
-  - sort by name, last used, compliance score
-- Agent detail page:
-  - overview
-  - skills
-  - capabilities
-  - compliance
-  - recent chats
-  - test actions
-- Import/export workspace:
-  - agents
-  - settings
-  - optional chats
-  - secrets excluded by default
-- Agent templates/examples:
-  - local demo server
-  - common sample agents
-  - "add from share link"
-- Optional public catalog later:
-  - featured A2A agents
-  - tags/categories
-  - one-click add
+- The dashboard and an embeddable chat widget both run on the same session primitives.
+- Host apps can inject context without forking the dashboard.
+- No regression in current workspace persistence or debug behavior.
 
-Why it matters:
+### Phase 2: Structured Observability
 
-This borrows the useful marketplace direction from `egor-baranov/a2a-ui` without requiring account/billing complexity early.
+Status:
+Complete.
 
-### 6. Conversation, Task, And Event Management
+Objective:
+Upgrade from request/response logging to a unified execution timeline across messages, tasks, artifacts, tool calls, validation warnings, and future traces.
 
-Move beyond a sidebar of recent chats.
+Why second:
+This is the biggest product-quality jump for developer users, and it builds directly on the current debug console.
 
 Deliverables:
 
-- Dedicated conversations page:
-  - all chats, not just last 10
-  - search by title, agent, message text
-  - delete/archive/rename
-  - export selected chats
-- Dedicated task list:
+- Define a normalized event model for:
+  - outgoing messages
+  - transport requests and responses
+  - validation warnings
+  - task state changes
+  - artifact updates
+  - tool call lifecycle
+  - trace/span links
+- Add a dedicated event explorer view.
+- Expand the debug console with:
+  - correlation by task ID and request ID
+  - header inspection with secret masking
+  - latency and transport summaries
+- Add a timeline view in chat:
+  - submitted
+  - working
+  - tool started
+  - tool finished
+  - artifact streamed
+  - completed
+- Add trace placeholders and linking fields now, even before a trace backend is integrated.
+- Support protocol report export from the normalized event store.
+
+Important product note:
+Do not implement “thought expanders” or chain-of-thought views. Show structured execution data instead: spans, tools, retrieved docs, timings, and status transitions.
+
+Repo areas:
+
+- [components/chat/DebugPanel.tsx](/Users/chintansoni/Github/a2a-ui/components/chat/DebugPanel.tsx)
+- [components/chat/ChatMessages.tsx](/Users/chintansoni/Github/a2a-ui/components/chat/ChatMessages.tsx)
+- [lib/features/chats/chatsSlice.ts](/Users/chintansoni/Github/a2a-ui/lib/features/chats/chatsSlice.ts)
+- [lib/utils/debugInterceptor.ts](/Users/chintansoni/Github/a2a-ui/lib/utils/debugInterceptor.ts)
+- [lib/utils/protocolReport.ts](/Users/chintansoni/Github/a2a-ui/lib/utils/protocolReport.ts)
+
+Implementation steps:
+
+1. Create a normalized event schema in state.
+2. Refactor current debug logging and task/artifact updates to emit into that schema.
+3. Add event filtering and correlation views.
+4. Extend exports and protocol reports to include normalized execution events.
+5. Add tests for masking, correlation, and export shape.
+
+Exit criteria:
+
+- A developer can inspect a run end-to-end without reading raw logs only.
+- Debug exports remain safe to share.
+- Event correlation works across request, task, artifact, and tool updates.
+
+### Phase 3: Workflow And Artifact Iteration
+
+Status:
+In progress.
+
+Objective:
+Make the app better for repeated agent development, not just one-off chats.
+
+Why third:
+Once the data model is reusable and observable, the next leverage is iteration speed.
+
+Deliverables:
+
+- Dedicated task explorer:
   - task ID
   - context ID
   - agent
-  - status
-  - timestamps
-  - artifacts count
+  - state
+  - related artifacts
   - validation warnings
-- Dedicated event list:
-  - raw incoming/outgoing A2A events
-  - filters by request, response, error, validation warning, task, artifact
-- Conversation compare:
-  - compare two runs against same prompt/agent
-  - useful for agent regression testing
+- Run comparison view:
+  - same prompt across two runs
+  - output diff
+  - artifact diff
+  - timing comparison
+- Editable artifact flows:
+  - inline edit for text and markdown artifacts
+  - submit diff or revised artifact back to the agent as context
+- Better conversation workflows:
+  - pin key chats
+  - clone a session into a new run
+  - rerun previous prompts
+- Saved debugging presets:
+  - favorite filters
+  - repeatable test prompts
+  - per-agent default metadata
 
-Why it matters:
+Repo areas:
 
-This makes the app useful for real development and QA workflows, not only one-off demos.
+- [app/dashboard/conversations/page.tsx](/Users/chintansoni/Github/a2a-ui/app/dashboard/conversations/page.tsx)
+- [components/chat/ArtifactBlock.tsx](/Users/chintansoni/Github/a2a-ui/components/chat/ArtifactBlock.tsx)
+- [components/chat/TaskStatusRow.tsx](/Users/chintansoni/Github/a2a-ui/components/chat/TaskStatusRow.tsx)
+- [lib/features/chats/chatsSlice.ts](/Users/chintansoni/Github/a2a-ui/lib/features/chats/chatsSlice.ts)
 
-### 7. Built-In Agent Test Harness
+Implementation steps:
 
-Give developers repeatable tests for their agents.
+1. Add a task-centric index derived from existing chat/task state.
+2. Add chat/session clone and rerun actions.
+3. Introduce editable text artifact support first.
+4. Add compare-runs UI for same-agent prompt regression checks.
+5. Persist presets and task filters in IndexedDB.
+
+Exit criteria:
+
+- Developers can compare runs and iterate on outputs without leaving the app.
+- Artifact revision is possible for at least text and markdown.
+- The app supports task-oriented workflows, not just chat-oriented ones.
+
+### Phase 4: QA Harness
+
+Objective:
+Let developers define repeatable agent checks and run them against local or remote agents.
+
+Why before richer modalities:
+This creates immediate value for engineering teams and makes `a2a-ui` useful in CI-adjacent workflows.
 
 Deliverables:
 
-- Test suite builder:
+- Test case builder:
   - prompt
-  - expected status
+  - attachments
+  - metadata
+  - expected task state
   - expected output mode
-  - expected artifact type
-  - optional regex/JSON assertions
-- Run tests against a selected agent.
-- Save run history.
-- Export test report.
-- Add smoke-test templates:
-  - agent card loads
-  - text chat works
-  - streaming works
-  - file input accepted/rejected correctly
-  - task cancel works
-  - auth failure handled cleanly
+  - regex and JSON assertions
+- Saved test suites per agent.
+- Run history with pass/fail results.
+- Exportable QA reports.
+- Bundled smoke suite for the demo server.
 
-Why it matters:
+Repo areas:
 
-None of the reference repos appear to provide a strong A2A agent QA workflow. This can become our standout feature.
+- new QA pages under `app/dashboard`
+- [lib/features/chats](/Users/chintansoni/Github/a2a-ui/lib/features/chats)
+- [lib/utils](/Users/chintansoni/Github/a2a-ui/lib/utils)
+- [tests](/Users/chintansoni/Github/a2a-ui/tests)
 
-### 8. Production Readiness
+Implementation steps:
 
-Make it easy to run, demo, and trust.
+1. Define a serializable test-case schema.
+2. Reuse Phase 1 session primitives to run tests headlessly.
+3. Build assertion helpers for status, content, artifact, and tool events.
+4. Add run-history persistence and export.
+5. Add demo test fixtures and CI-friendly sample docs.
+
+Exit criteria:
+
+- A developer can save and rerun the same agent test suite.
+- Results are understandable without digging through raw logs.
+- The harness works against the bundled demo server.
+
+### Phase 5: A2UI And Structured Rich Surfaces
+
+Objective:
+Support interactive, structured agent-rendered UI where the protocol or extension supports it.
+
+Why here:
+This is valuable, but it should sit on top of a stronger reusable and observable foundation.
 
 Deliverables:
 
-- Dockerfile for UI.
-- Dockerfile for bundled demo server.
-- Docker Compose profile:
-  - UI
-  - demo A2A server
-  - optional Phoenix
-- Environment validation and documented `.env.example`.
-- Error boundary around dashboard/chat.
-- Secret masking everywhere:
-  - auth forms
-  - debug logs
-  - exports
-- CI:
-  - lint
-  - typecheck
-  - test
-  - build
-- E2E smoke tests:
-  - add demo agent
-  - chat
-  - inspect debug log
-  - export chat
+- A2UI capability toggle per agent or session.
+- Extension header support.
+- Detection and rendering of supported structured UI payloads.
+- Safe renderer for read-only surfaces first.
+- Event dispatch back to the agent for interactive controls later.
+- Example fixtures and demo flows.
 
-## Phased Plan
+Repo areas:
 
-### Phase 0: Foundation Polish
+- [components/chat/PartRenderer.tsx](/Users/chintansoni/Github/a2a-ui/components/chat/PartRenderer.tsx)
+- [components/chat/ArtifactBlock.tsx](/Users/chintansoni/Github/a2a-ui/components/chat/ArtifactBlock.tsx)
+- [server/src/agent.ts](/Users/chintansoni/Github/a2a-ui/server/src/agent.ts)
 
-Scope: 1-2 days
+Implementation steps:
 
-- Fix README/implementation drift:
-  - either implement workspace import/export or remove the claim until implemented
-  - verify chat title customization claim
-- Add `.env.example` for UI and server.
-- Add Docker support for current app/server.
-- Add CI for lint, typecheck, tests, and build.
-- Add simple error boundary for dashboard/chat routes.
+1. Add structured payload detection and logging.
+2. Ship read-only rendering for a small supported subset.
+3. Add interactive controls only after event contracts are clear.
+4. Add demo-server fixtures for local development.
+5. Add tests for payload parsing and event dispatch.
 
 Exit criteria:
 
-- Fresh clone can run UI and demo server with documented commands.
-- CI is green.
-- README only claims features that exist.
+- Structured agent UI can be rendered safely.
+- Interactive controls work for a constrained supported subset.
 
-### Phase 1: Better Inspector
+### Phase 6: Local Tool Execution Bridge
 
-Scope: 1 week
+Objective:
+Enable local-first tool execution without turning the browser into an unsafe general-purpose runtime.
 
-- Expand compliance validator.
-- Add validation warnings for incoming events.
-- Improve debug console with transport, duration, status, and masked headers.
-- Add Protocol Report export.
-- Add tests for compliance and debug masking.
+Why later:
+This is strategically important but architecturally heavy. It needs a stronger trust and execution model than the current app.
 
-Exit criteria:
+Recommendation:
+Do not start with browser-only MCP. Start with a local bridge or companion process.
 
-- A developer can connect an agent and immediately see whether its card/events are valid.
-- Debug logs can be shared without leaking secrets.
+Deliverables:
 
-### Phase 2: Agent Library And Workspace
+- Define a local tool bridge protocol.
+- Add UI-level registration for local tool providers.
+- Support tool request interception and approval UX.
+- Execute approved tools through the local bridge.
+- Stream tool results back into the A2A session.
+- Add clear security prompts and audit history.
 
-Scope: 1 week
+Possible shapes:
 
-- Dedicated agents page with search/filter/sort.
-- Dedicated conversations page.
-- Workspace import/export with secret-safe defaults.
-- Rename/delete/archive chats.
-- Agent tags/favorites.
+- desktop companion app
+- localhost bridge service
+- signed local CLI helper
 
-Exit criteria:
+Repo areas:
 
-- The app feels like a workbench for many agents and many sessions, not a single chat screen.
+- new local-bridge package or companion app
+- [app/api/proxy/route.ts](/Users/chintansoni/Github/a2a-ui/app/api/proxy/route.ts)
+- [components/chat](/Users/chintansoni/Github/a2a-ui/components/chat)
 
-### Phase 3: A2UI Interactive Surfaces
+Implementation steps:
 
-Scope: 2-3 weeks
-
-- Add A2UI mode toggle.
-- Send extension header.
-- Detect and render A2UI data parts.
-- Implement event dispatch back to the agent.
-- Add example fixtures and demo agent support.
-- Add tests for mode/header behavior and component event payloads.
-
-Exit criteria:
-
-- A2UI-capable agents can show interactive UI components and receive user actions.
-
-### Phase 4: Observability
-
-Scope: 2 weeks
-
-- Add Phoenix settings.
-- Add trace sidebar.
-- Add timeline view.
-- Add graph view.
-- Link trace spans to chat/debug events.
-- Add Docker Compose option for Phoenix.
+1. Write the trust model and approval UX first.
+2. Implement a minimal localhost bridge with one safe tool.
+3. Add user approval and audit logging.
+4. Add tool result streaming into the existing artifact/event model.
+5. Expand tool types only after the approval model is solid.
 
 Exit criteria:
 
-- A developer can inspect a chat at message, protocol, task, tool, and trace-span levels from one screen.
+- Sensitive local data stays local by default.
+- Users can see and approve what runs locally.
+- Local execution integrates with existing observability surfaces.
 
-### Phase 5: Agent QA Harness
+### Phase 7: Rich Modalities
 
-Scope: 2 weeks
+Objective:
+Add voice and richer live media only after the workbench foundation is solid.
 
-- Add test-case builder.
-- Add repeatable run execution.
-- Add assertions for status/output/artifact/content.
-- Add run history and report export.
-- Add demo test pack for bundled server.
+Deliverables:
+
+- voice input and output mapping to declared modes
+- streaming audio transport support where agents provide it
+- richer artifact editing for diagrams, tables, and code
 
 Exit criteria:
 
-- The app can validate an agent before and after code changes.
+- New modalities fit the same session, observability, and export model.
 
-### Phase 6: Public Polish And Differentiators
+## Suggested Sequencing By Quarter
 
-Scope: ongoing
+### Milestone A
 
-- Add landing/demo page only after the core workbench is strong.
-- Add sample agent catalog.
-- Add shareable protocol reports.
-- Add optional cloud-sync hooks later, keeping local-first behavior as default.
-- Publish docs:
-  - quickstart
-  - connect an agent
-  - debug an agent
-  - A2UI guide
-  - tracing guide
-  - test harness guide
+- Phase 1 complete
+- Phase 2 in MVP form
 
-## Suggested Priority Order
+Result:
+`a2a-ui` becomes both a strong dashboard and a reusable A2A frontend foundation.
 
-1. Foundation polish and docs accuracy
-2. Inspector-grade validation/debugging
-3. Agent library and conversations/tasks/events pages
-4. A2UI interactive rendering
-5. Phoenix tracing
-6. Agent QA harness
-7. Catalog/marketplace/product-shell ideas
+### Milestone B
 
-## Standout Features To Market
+- Phase 2 complete
+- Phase 3 complete
+- Phase 4 started
 
-- "One UI for every A2A agent: chat, inspect, trace, test."
-- Local-first workspace with saved agents, sessions, and debug history.
-- Secret-safe protocol reports.
-- A2UI rich component support.
-- Agent QA harness for regression testing.
-- Built-in demo A2A server for instant onboarding.
+Result:
+`a2a-ui` becomes a real agent development workbench, not just a client.
 
-## Near-Term Implementation Checklist
+### Milestone C
 
-- [ ] Add `.env.example` for UI/server
-- [ ] Add Dockerfile and Docker Compose
-- [ ] Add CI workflow
-- [ ] Align README with current implementation
-- [ ] Expand compliance checks
-- [ ] Mask secrets in debug/export paths
-- [ ] Add Protocol Report export
-- [ ] Add agents list page
-- [ ] Add conversations list page
-- [ ] Add task/event explorer
-- [ ] Add A2UI mode/header support
-- [ ] Add A2UI renderer MVP
-- [ ] Add Phoenix settings and trace sidebar MVP
-- [ ] Add test harness MVP
+- Phase 4 complete
+- Phase 5 MVP
+
+Result:
+The product supports both QA workflows and richer structured agent interactions.
+
+### Milestone D
+
+- Phase 6 exploration
+- Phase 7 only if demanded by users
+
+Result:
+The platform expands carefully into local-first execution and richer modalities.
+
+## Near-Term Execution Checklist
+
+- [x] Refactor chat/session logic into reusable hooks
+- [x] Create an internal embeddable `A2AChat` component
+- [x] Define a normalized execution event schema
+- [x] Correlate debug logs, tasks, artifacts, and tool calls
+- [x] Add an event explorer view
+- [ ] Add a task explorer view
+- [ ] Add run clone and rerun actions
+- [ ] Add compare-runs support
+- [ ] Define QA test-case schema
+- [ ] Build saved test suites and run history
+- [ ] Add A2UI payload detection and renderer MVP
+- [ ] Write local tool bridge trust model before implementation
+
+## Explicit Non-Goals For The Next Phase
+
+- exposing model chain-of-thought
+- building a marketplace before the workbench is stronger
+- browser-only unrestricted local tool execution
+- prioritizing voice ahead of embeddability and observability

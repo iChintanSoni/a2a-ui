@@ -35,7 +35,9 @@ export async function loadPersistedState(): Promise<{ agents: Agent[]; chats: Ch
   const restoredChats = chats.map((c) => ({
     ...c,
     archived: c.archived ?? false,
+    pinned: c.pinned ?? false,
     items: c.items ?? [],
+    executionEvents: c.executionEvents ?? [],
   }));
   return { agents: restoredAgents, chats: restoredChats };
 }

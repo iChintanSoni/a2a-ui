@@ -2,12 +2,15 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Part } from "@a2a-js/sdk";
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
+  CopyIcon,
   DownloadIcon,
   PencilIcon,
+  PinIcon,
   Trash2Icon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +29,8 @@ import {
   removeChat,
   renameChat,
   setChatArchived,
+  setChatPinned,
+  cloneChat,
   type AgentMessageItem,
   type ArtifactItem,
   type Chat,
@@ -89,6 +94,7 @@ function exportMarkdown(chats: Chat[]) {
 }
 
 export default function ConversationsPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const chats = useAppSelector((state) => state.chats.chats);
   const [query, setQuery] = useState("");
@@ -108,6 +114,7 @@ export default function ConversationsPage() {
         return true;
       })
       .sort((a, b) => {
+        if (Boolean(a.pinned) !== Boolean(b.pinned)) return a.pinned ? -1 : 1;
         if (sort === "title") return a.title.localeCompare(b.title);
         if (sort === "agent") return a.agentName.localeCompare(b.agentName);
         return b.timestamp - a.timestamp;
@@ -223,6 +230,7 @@ export default function ConversationsPage() {
                       <Badge variant={chat.archived ? "secondary" : "default"}>
                         {chat.archived ? "Archived" : "Active"}
                       </Badge>
+                      {chat.pinned && <Badge variant="outline">Pinned</Badge>}
                       <Badge variant="outline">{chat.items.length} item{chat.items.length === 1 ? "" : "s"}</Badge>
                     </div>
                   </div>
@@ -234,6 +242,28 @@ export default function ConversationsPage() {
                   <Button size="sm" variant="outline" onClick={() => startRename(chat)}>
                     <PencilIcon className="size-4" />
                     Rename
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      dispatch(setChatPinned({ chatId: chat.id, pinned: !chat.pinned }))
+                    }
+                  >
+                    <PinIcon className="size-4" />
+                    {chat.pinned ? "Unpin" : "Pin"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const nextChatId = crypto.randomUUID();
+                      dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId }));
+                      router.push(`/dashboard/chat/${nextChatId}`);
+                    }}
+                  >
+                    <CopyIcon className="size-4" />
+                    Clone Run
                   </Button>
                   <Button
                     size="sm"
