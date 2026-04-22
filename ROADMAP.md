@@ -187,7 +187,7 @@ Exit criteria:
 ### Phase 3: Workflow And Artifact Iteration
 
 Status:
-In progress.
+Complete.
 
 Objective:
 Make the app better for repeated agent development, not just one-off chats.
@@ -424,9 +424,9 @@ The platform expands carefully into local-first execution and richer modalities.
 - [x] Define a normalized execution event schema
 - [x] Correlate debug logs, tasks, artifacts, and tool calls
 - [x] Add an event explorer view
-- [ ] Add a task explorer view
-- [ ] Add run clone and rerun actions
-- [ ] Add compare-runs support
+- [x] Add a task explorer view
+- [x] Add run clone and rerun actions
+- [x] Add compare-runs support
 - [ ] Define QA test-case schema
 - [ ] Build saved test suites and run history
 - [ ] Add A2UI payload detection and renderer MVP

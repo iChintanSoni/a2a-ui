@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { Chat } from "@/lib/features/chats/chatsSlice";
+import type { ArtifactItem, Chat, UserMessageItem } from "@/lib/features/chats/chatsSlice";
 import { UserBubble, AgentBubble } from "./MessageBubble";
 import { TaskStatusRow } from "./TaskStatusRow";
 import { ArtifactBlock } from "./ArtifactBlock";
@@ -10,9 +10,11 @@ import { getTaskTimelineStages } from "@/lib/a2a/execution-events";
 interface Props {
   chat: Chat;
   onRetry?: (text: string) => void;
+  onRerunMessage?: (item: UserMessageItem) => void;
+  onSubmitArtifactRevision?: (item: ArtifactItem, revisedText: string) => Promise<void> | void;
 }
 
-export function ChatMessages({ chat, onRetry }: Props) {
+export function ChatMessages({ chat, onRetry, onRerunMessage, onSubmitArtifactRevision }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [inspectData, setInspectData] = useState<unknown>(null);
 
@@ -32,7 +34,20 @@ export function ChatMessages({ chat, onRetry }: Props) {
     <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
       {chat.items.map((item, index) => {
         if (item.kind === "user-message") {
-          return <UserBubble key={item.id} item={item} onInspect={() => setInspectData(item)} />;
+          return (
+            <UserBubble
+              key={item.id}
+              item={item}
+              onInspect={() => setInspectData(item)}
+              onRerun={
+                onRerunMessage && item.attachments?.length
+                  ? undefined
+                  : onRerunMessage
+                    ? () => onRerunMessage(item)
+                    : undefined
+              }
+            />
+          );
         }
         if (item.kind === "agent-message") {
           return <AgentBubble key={item.id} item={item} onInspect={() => setInspectData(item)} />;
@@ -61,7 +76,14 @@ export function ChatMessages({ chat, onRetry }: Props) {
           );
         }
         if (item.kind === "artifact") {
-          return <ArtifactBlock key={`${item.taskId}-${item.id}`} item={item} onInspect={() => setInspectData(item)} />;
+          return (
+            <ArtifactBlock
+              key={`${item.taskId}-${item.id}`}
+              item={item}
+              onInspect={() => setInspectData(item)}
+              onSubmitRevision={onSubmitArtifactRevision}
+            />
+          );
         }
         if (item.kind === "tool-call") {
           return <ToolCallBlock key={item.id} item={item} onInspect={() => setInspectData(item)} />;

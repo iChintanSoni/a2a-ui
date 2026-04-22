@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Part } from "@a2a-js/sdk";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -23,14 +24,28 @@ import {
   DownloadIcon,
   ActivityIcon,
   CopyIcon,
+  GitCompareArrowsIcon,
+  RotateCcwIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Caption, Small, Muted } from "@/components/typography";
 import { useToast } from "@/lib/toast";
 import { cloneChat } from "@/lib/features/chats/chatsSlice";
-import type { Chat, ArtifactItem, AgentMessageItem } from "@/lib/features/chats/chatsSlice";
+import type {
+  Chat,
+  ArtifactItem,
+  AgentMessageItem,
+  UserMessageItem,
+} from "@/lib/features/chats/chatsSlice";
 import { checkCompliance } from "@/lib/utils/compliance";
 import { buildProtocolReport, protocolReportFilename } from "@/lib/utils/protocolReport";
+import {
+  markPromptPresetUsed,
+  savePromptPreset,
+  setAgentDefaultMetadata,
+} from "@/lib/features/workbench/workbenchSlice";
+import { consumeRerunDraft, queueRerunDraft } from "@/lib/features/chats/rerunDraft";
+import { buildArtifactRevisionMessage } from "@/lib/features/chats/artifactRevision";
 
 interface PageProps {
   params: Promise<{ chatId: string }>;
@@ -111,6 +126,9 @@ export default function ChatPage({ params }: PageProps) {
   const agent = useAppSelector((s) =>
     s.agents.agents.find((a) => a.url === chat?.agentUrl)
   );
+  const agentWorkbench = useAppSelector((s) =>
+    chat ? s.workbench.agentSettings[chat.agentUrl] : undefined,
+  );
 
   const { isStreaming, isInputRequired, error, transportMethod, logs, validationWarnings, cancelStream, sendMessage, newSession, clearLogs } =
     useChatSession(chatId);
@@ -118,6 +136,10 @@ export default function ChatPage({ params }: PageProps) {
   const [debugOpen, setDebugOpen] = useState(false);
   const [eventsOpen, setEventsOpen] = useState(false);
   const { toast } = useToast();
+  const lastUserMessage = useMemo(
+    () => chat?.items.findLast((item): item is UserMessageItem => item.kind === "user-message"),
+    [chat],
+  );
 
   // Show error as an actionable toast
   useEffect(() => {
@@ -145,6 +167,17 @@ export default function ChatPage({ params }: PageProps) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [isStreaming, newSession]);
+
+  useEffect(() => {
+    const rerun = consumeRerunDraft(chatId);
+    if (!rerun) return;
+    sendMessage(rerun.text, rerun.metadata).catch((err) => {
+      toast({
+        type: "error",
+        message: err instanceof Error ? err.message : "Unable to rerun prompt.",
+      });
+    });
+  }, [chatId, sendMessage, toast]);
 
   if (!chat) {
     return (
@@ -184,6 +217,29 @@ export default function ChatPage({ params }: PageProps) {
     dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId }));
     router.push(`/dashboard/chat/${nextChatId}`);
   };
+
+  const rerunMessage = (item: UserMessageItem) => {
+    const nextChatId = crypto.randomUUID();
+    dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId }));
+    queueRerunDraft(nextChatId, {
+      text: item.text,
+      metadata: item.metadata,
+    });
+    router.push(`/dashboard/chat/${nextChatId}`);
+  };
+
+  const submitArtifactRevision = async (item: ArtifactItem, revisedText: string) => {
+    const revision = buildArtifactRevisionMessage(item, revisedText);
+    await sendMessage(revision.text, revision.metadata);
+    toast({
+      type: "success",
+      message: `Revision sent for ${item.name ?? item.id}.`,
+    });
+  };
+
+  const compareHref = chat.sourceChatId
+    ? `/dashboard/compare?left=${chat.sourceChatId}&right=${chat.id}`
+    : undefined;
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
@@ -251,6 +307,29 @@ export default function ChatPage({ params }: PageProps) {
           Clone Run
         </Button>
 
+        {lastUserMessage && !lastUserMessage.attachments?.length && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => rerunMessage(lastUserMessage)}
+            disabled={isStreaming}
+            className="shrink-0 gap-1.5"
+            title="Rerun the latest prompt in a fresh run"
+          >
+            <RotateCcwIcon className="size-3.5" />
+            Rerun Prompt
+          </Button>
+        )}
+
+        {compareHref && (
+          <Button variant="outline" size="sm" className="shrink-0 gap-1.5" asChild>
+            <Link href={compareHref}>
+              <GitCompareArrowsIcon className="size-3.5" />
+              Compare Source
+            </Link>
+          </Button>
+        )}
+
         <Button
           variant="outline"
           size="sm"
@@ -273,7 +352,12 @@ export default function ChatPage({ params }: PageProps) {
       />
 
       {/* Messages */}
-      <ChatMessages chat={chat} onRetry={sendMessage} />
+      <ChatMessages
+        chat={chat}
+        onRetry={sendMessage}
+        onRerunMessage={rerunMessage}
+        onSubmitArtifactRevision={submitArtifactRevision}
+      />
 
       {/* Input */}
       <ChatInput
@@ -283,6 +367,28 @@ export default function ChatPage({ params }: PageProps) {
         disabled={isStreaming}
         isInputRequired={isInputRequired}
         inputModes={inputModes}
+        promptPresets={agentWorkbench?.promptPresets ?? []}
+        defaultMetadata={agentWorkbench?.defaultMetadata}
+        onSavePromptPreset={(text, metadata) => {
+          if (!chat) return;
+          dispatch(savePromptPreset({ agentUrl: chat.agentUrl, text, metadata }));
+          toast({
+            type: "success",
+            message: "Saved prompt preset for this agent.",
+          });
+        }}
+        onSaveDefaultMetadata={(metadata) => {
+          if (!chat) return;
+          dispatch(setAgentDefaultMetadata({ agentUrl: chat.agentUrl, metadata }));
+          toast({
+            type: "success",
+            message: "Saved default metadata for this agent.",
+          });
+        }}
+        onApplyPromptPreset={(presetId) => {
+          if (!chat) return;
+          dispatch(markPromptPresetUsed({ agentUrl: chat.agentUrl, presetId }));
+        }}
       />
 
       {eventsOpen && (
