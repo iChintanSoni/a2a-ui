@@ -5,34 +5,14 @@ import { MemorySaver } from "@langchain/langgraph";
 import { TavilySearch } from "@langchain/tavily";
 import { DynamicStructuredTool, type StructuredToolInterface } from "@langchain/core/tools";
 import { z } from "zod";
-import { ChatGoogle } from "@langchain/google/node";
 import { ChatOllama } from "@langchain/ollama";
 import { env } from "#src/env.ts";
 
-const aiProvider = env.AI_PROVIDER;
-
-const model =
-  aiProvider === "ollama"
-    ? new ChatOllama({
-        model: env.OLLAMA_LLM_MODEL,
-        baseUrl: env.OLLAMA_HOST,
-        temperature: 0.7,
-      })
-    : new ChatGoogle({
-        model: env.GEMINI_LLM_MODEL,
-        apiKey: env.GEMINI_API_KEY,
-        temperature: 0.7,
-      });
-
-const imageModel =
-  aiProvider === "ollama"
-    ? null
-    : new ChatGoogle({
-        model: env.GEMINI_IMAGE_MODEL,
-        apiKey: env.GEMINI_API_KEY,
-        temperature: 0.5,
-        responseModalities: ["IMAGE", "TEXT"],
-      });
+const model = new ChatOllama({
+  model: env.OLLAMA_LLM_MODEL,
+  baseUrl: env.OLLAMA_HOST,
+  temperature: 0.7,
+});
 
 const checkpointer = new MemorySaver();
 
@@ -44,56 +24,42 @@ const generateImageTool = new DynamicStructuredTool({
     prompt: z.string().describe("The text description of the image to generate"),
   }),
   func: async ({ prompt }) => {
-    if (aiProvider === "ollama") {
-      try {
-        const ollamaHost = env.OLLAMA_HOST;
-        const ollamaImageModelName = env.OLLAMA_IMAGE_MODEL;
-        
-        const response = await fetch(`${ollamaHost}/api/generate`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: ollamaImageModelName,
-            prompt,
-            stream: false,
-          }),
-        });
+    try {
+      const ollamaHost = env.OLLAMA_HOST;
+      const ollamaImageModelName = env.OLLAMA_IMAGE_MODEL;
 
-        if (!response.ok) {
-          const body = await response.text();
-          return JSON.stringify({ success: false, error: `Ollama image gen failed: ${body}` });
-        }
+      const response = await fetch(`${ollamaHost}/api/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: ollamaImageModelName,
+          prompt,
+          stream: false,
+        }),
+      });
 
-        const data = (await response.json()) as { images?: string[]; response?: string };
-        let base64Image = data.images?.[0];
-        if (!base64Image && typeof data.response === "string") {
-          // Some Ollama image models return base64 in response instead of images.
-          base64Image = data.response;
-        }
-
-        if (base64Image) {
-          if (base64Image.startsWith("data:")) {
-            base64Image = base64Image.split(",")[1];
-          }
-          return JSON.stringify({ success: true, image_base64: base64Image, mimeType: "image/png" });
-        }
-
-        return JSON.stringify({ success: false, error: "No image found in Ollama response." });
-      } catch (error) {
-        return JSON.stringify({ success: false, error: String(error) });
-      }
-    } else {
-      if (!imageModel) return JSON.stringify({ success: false, error: "Image model not initialized" });
-      const res = await imageModel.invoke(prompt);
-
-      for (const block of res.contentBlocks ?? []) {
-        if (block.type === "file" && block.data) {
-          const mimeType = ((block.mimeType as string) || "image/png").split(";")[0];
-          return JSON.stringify({ success: true, image_base64: block.data, mimeType });
-        }
+      if (!response.ok) {
+        const body = await response.text();
+        return JSON.stringify({ success: false, error: `Ollama image gen failed: ${body}` });
       }
 
-      return JSON.stringify({ success: false, error: "No image returned by model" });
+      const data = (await response.json()) as { images?: string[]; response?: string };
+      let base64Image = data.images?.[0];
+      if (!base64Image && typeof data.response === "string") {
+        // Some Ollama image models return base64 in response instead of images.
+        base64Image = data.response;
+      }
+
+      if (base64Image) {
+        if (base64Image.startsWith("data:")) {
+          base64Image = base64Image.split(",")[1];
+        }
+        return JSON.stringify({ success: true, image_base64: base64Image, mimeType: "image/png" });
+      }
+
+      return JSON.stringify({ success: false, error: "No image found in Ollama response." });
+    } catch (error) {
+      return JSON.stringify({ success: false, error: String(error) });
     }
   },
 });
