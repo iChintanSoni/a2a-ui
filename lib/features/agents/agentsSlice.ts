@@ -1,55 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { AgentCard as SDKAgentCard } from "@a2a-js/sdk";
 import { normalizeModes } from "@/lib/utils/modes";
-
-export interface AgentCapabilities {
-  streaming?: boolean;
-  pushNotifications?: boolean;
-  stateTransitionHistory?: boolean;
-}
-
-export interface AgentInterface {
-  url: string;
-  transport: string;
-}
-
-export interface AgentSkill {
-  id: string;
-  name: string;
-  description: string;
-  tags: string[];
-  examples?: string[];
-  inputModes?: string[];
-  outputModes?: string[];
-  security?: Record<string, string[]>[];
-}
-
-export interface AgentCard {
-  name: string;
-  description: string;
-  url?: string;
-  preferredTransport?: string;
-  additionalInterfaces?: AgentInterface[];
-  version: string;
-  protocolVersion: string;
-  author?: string;
-  capabilities?: AgentCapabilities;
-  skills?: AgentSkill[];
-  defaultInputModes?: string[];
-  defaultOutputModes?: string[];
-  security?: Record<string, string[]>[];
-  securitySchemes?: Record<string, unknown>;
-}
-
-interface RawAgentSkill extends AgentSkill {
-  input_modes?: string[];
-  output_modes?: string[];
-}
-
-interface RawAgentCard extends AgentCard {
-  default_input_modes?: string[];
-  default_output_modes?: string[];
-  skills?: RawAgentSkill[];
-}
 
 export type AuthType = "none" | "bearer" | "api-key" | "basic";
 
@@ -73,7 +24,7 @@ export interface Agent {
   displayName?: string;
   tags?: string[];
   favorite?: boolean;
-  card: AgentCard;
+  card: SDKAgentCard;
   status: "connected" | "disconnected" | "error";
   error?: string;
   auth: AuthConfig;
@@ -90,23 +41,18 @@ const initialState: AgentsState = {
   activeAgentUrl: null,
 };
 
-function normalizeAgentCard(card: AgentCard): AgentCard {
-  const raw = card as RawAgentCard;
-  const defaultInputModes = normalizeModes(
-    raw.defaultInputModes ?? raw.default_input_modes
-  );
-  const defaultOutputModes = normalizeModes(
-    raw.defaultOutputModes ?? raw.default_output_modes
-  );
+function normalizeAgentCard(card: SDKAgentCard): SDKAgentCard {
+  const defaultInputModes = normalizeModes(card.defaultInputModes);
+  const defaultOutputModes = normalizeModes(card.defaultOutputModes);
 
   return {
     ...card,
-    defaultInputModes,
-    defaultOutputModes,
-    skills: raw.skills?.map((skill) => ({
+    defaultInputModes: defaultInputModes ?? [],
+    defaultOutputModes: defaultOutputModes ?? [],
+    skills: (card.skills ?? []).map((skill) => ({
       ...skill,
-      inputModes: normalizeModes(skill.inputModes ?? skill.input_modes),
-      outputModes: normalizeModes(skill.outputModes ?? skill.output_modes),
+      inputModes: normalizeModes(skill.inputModes),
+      outputModes: normalizeModes(skill.outputModes),
     })),
   };
 }
@@ -213,7 +159,7 @@ export const agentsSlice = createSlice({
     },
     updateAgentCard: (
       state,
-      action: PayloadAction<{ agentId: string; card: AgentCard }>
+      action: PayloadAction<{ agentId: string; card: SDKAgentCard }>
     ) => {
       const agent = state.agents.find((a) => a.id === action.payload.agentId);
       if (agent) {

@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import type { AgentCard } from "@a2a-js/sdk";
 import reducer, {
   addAgent,
   removeAgent,
@@ -19,8 +20,13 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
     card: {
       name: "Test Agent",
       description: "desc",
+      url: "https://example.com/agent",
       version: "1.0",
       protocolVersion: "0.1",
+      capabilities: {},
+      defaultInputModes: ["text/plain"],
+      defaultOutputModes: ["text/plain"],
+      skills: [],
     },
     status: "connected",
     auth: { type: "none" },
@@ -175,7 +181,7 @@ describe("agentsSlice", () => {
   });
 
   describe("updateAgentCard", () => {
-    it("normalizes snake_case mode fields when refetching a card", () => {
+    it("normalizes sdk mode aliases when refetching a card", () => {
       let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1" })));
       state = reducer(
         state,
@@ -184,21 +190,23 @@ describe("agentsSlice", () => {
           card: {
             name: "Refetched",
             description: "desc",
+            url: "https://example.com/agent",
             version: "1.0",
             protocolVersion: "0.3.0",
-            default_input_modes: ["text"],
-            default_output_modes: ["json"],
+            capabilities: {},
+            defaultInputModes: ["text"],
+            defaultOutputModes: ["json"],
             skills: [
               {
                 id: "chat",
                 name: "Chat",
                 description: "Talks",
                 tags: [],
-                input_modes: ["text"],
-                output_modes: ["json"],
+                inputModes: ["text"],
+                outputModes: ["json"],
               },
             ],
-          } as unknown as Agent["card"],
+          } satisfies AgentCard,
         })
       );
 

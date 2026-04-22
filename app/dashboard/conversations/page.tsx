@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import type { Part } from "@a2a-js/sdk";
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
@@ -28,7 +29,6 @@ import {
   type AgentMessageItem,
   type ArtifactItem,
   type Chat,
-  type TextPartData,
 } from "@/lib/features/chats/chatsSlice";
 
 type ArchiveFilter = "active" | "archived" | "all";
@@ -46,7 +46,7 @@ function downloadFile(name: string, content: string, type: string) {
 
 function textOf(item: ArtifactItem | AgentMessageItem) {
   return item.parts
-    .filter((part): part is TextPartData => part.kind === "text")
+    .filter((part): part is Extract<Part, { kind: "text" }> => part.kind === "text")
     .map((part) => part.text)
     .join("");
 }

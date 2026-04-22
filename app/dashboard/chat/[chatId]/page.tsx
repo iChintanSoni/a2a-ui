@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { Part } from "@a2a-js/sdk";
 import { useAppSelector } from "@/lib/hooks";
 import { useChatSession } from "@/hooks/use-chat-session";
 import { ChatMessages } from "@/components/chat/ChatMessages";
@@ -20,7 +21,7 @@ import { SquarePenIcon, BugIcon, DownloadIcon, ActivityIcon } from "lucide-react
 import { cn } from "@/lib/utils";
 import { Caption, Small, Muted } from "@/components/typography";
 import { useToast } from "@/lib/toast";
-import type { Chat, ArtifactItem, AgentMessageItem, TextPartData } from "@/lib/features/chats/chatsSlice";
+import type { Chat, ArtifactItem, AgentMessageItem } from "@/lib/features/chats/chatsSlice";
 import { checkCompliance } from "@/lib/utils/compliance";
 import { buildProtocolReport, protocolReportFilename } from "@/lib/utils/protocolReport";
 
@@ -57,7 +58,7 @@ function exportAsMarkdown(chat: Chat) {
 
   const textOf = (item: ArtifactItem | AgentMessageItem) =>
     item.parts
-      .filter((p): p is TextPartData => p.kind === "text")
+      .filter((p): p is Extract<Part, { kind: "text" }> => p.kind === "text")
       .map((p) => p.text)
       .join("");
 

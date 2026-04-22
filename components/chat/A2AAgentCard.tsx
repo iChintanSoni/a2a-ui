@@ -5,7 +5,7 @@ import { AgentCardViewer } from "@/components/agent-card-viewer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Caption, Muted, Small } from "@/components/typography";
-import type { AgentCard } from "@/lib/features/agents/agentsSlice";
+import type { AgentCard } from "@a2a-js/sdk";
 import { checkCompliance } from "@/lib/utils/compliance";
 
 interface A2AAgentCardProps {

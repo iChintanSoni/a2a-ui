@@ -8,7 +8,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import type { AgentCard } from "@/lib/features/agents/agentsSlice";
+import type { AgentCard } from "@a2a-js/sdk";
 
 interface AgentCardViewerProps {
   card: AgentCard;

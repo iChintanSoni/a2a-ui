@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { AgentCard } from "@a2a-js/sdk";
 import { buildProtocolReport } from "@/lib/utils/protocolReport";
 import type { Agent } from "@/lib/features/agents/agentsSlice";
 import type { Chat } from "@/lib/features/chats/chatsSlice";
@@ -9,9 +10,14 @@ const agent: Agent = {
   card: {
     name: "Demo Agent",
     description: "desc",
+    url: "https://agent.test",
     version: "1.0.0",
     protocolVersion: "0.3.0",
-  },
+    capabilities: {},
+    defaultInputModes: ["text/plain"],
+    defaultOutputModes: ["text/plain"],
+    skills: [],
+  } satisfies AgentCard,
   status: "connected",
   auth: { type: "bearer", bearerToken: "secret-token" },
   customHeaders: [{ key: "X-Api-Key", value: "super-secret" }],

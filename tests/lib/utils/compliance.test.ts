@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
+import type { AgentCard } from "@a2a-js/sdk";
 import { checkCompliance } from "@/lib/utils/compliance";
-import type { AgentCard } from "@/lib/features/agents/agentsSlice";
 
 const VALID_CARD: AgentCard = {
   name: "Test Agent",
@@ -157,6 +157,20 @@ describe("checkCompliance", () => {
       const result = checkCompliance(VALID_CARD);
       expect(getCheck(result, "defaultInputModes").pass).toBe(true);
       expect(getCheck(result, "defaultOutputModes").pass).toBe(true);
+    });
+
+    it("flags snake_case-only mode fields instead of normalizing them", () => {
+      const result = checkCompliance(
+        {
+          ...VALID_CARD,
+          defaultInputModes: undefined,
+          defaultOutputModes: undefined,
+          default_input_modes: ["text"],
+          default_output_modes: ["text"],
+        } as unknown as AgentCard,
+      );
+      expect(getCheck(result, "defaultInputModes").pass).toBe(false);
+      expect(getCheck(result, "defaultOutputModes").pass).toBe(false);
     });
   });
 

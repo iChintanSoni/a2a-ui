@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Client } from "@a2a-js/sdk/client";
-import type { AgentCard, AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
+import type { AgentCard } from "@a2a-js/sdk";
+import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
 import { useA2ADebug } from "@/hooks/use-a2a-debug";
 

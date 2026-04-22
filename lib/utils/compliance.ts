@@ -1,4 +1,4 @@
-import type { AgentCard } from "@/lib/features/agents/agentsSlice";
+import type { AgentCard } from "@a2a-js/sdk";
 import { normalizeMode } from "@/lib/utils/modes";
 
 export type ComplianceSeverity = "error" | "warning" | "info";

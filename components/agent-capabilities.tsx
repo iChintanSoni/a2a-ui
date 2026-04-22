@@ -1,9 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Caption, Small } from "@/components/typography";
-import type { AgentCapabilities } from "@/lib/features/agents/agentsSlice";
+import type { AgentCard } from "@a2a-js/sdk";
 
 interface AgentCapabilitiesProps {
-  capabilities?: AgentCapabilities;
+  capabilities?: AgentCard["capabilities"];
   defaultInputModes?: string[];
   defaultOutputModes?: string[];
 }
