@@ -4,6 +4,7 @@ import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Part } from "@a2a-js/sdk";
+import { partsToPlainText } from "@/lib/a2a/parts";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useChatSession } from "@/hooks/use-chat-session";
 import { ChatMessages } from "@/components/chat/ChatMessages";
@@ -87,7 +88,7 @@ function exportAsMarkdown(chat: Chat) {
   for (const item of chat.items) {
     switch (item.kind) {
       case "user-message":
-        lines.push(`**You:** ${item.text}`, "");
+        lines.push(`**You:** ${partsToPlainText(item.parts)}`, "");
         break;
       case "artifact": {
         const text = textOf(item);
@@ -171,7 +172,7 @@ export default function ChatPage({ params }: PageProps) {
   useEffect(() => {
     const rerun = consumeRerunDraft(chatId);
     if (!rerun) return;
-    sendMessage(rerun.text, rerun.metadata).catch((err) => {
+    sendMessage(rerun.parts, rerun.metadata).catch((err) => {
       toast({
         type: "error",
         message: err instanceof Error ? err.message : "Unable to rerun prompt.",
@@ -222,7 +223,7 @@ export default function ChatPage({ params }: PageProps) {
     const nextChatId = crypto.randomUUID();
     dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId }));
     queueRerunDraft(nextChatId, {
-      text: item.text,
+      parts: item.parts,
       metadata: item.metadata,
     });
     router.push(`/dashboard/chat/${nextChatId}`);
@@ -230,7 +231,7 @@ export default function ChatPage({ params }: PageProps) {
 
   const submitArtifactRevision = async (item: ArtifactItem, revisedText: string) => {
     const revision = buildArtifactRevisionMessage(item, revisedText);
-    await sendMessage(revision.text, revision.metadata);
+    await sendMessage(revision.parts, revision.metadata);
     toast({
       type: "success",
       message: `Revision sent for ${item.name ?? item.id}.`,
@@ -307,7 +308,7 @@ export default function ChatPage({ params }: PageProps) {
           Clone Run
         </Button>
 
-        {lastUserMessage && !lastUserMessage.attachments?.length && (
+        {lastUserMessage && (
           <Button
             variant="outline"
             size="sm"
@@ -354,7 +355,7 @@ export default function ChatPage({ params }: PageProps) {
       {/* Messages */}
       <ChatMessages
         chat={chat}
-        onRetry={sendMessage}
+        onRetry={(item) => sendMessage(item.parts, item.metadata)}
         onRerunMessage={rerunMessage}
         onSubmitArtifactRevision={submitArtifactRevision}
       />

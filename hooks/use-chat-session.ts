@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { addChat, addUserMessage, applyAgentMessage, applyArtifactUpdate, appendExecutionEvent, applyStatusUpdate, applyToolCall, sanitizeStaleStreaming } from "@/lib/features/chats/chatsSlice";
 import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
-import type { A2AExternalMessageStore } from "@/lib/a2a/types";
+import type { A2AExternalMessageStore, OutgoingMessagePartInput } from "@/lib/a2a/types";
 import { useA2AConnection } from "@/hooks/use-a2a-connection";
 import { useA2ADebug } from "@/hooks/use-a2a-debug";
 import { useA2AMessages } from "@/hooks/use-a2a-messages";
@@ -20,9 +20,8 @@ export interface ChatSessionState {
   validationWarnings: ReturnType<typeof useA2ADebug>["validationWarnings"];
   cancelStream: () => void;
   sendMessage: (
-    text: string,
+    parts: OutgoingMessagePartInput[],
     metadata?: Record<string, string>,
-    attachments?: File[],
   ) => Promise<void>;
   newSession: () => void;
   clearLogs: () => void;
@@ -92,9 +91,9 @@ export function useChatSession(chatId: string): ChatSessionState {
   });
 
   const safeSendMessage = useCallback<ChatSessionState["sendMessage"]>(
-    async (text, metadata, attachments) => {
+    async (parts, metadata) => {
       if (!chat || !agent) return;
-      await sendMessage(text, metadata, attachments);
+      await sendMessage(parts, metadata);
     },
     [agent, chat, sendMessage],
   );

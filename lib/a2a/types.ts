@@ -1,4 +1,4 @@
-import type { AgentCard, FilePart, Part, TaskState } from "@a2a-js/sdk";
+import type { AgentCard, Part, TaskState } from "@a2a-js/sdk";
 import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
 import type { Chat } from "@/lib/features/chats/chatsSlice";
 import type { ExecutionEvent } from "@/lib/a2a/execution-events";
@@ -9,10 +9,13 @@ export type A2ASessionPersistenceMode = "memory" | "none" | "external";
 
 export interface A2AMessageContextInput {
   text: string;
+  parts: Part[];
   contextId: string;
   agentUrl: string;
   metadata?: Record<string, string>;
 }
+
+export type OutgoingMessagePartInput = Part | File;
 
 export interface A2AMessageContextResult {
   metadata?: Record<string, string>;
@@ -45,8 +48,7 @@ export interface A2AExternalMessageStore {
   addUserMessage: (payload: {
     chatId: string;
     id: string;
-    text: string;
-    attachments?: FilePart[];
+    parts: Part[];
     metadata?: Record<string, string>;
     isInputResponse?: boolean;
   }) => void;

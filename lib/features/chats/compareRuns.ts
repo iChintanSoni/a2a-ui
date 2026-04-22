@@ -1,5 +1,6 @@
 import type { Chat, ArtifactItem } from "./chatsSlice";
 import { getArtifactText, summarizeTextDiff, type TextDiffSummary } from "./artifactRevision";
+import { partsToPlainText } from "@/lib/a2a/parts";
 
 export interface ComparableArtifact {
   key: string;
@@ -89,7 +90,7 @@ function toSnapshot(chat: Chat): RunSnapshot {
     title: chat.title,
     agentName: chat.agentName,
     agentUrl: chat.agentUrl,
-    latestPrompt: latestPrompt?.text ?? "",
+    latestPrompt: latestPrompt ? partsToPlainText(latestPrompt.parts) : "",
     latestPromptMetadata: latestPrompt?.metadata,
     latestOutput: getLatestOutput(chat),
     artifacts: getComparableArtifacts(chat),

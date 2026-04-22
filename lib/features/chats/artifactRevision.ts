@@ -1,3 +1,4 @@
+import type { Part } from "@a2a-js/sdk";
 import type { ArtifactItem } from "./chatsSlice";
 
 export interface TextDiffSummary {
@@ -33,17 +34,18 @@ export function summarizeTextDiff(original: string, revised: string): TextDiffSu
 export function buildArtifactRevisionMessage(item: ArtifactItem, revisedText: string) {
   const originalText = getArtifactText(item);
   const diff = summarizeTextDiff(originalText, revisedText);
+  const text = [
+    `Use this revised artifact as the latest working version for task ${item.taskId}.`,
+    `Artifact: ${item.name ?? item.id}`,
+    `Diff summary: ${diff.addedLines} added line${diff.addedLines === 1 ? "" : "s"}, ${diff.removedLines} removed line${diff.removedLines === 1 ? "" : "s"}.`,
+    "",
+    "```text",
+    revisedText,
+    "```",
+  ].join("\n");
 
   return {
-    text: [
-      `Use this revised artifact as the latest working version for task ${item.taskId}.`,
-      `Artifact: ${item.name ?? item.id}`,
-      `Diff summary: ${diff.addedLines} added line${diff.addedLines === 1 ? "" : "s"}, ${diff.removedLines} removed line${diff.removedLines === 1 ? "" : "s"}.`,
-      "",
-      "```text",
-      revisedText,
-      "```",
-    ].join("\n"),
+    parts: [{ kind: "text", text }] satisfies Part[],
     metadata: {
       artifactId: item.id,
       artifactName: item.name ?? item.id,

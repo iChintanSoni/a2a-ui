@@ -1,14 +1,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { FilePart, Part, TaskState } from "@a2a-js/sdk";
+import type { Part, TaskState } from "@a2a-js/sdk";
 import type { ExecutionEvent } from "@/lib/a2a/execution-events";
+import { buildPartsPreview } from "@/lib/a2a/parts";
 
 // ─── Chat display item types ─────────────────────────────────────────────────
 
 export type UserMessageItem = {
   kind: "user-message";
   id: string;
-  text: string;
-  attachments?: FilePart[];
+  parts: Part[];
   metadata?: Record<string, string>;
   isInputResponse?: boolean; // true when this message continues an input-required task
   timestamp: number;
@@ -220,8 +220,7 @@ export const chatsSlice = createSlice({
       action: PayloadAction<{
         chatId: string;
         id: string;
-        text: string;
-        attachments?: FilePart[];
+        parts: Part[];
         metadata?: Record<string, string>;
         isInputResponse?: boolean;
       }>,
@@ -231,14 +230,13 @@ export const chatsSlice = createSlice({
       const item: UserMessageItem = {
         kind: "user-message",
         id: action.payload.id,
-        text: action.payload.text,
-        attachments: action.payload.attachments,
+        parts: action.payload.parts,
         metadata: action.payload.metadata,
         isInputResponse: action.payload.isInputResponse,
         timestamp: Date.now(),
       };
       chat.items.push(item);
-      chat.lastMessage = action.payload.text;
+      chat.lastMessage = buildPartsPreview(action.payload.parts);
       chat.timestamp = item.timestamp;
     },
 

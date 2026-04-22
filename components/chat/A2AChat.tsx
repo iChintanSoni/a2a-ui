@@ -123,7 +123,10 @@ export function A2AChat({
         outputModes={outputModes}
       />
 
-      <ChatMessages chat={chat} onRetry={sendMessage} />
+      <ChatMessages
+        chat={chat}
+        onRetry={(item) => sendMessage(item.parts, item.metadata)}
+      />
 
       <ChatInput
         onSend={sendMessage}

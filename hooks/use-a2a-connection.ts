@@ -63,6 +63,14 @@ export function useA2AConnection({
   const error = transportState.key === configKey ? transportState.error : null;
   const card = cardState.key === configKey ? cardState.card : (initialCard ?? null);
 
+  // Keep debug in a ref so getClient doesn't need it as a dep (debug is a new
+  // object every render, which would otherwise cause getClient to change and
+  // re-trigger the auto-connect effect on every re-render).
+  const debugRef = useRef(debug);
+  useEffect(() => {
+    debugRef.current = debug;
+  });
+
   const resetConnection = useCallback(() => {
     clientRef.current = null;
   }, []);
@@ -79,8 +87,8 @@ export function useA2AConnection({
       const factory = createClientFactory(
         auth,
         headers,
-        debug?.interceptors,
-        debug?.onTransportLog,
+        debugRef.current?.interceptors,
+        debugRef.current?.onTransportLog,
       );
       const client = await factory.createFromUrl(agentUrl);
       clientRef.current = client;
@@ -105,7 +113,7 @@ export function useA2AConnection({
       });
       throw err;
     }
-  }, [agentUrl, auth, configKey, debug, headers]);
+  }, [agentUrl, auth, configKey, headers]);
 
   const refreshAgentCard = useCallback(async () => {
     const client = await getClient();

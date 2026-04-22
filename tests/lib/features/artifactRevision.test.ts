@@ -40,7 +40,12 @@ describe("artifactRevision", () => {
       artifactTaskId: "task-1",
       artifactRevision: "true",
     });
-    expect(revision.text).toContain("Use this revised artifact as the latest working version");
-    expect(revision.text).toContain("line three");
+    expect(revision.parts[0]).toMatchObject({ kind: "text" });
+    expect(revision.parts[0].kind === "text" ? revision.parts[0].text : "").toContain(
+      "Use this revised artifact as the latest working version",
+    );
+    expect(revision.parts[0].kind === "text" ? revision.parts[0].text : "").toContain(
+      "line three",
+    );
   });
 });

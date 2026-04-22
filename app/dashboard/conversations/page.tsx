@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Part } from "@a2a-js/sdk";
+import { partsToPlainText } from "@/lib/a2a/parts";
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
@@ -64,7 +65,7 @@ function chatSearchText(chat: Chat) {
     chat.agentUrl,
     chat.lastMessage,
     ...chat.items.flatMap((item) => {
-      if (item.kind === "user-message") return [item.text];
+      if (item.kind === "user-message") return [partsToPlainText(item.parts)];
       if (item.kind === "artifact" || item.kind === "agent-message") return [textOf(item)];
       if (item.kind === "tool-call") return [item.toolName, item.query];
       if (item.kind === "task-status") return [item.state];
@@ -81,7 +82,7 @@ function exportMarkdown(chats: Chat[]) {
   for (const chat of chats) {
     lines.push(`# ${chat.title}`, `Agent: ${chat.agentName}`, "");
     for (const item of chat.items) {
-      if (item.kind === "user-message") lines.push(`**You:** ${item.text}`, "");
+      if (item.kind === "user-message") lines.push(`**You:** ${partsToPlainText(item.parts)}`, "");
       if (item.kind === "artifact" || item.kind === "agent-message") {
         const text = textOf(item);
         if (text) lines.push(`**Agent:** ${text}`, "");

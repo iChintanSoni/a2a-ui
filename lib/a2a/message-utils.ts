@@ -1,13 +1,17 @@
 import type { FilePart, Message, Part } from "@a2a-js/sdk";
-import type { A2AContextConfig, A2AMessageContextInput } from "@/lib/a2a/types";
+import { getTextPartsText } from "@/lib/a2a/parts";
+import type {
+  A2AContextConfig,
+  A2AMessageContextInput,
+  OutgoingMessagePartInput,
+} from "@/lib/a2a/types";
 
 interface BuildOutgoingMessageInput {
-  text: string;
+  parts: Part[];
   messageId: string;
   contextId: string;
   agentUrl: string;
   metadata?: Record<string, string>;
-  fileParts?: FilePart[];
   inputTaskId?: string;
   context?: A2AContextConfig;
 }
@@ -73,12 +77,54 @@ export async function encodeAttachments(files: File[]): Promise<FilePart[]> {
   );
 }
 
+function injectHiddenContext(parts: Part[], hiddenSystemContext?: string): Part[] {
+  const hiddenEnvelope = buildHiddenContextEnvelope(hiddenSystemContext);
+  if (!hiddenEnvelope) return parts;
+
+  let injected = false;
+  const nextParts = parts.map((part) => {
+    if (injected || part.kind !== "text") return part;
+    injected = true;
+    return {
+      ...part,
+      text: part.text ? `${hiddenEnvelope}\n\n${part.text}` : hiddenEnvelope,
+    };
+  });
+
+  if (injected) return nextParts;
+  return [{ kind: "text", text: hiddenEnvelope }, ...parts];
+}
+
+function isNativeFile(part: OutgoingMessagePartInput): part is File {
+  return typeof File !== "undefined" && part instanceof File;
+}
+
+export async function normalizeOutgoingParts(
+  parts: OutgoingMessagePartInput[],
+): Promise<Part[]> {
+  const normalized: Part[] = [];
+
+  for (const part of parts) {
+    if (isNativeFile(part)) {
+      const [filePart] = await encodeAttachments([part]);
+      normalized.push(filePart);
+      continue;
+    }
+
+    normalized.push(part);
+  }
+
+  return normalized;
+}
+
 export async function buildOutgoingMessage(
   input: BuildOutgoingMessageInput,
 ): Promise<Message> {
+  const text = getTextPartsText(input.parts);
   const resolvedContext = await resolveContextConfig(
     {
-      text: input.text,
+      text,
+      parts: input.parts,
       contextId: input.contextId,
       agentUrl: input.agentUrl,
       metadata: input.metadata,
@@ -86,17 +132,7 @@ export async function buildOutgoingMessage(
     input.context,
   );
 
-  const hiddenEnvelope = buildHiddenContextEnvelope(resolvedContext.hiddenSystemContext);
-  const parts: Part[] = [
-    {
-      kind: "text",
-      text: hiddenEnvelope ? `${hiddenEnvelope}\n\n${input.text}` : input.text,
-    },
-    ...((input.fileParts ?? []).map((filePart) => ({
-      kind: "file" as const,
-      file: filePart.file as import("@a2a-js/sdk").FilePart["file"],
-    })) satisfies Part[]),
-  ];
+  const parts = injectHiddenContext(input.parts, resolvedContext.hiddenSystemContext);
 
   return {
     kind: "message",

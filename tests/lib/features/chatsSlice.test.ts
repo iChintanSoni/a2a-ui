@@ -34,6 +34,10 @@ function makeChat(
   };
 }
 
+function userTextParts(text: string) {
+  return [{ kind: "text" as const, text }];
+}
+
 describe("chatsSlice", () => {
   describe("addChat", () => {
     it("adds a chat with an empty items array", () => {
@@ -64,7 +68,7 @@ describe("chatsSlice", () => {
     it("updates metadata when the same id is added again (no items reset)", () => {
       let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1", title: "Old" })));
       // Add a message first
-      state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", text: "hello" }));
+      state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", parts: userTextParts("hello") }));
       // Re-add same chat with updated title
       state = reducer(state, addChat(makeChat({ id: "c1", title: "New" })));
       expect(state.chats).toHaveLength(1);
@@ -80,7 +84,7 @@ describe("chatsSlice", () => {
         INITIAL_STATE,
         importChat({
           ...makeChat({ id: "imported" }),
-          items: [{ kind: "user-message", id: "m1", text: "hello", timestamp: 1 }],
+          items: [{ kind: "user-message", id: "m1", parts: userTextParts("hello"), timestamp: 1 }],
           executionEvents: [],
         })
       );
@@ -152,7 +156,7 @@ describe("chatsSlice", () => {
         INITIAL_STATE,
         addChat(makeChat({ id: "c1", title: "Original chat", lastMessage: "hello" })),
       );
-      state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", text: "Hello" }));
+      state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", parts: userTextParts("Hello") }));
       state = reducer(state, cloneChat({ chatId: "c1", newChatId: "c2" }));
 
       expect(state.activeChatId).toBe("c2");
@@ -167,22 +171,35 @@ describe("chatsSlice", () => {
   describe("addUserMessage", () => {
     it("appends a user-message item to the chat", () => {
       let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1" })));
-      state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", text: "Hello" }));
+      state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", parts: userTextParts("Hello") }));
       const item = state.chats[0].items[0];
       expect(item.kind).toBe("user-message");
-      expect((item as { text: string }).text).toBe("Hello");
+      expect((item as { parts: { text: string }[] }).parts[0].text).toBe("Hello");
     });
 
     it("updates lastMessage and timestamp on the chat", () => {
       let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1", lastMessage: "", timestamp: 0 })));
-      state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", text: "Hi" }));
+      state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", parts: userTextParts("Hi") }));
       expect(state.chats[0].lastMessage).toBe("Hi");
       expect(state.chats[0].timestamp).toBeGreaterThan(0);
     });
 
+    it("builds a preview for data-only messages", () => {
+      let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1", lastMessage: "", timestamp: 0 })));
+      state = reducer(
+        state,
+        addUserMessage({
+          chatId: "c1",
+          id: "m1",
+          parts: [{ kind: "data", data: { query: "status", limit: 3 } }],
+        }),
+      );
+      expect(state.chats[0].lastMessage).toContain('"query": "status"');
+    });
+
     it("is a no-op for an unknown chatId", () => {
       let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1" })));
-      state = reducer(state, addUserMessage({ chatId: "unknown", id: "m1", text: "Hi" }));
+      state = reducer(state, addUserMessage({ chatId: "unknown", id: "m1", parts: userTextParts("Hi") }));
       expect(state.chats[0].items).toHaveLength(0);
     });
   });

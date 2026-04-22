@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import type { Message, TaskArtifactUpdateEvent, TaskStatusUpdateEvent } from "@a2a-js/sdk";
+import { getTextPartsText } from "@/lib/a2a/parts";
 import chatsReducer, {
   addChat,
   addUserMessage,
@@ -15,10 +16,11 @@ import chatsReducer, {
   type Chat,
   type ChatsState,
 } from "@/lib/features/chats/chatsSlice";
-import { buildOutgoingMessage, encodeAttachments } from "@/lib/a2a/message-utils";
+import { buildOutgoingMessage, normalizeOutgoingParts } from "@/lib/a2a/message-utils";
 import type {
   A2AContextConfig,
   A2AExternalMessageStore,
+  OutgoingMessagePartInput,
   A2ASessionPersistenceMode,
 } from "@/lib/a2a/types";
 import {
@@ -234,19 +236,23 @@ export function useA2AMessages({
   }, [connection, messageStore, session]);
 
   const sendMessage = useCallback(
-    async (text: string, metadata?: Record<string, string>, attachments?: File[]) => {
+    async (partsInput: OutgoingMessagePartInput[], metadata?: Record<string, string>) => {
       if (!chat) return;
+
+      const parts = await normalizeOutgoingParts(partsInput);
+      if (parts.length === 0) return;
 
       session.beginStream();
 
       const messageId = crypto.randomUUID();
-      const fileParts = attachments?.length ? await encodeAttachments(attachments) : [];
+      const text = getTextPartsText(parts);
+      const fileCount = parts.filter((part) => part.kind === "file").length;
+      const dataCount = parts.filter((part) => part.kind === "data").length;
 
       messageStore.addUserMessage({
         chatId: session.contextId,
         id: messageId,
-        text,
-        attachments: fileParts.length > 0 ? fileParts : undefined,
+        parts,
         metadata: metadata && Object.keys(metadata).length > 0 ? metadata : undefined,
         isInputResponse: inputRequiredTaskId != null,
       });
@@ -267,7 +273,9 @@ export function useA2AMessages({
           details: {
             text,
             metadata,
-            attachmentCount: fileParts.length,
+            partCount: parts.length,
+            fileCount,
+            dataCount,
             hiddenContextConfigured:
               Boolean(context?.hiddenSystemContext) ||
               Boolean(context?.messageContextEnrichers?.length),
@@ -278,12 +286,11 @@ export function useA2AMessages({
       try {
         const client = await connection.getClient();
         const outgoingMessage = await buildOutgoingMessage({
-          text,
+          parts,
           messageId,
           contextId: session.contextId,
           agentUrl: connection.agentUrl,
           metadata,
-          fileParts,
           inputTaskId: inputRequiredTaskId,
           context,
         });
