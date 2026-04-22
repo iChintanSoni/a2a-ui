@@ -1,8 +1,8 @@
-import type { PartData } from "@/lib/features/chats/chatsSlice";
+import type { Part } from "@a2a-js/sdk";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface Props {
-  part: PartData;
+  part: Part;
 }
 
 export function PartRenderer({ part }: Props) {

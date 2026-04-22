@@ -1,26 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { FilePart, Part, TaskState } from "@a2a-js/sdk";
 import type { ExecutionEvent } from "@/lib/a2a/execution-events";
-
-// ─── Serializable A2A Part types ────────────────────────────────────────────
-
-export type TextPartData = { kind: "text"; text: string };
-export type FilePartData = {
-  kind: "file";
-  file: { name?: string; mimeType?: string } & ({ bytes: string } | { uri: string });
-};
-export type DataPartData = { kind: "data"; data: Record<string, unknown> };
-export type PartData = TextPartData | FilePartData | DataPartData;
-
-export type TaskState =
-  | "submitted"
-  | "working"
-  | "input-required"
-  | "completed"
-  | "canceled"
-  | "failed"
-  | "rejected"
-  | "auth-required"
-  | "unknown";
 
 // ─── Chat display item types ─────────────────────────────────────────────────
 
@@ -28,7 +8,7 @@ export type UserMessageItem = {
   kind: "user-message";
   id: string;
   text: string;
-  attachments?: FilePartData[];
+  attachments?: FilePart[];
   metadata?: Record<string, string>;
   isInputResponse?: boolean; // true when this message continues an input-required task
   timestamp: number;
@@ -39,7 +19,7 @@ export type TaskStatusItem = {
   id: string; // taskId
   taskId: string;
   state: TaskState;
-  statusMessage?: { parts: PartData[] };
+  statusMessage?: { parts: Part[] };
   timestamp: number;
 };
 
@@ -49,7 +29,7 @@ export type ArtifactItem = {
   taskId: string;
   name?: string;
   description?: string;
-  parts: PartData[];
+  parts: Part[];
   metadata?: Record<string, unknown>;
   isStreaming: boolean;
   timestamp: number;
@@ -59,7 +39,7 @@ export type AgentMessageItem = {
   kind: "agent-message";
   id: string; // messageId
   taskId?: string;
-  parts: PartData[];
+  parts: Part[];
   timestamp: number;
 };
 
@@ -195,7 +175,7 @@ export const chatsSlice = createSlice({
         chatId: string;
         id: string;
         text: string;
-        attachments?: FilePartData[];
+        attachments?: FilePart[];
         metadata?: Record<string, string>;
         isInputResponse?: boolean;
       }>,
@@ -222,7 +202,7 @@ export const chatsSlice = createSlice({
         chatId: string;
         taskId: string;
         state: TaskState;
-        statusMessage?: { parts: PartData[] };
+        statusMessage?: { parts: Part[] };
       }>,
     ) => {
       const chat = findChat(state, action.payload.chatId);
@@ -255,7 +235,7 @@ export const chatsSlice = createSlice({
         artifactId: string;
         name?: string;
         description?: string;
-        parts: PartData[];
+        parts: Part[];
         metadata?: Record<string, unknown>;
         append: boolean;
         lastChunk: boolean;
@@ -276,7 +256,7 @@ export const chatsSlice = createSlice({
             if (newPart.kind === "text") {
               const lastPart = existing.parts[existing.parts.length - 1];
               if (lastPart?.kind === "text") {
-                (lastPart as TextPartData).text += newPart.text;
+                lastPart.text += newPart.text;
               } else {
                 existing.parts.push(newPart);
               }
@@ -348,7 +328,7 @@ export const chatsSlice = createSlice({
         chatId: string;
         messageId: string;
         taskId?: string;
-        parts: PartData[];
+        parts: Part[];
       }>,
     ) => {
       const chat = findChat(state, action.payload.chatId);

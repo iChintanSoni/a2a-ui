@@ -1,5 +1,4 @@
-import type { Message, Part } from "@a2a-js/sdk";
-import type { FilePartData } from "@/lib/features/chats/chatsSlice";
+import type { FilePart, Message, Part } from "@a2a-js/sdk";
 import type { A2AContextConfig, A2AMessageContextInput } from "@/lib/a2a/types";
 
 interface BuildOutgoingMessageInput {
@@ -8,7 +7,7 @@ interface BuildOutgoingMessageInput {
   contextId: string;
   agentUrl: string;
   metadata?: Record<string, string>;
-  fileParts?: FilePartData[];
+  fileParts?: FilePart[];
   inputTaskId?: string;
   context?: A2AContextConfig;
 }
@@ -53,11 +52,11 @@ export async function resolveContextConfig(
   };
 }
 
-export async function encodeAttachments(files: File[]): Promise<FilePartData[]> {
+export async function encodeAttachments(files: File[]): Promise<FilePart[]> {
   return Promise.all(
     files.map(
       (file) =>
-        new Promise<FilePartData>((resolve, reject) => {
+        new Promise<FilePart>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => {
             const dataUrl = reader.result as string;

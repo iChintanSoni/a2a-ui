@@ -1,4 +1,5 @@
-import type { AgentCard, AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
+import type { AgentCard, FilePart, Part, TaskState } from "@a2a-js/sdk";
+import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
 import type { Chat } from "@/lib/features/chats/chatsSlice";
 import type { ExecutionEvent } from "@/lib/a2a/execution-events";
 import type { LogEntry } from "@/lib/utils/debugInterceptor";
@@ -45,15 +46,15 @@ export interface A2AExternalMessageStore {
     chatId: string;
     id: string;
     text: string;
-    attachments?: import("@/lib/features/chats/chatsSlice").FilePartData[];
+    attachments?: FilePart[];
     metadata?: Record<string, string>;
     isInputResponse?: boolean;
   }) => void;
   applyStatusUpdate: (payload: {
     chatId: string;
     taskId: string;
-    state: import("@/lib/features/chats/chatsSlice").TaskState;
-    statusMessage?: { parts: import("@/lib/features/chats/chatsSlice").PartData[] };
+    state: TaskState;
+    statusMessage?: { parts: Part[] };
   }) => void;
   applyArtifactUpdate: (payload: {
     chatId: string;
@@ -61,7 +62,7 @@ export interface A2AExternalMessageStore {
     artifactId: string;
     name?: string;
     description?: string;
-    parts: import("@/lib/features/chats/chatsSlice").PartData[];
+    parts: Part[];
     metadata?: Record<string, unknown>;
     append: boolean;
     lastChunk: boolean;
@@ -78,7 +79,7 @@ export interface A2AExternalMessageStore {
     chatId: string;
     messageId: string;
     taskId?: string;
-    parts: import("@/lib/features/chats/chatsSlice").PartData[];
+    parts: Part[];
   }) => void;
   appendExecutionEvent: (payload: {
     chatId: string;

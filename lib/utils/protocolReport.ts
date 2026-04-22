@@ -1,4 +1,5 @@
-import type { Agent, AgentCard } from "@/lib/features/agents/agentsSlice";
+import type { Agent } from "@/lib/features/agents/agentsSlice";
+import type { AgentCard } from "@a2a-js/sdk";
 import type { Chat } from "@/lib/features/chats/chatsSlice";
 import type { ExecutionEvent } from "@/lib/a2a/execution-events";
 import type { ComplianceResult, ValidationWarning } from "@/lib/utils/compliance";

@@ -14,7 +14,6 @@ import chatsReducer, {
   sanitizeStaleStreaming,
   type Chat,
   type ChatsState,
-  type PartData,
 } from "@/lib/features/chats/chatsSlice";
 import { buildOutgoingMessage, encodeAttachments } from "@/lib/a2a/message-utils";
 import type {
@@ -319,7 +318,7 @@ export function useA2AMessages({
                 | "auth-required"
                 | "unknown",
               statusMessage: statusEvent.status.message
-                ? { parts: statusEvent.status.message.parts as PartData[] }
+                ? { parts: statusEvent.status.message.parts }
                 : undefined,
             });
             messageStore.appendExecutionEvent({
@@ -408,7 +407,7 @@ export function useA2AMessages({
               artifactId: artifactEvent.artifact.artifactId,
               name: artifactEvent.artifact.name,
               description: artifactEvent.artifact.description,
-              parts: artifactEvent.artifact.parts as PartData[],
+              parts: artifactEvent.artifact.parts,
               metadata: artifactEvent.artifact.metadata,
               append: artifactEvent.append ?? false,
               lastChunk: artifactEvent.lastChunk ?? false,
@@ -448,7 +447,7 @@ export function useA2AMessages({
                 chatId: session.contextId,
                 messageId: agentMessage.messageId,
                 taskId: agentMessage.taskId,
-                parts: agentMessage.parts as PartData[],
+                parts: agentMessage.parts,
               });
               messageStore.appendExecutionEvent({
                 chatId: session.contextId,
