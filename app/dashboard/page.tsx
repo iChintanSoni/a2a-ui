@@ -75,6 +75,9 @@ export default function DashboardPage() {
           <Button variant="outline" asChild>
             <Link href="/dashboard/conversations">Open Conversations</Link>
           </Button>
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/embed">Open Embed Demo</Link>
+          </Button>
         </div>
       )}
     </div>
