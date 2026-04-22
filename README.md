@@ -139,7 +139,7 @@ npm install
 npm run dev
 ```
 
-The demo server listens on [http://localhost:3001](http://localhost:3001) by default. Use `AI_PROVIDER=ollama` for a local Ollama path, or keep `AI_PROVIDER=gemini` and set `GEMINI_API_KEY` in `server/.env`.
+The demo server listens on [http://localhost:3001](http://localhost:3001) by default and uses Ollama for its LangChain agent. Configure `OLLAMA_HOST`, `OLLAMA_LLM_MODEL`, and `OLLAMA_IMAGE_MODEL` in `server/.env` as needed.
 
 ### Docker
 
