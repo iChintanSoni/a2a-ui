@@ -1,5 +1,6 @@
 import type { Agent, AgentCard } from "@/lib/features/agents/agentsSlice";
 import type { Chat } from "@/lib/features/chats/chatsSlice";
+import type { ExecutionEvent } from "@/lib/a2a/execution-events";
 import type { ComplianceResult, ValidationWarning } from "@/lib/utils/compliance";
 import { maskSecrets, type LogEntry } from "@/lib/utils/debugInterceptor";
 
@@ -17,6 +18,8 @@ export interface ProtocolReport {
   failedRequests: LogEntry[];
   validationWarnings: ValidationWarning[];
   debugLogCount: number;
+  executionEventCount: number;
+  executionEvents: ExecutionEvent[];
   chat?: {
     id: string;
     title: string;
@@ -59,6 +62,8 @@ export function buildProtocolReport(input: {
     failedRequests,
     validationWarnings: input.validationWarnings,
     debugLogCount: input.logs.length,
+    executionEventCount: input.chat?.executionEvents.length ?? 0,
+    executionEvents: input.chat?.executionEvents ?? [],
     chat: input.chat
       ? {
           id: input.chat.id,

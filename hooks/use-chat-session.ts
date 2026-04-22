@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { addChat, addUserMessage, applyAgentMessage, applyArtifactUpdate, applyStatusUpdate, applyToolCall, sanitizeStaleStreaming } from "@/lib/features/chats/chatsSlice";
+import { addChat, addUserMessage, applyAgentMessage, applyArtifactUpdate, appendExecutionEvent, applyStatusUpdate, applyToolCall, sanitizeStaleStreaming } from "@/lib/features/chats/chatsSlice";
 import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
 import type { A2AExternalMessageStore } from "@/lib/a2a/types";
 import { useA2AConnection } from "@/hooks/use-a2a-connection";
@@ -78,6 +78,7 @@ export function useChatSession(chatId: string): ChatSessionState {
       applyArtifactUpdate: (payload) => dispatch(applyArtifactUpdate(payload)),
       applyToolCall: (payload) => dispatch(applyToolCall(payload)),
       applyAgentMessage: (payload) => dispatch(applyAgentMessage(payload)),
+      appendExecutionEvent: (payload) => dispatch(appendExecutionEvent(payload)),
     };
   }, [chat, dispatch]);
 

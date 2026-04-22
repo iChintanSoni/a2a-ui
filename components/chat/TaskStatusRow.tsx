@@ -10,12 +10,14 @@ import {
   RotateCcw,
 } from "lucide-react";
 import type { TaskStatusItem } from "@/lib/features/chats/chatsSlice";
+import type { TaskTimelineStage } from "@/lib/a2a/execution-events";
 import { PartRenderer } from "./PartRenderer";
 import { Muted } from "@/components/typography";
 import { Button } from "@/components/ui/button";
 
 interface Props {
   item: TaskStatusItem;
+  timelineStages?: TaskTimelineStage[];
   onInspect?: () => void;
   onRetry?: () => void;
 }
@@ -72,7 +74,7 @@ const STATE_CONFIG: Record<
   },
 };
 
-export function TaskStatusRow({ item, onInspect, onRetry }: Props) {
+export function TaskStatusRow({ item, timelineStages = [], onInspect, onRetry }: Props) {
   const config = STATE_CONFIG[item.state] ?? STATE_CONFIG.unknown;
   const Icon = config.icon;
 
@@ -114,6 +116,18 @@ export function TaskStatusRow({ item, onInspect, onRetry }: Props) {
         <Icon className={`size-3.5 ${config.spin ? "animate-spin" : ""}`} />
         <span>{config.label}</span>
       </div>
+      {timelineStages.length > 0 && (
+        <div className="ms-5 flex flex-wrap gap-1">
+          {timelineStages.map((stage) => (
+            <span
+              key={stage.key}
+              className="rounded-full border bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground"
+            >
+              {stage.label}
+            </span>
+          ))}
+        </div>
+      )}
       {item.statusMessage && item.statusMessage.parts.length > 0 && (
         <Muted className="ms-5">
           {item.statusMessage.parts.map((part, i) => (

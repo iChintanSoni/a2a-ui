@@ -8,6 +8,7 @@ import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { SessionInfoBar } from "@/components/chat/SessionInfoBar";
 import { DebugPanel } from "@/components/chat/DebugPanel";
+import { EventExplorer } from "@/components/chat/EventExplorer";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,7 +16,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SquarePenIcon, BugIcon, DownloadIcon } from "lucide-react";
+import { SquarePenIcon, BugIcon, DownloadIcon, ActivityIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Caption, Small, Muted } from "@/components/typography";
 import { useToast } from "@/lib/toast";
@@ -106,6 +107,7 @@ export default function ChatPage({ params }: PageProps) {
     useChatSession(chatId);
 
   const [debugOpen, setDebugOpen] = useState(false);
+  const [eventsOpen, setEventsOpen] = useState(false);
   const { toast } = useToast();
 
   // Show error as an actionable toast
@@ -203,6 +205,17 @@ export default function ChatPage({ params }: PageProps) {
         <Button
           variant="ghost"
           size="icon"
+          className={cn("size-8 shrink-0", eventsOpen && "bg-muted text-foreground")}
+          onClick={() => setEventsOpen((v) => !v)}
+          title="Toggle event explorer"
+        >
+          <ActivityIcon className="size-4" />
+        </Button>
+
+        {/* Debug */}
+        <Button
+          variant="ghost"
+          size="icon"
           className={cn("size-8 shrink-0", debugOpen && "bg-muted text-foreground")}
           onClick={() => setDebugOpen((v) => !v)}
           title="Toggle debug console (⌘⇧D)"
@@ -244,6 +257,13 @@ export default function ChatPage({ params }: PageProps) {
         isInputRequired={isInputRequired}
         inputModes={inputModes}
       />
+
+      {eventsOpen && (
+        <EventExplorer
+          events={chat.executionEvents}
+          onClose={() => setEventsOpen(false)}
+        />
+      )}
 
       {/* Debug console */}
       {debugOpen && (

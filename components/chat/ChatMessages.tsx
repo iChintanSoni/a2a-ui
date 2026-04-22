@@ -5,6 +5,7 @@ import { TaskStatusRow } from "./TaskStatusRow";
 import { ArtifactBlock } from "./ArtifactBlock";
 import { ToolCallBlock } from "./ToolCallBlock";
 import { JsonInspectModal } from "./JsonInspectModal";
+import { getTaskTimelineStages } from "@/lib/a2a/execution-events";
 
 interface Props {
   chat: Chat;
@@ -41,6 +42,7 @@ export function ChatMessages({ chat, onRetry }: Props) {
             <TaskStatusRow
               key={`${item.taskId}-${item.state}`}
               item={item}
+              timelineStages={getTaskTimelineStages(chat.executionEvents, item.taskId)}
               onInspect={() => setInspectData(item)}
               onRetry={
                 onRetry

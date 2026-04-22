@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { ExecutionEvent } from "@/lib/a2a/execution-events";
 
 // ─── Serializable A2A Part types ────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ export interface Chat {
   timestamp: number;
   archived?: boolean;
   items: ChatItem[];
+  executionEvents: ExecutionEvent[];
 }
 
 export interface ChatsState {
@@ -101,6 +103,8 @@ const initialState: ChatsState = {
   chats: [],
   activeChatId: null,
 };
+
+const MAX_EXECUTION_EVENTS = 1000;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -120,13 +124,14 @@ export const chatsSlice = createSlice({
           ...chat,
           archived: chat.archived ?? false,
           items: chat.items ?? [],
+          executionEvents: chat.executionEvents ?? [],
         })),
         activeChatId: null,
       };
     },
-    addChat: (state, action: PayloadAction<Omit<Chat, "items">>) => {
+    addChat: (state, action: PayloadAction<Omit<Chat, "items" | "executionEvents">>) => {
       const existing = state.chats.findIndex(c => c.id === action.payload.id);
-      const chat: Chat = { ...action.payload, items: [] };
+      const chat: Chat = { ...action.payload, items: [], executionEvents: [] };
       if (existing >= 0) {
         state.chats[existing] = { ...state.chats[existing], ...action.payload };
       } else {
@@ -140,6 +145,7 @@ export const chatsSlice = createSlice({
         ...action.payload,
         archived: action.payload.archived ?? false,
         items: action.payload.items ?? [],
+        executionEvents: action.payload.executionEvents ?? [],
       };
       const existing = state.chats.findIndex(c => c.id === chat.id);
       if (existing >= 0) {
@@ -357,6 +363,23 @@ export const chatsSlice = createSlice({
       chat.items.push(item);
     },
 
+    appendExecutionEvent: (
+      state,
+      action: PayloadAction<{
+        chatId: string;
+        event: ExecutionEvent;
+      }>,
+    ) => {
+      const chat = findChat(state, action.payload.chatId);
+      if (!chat) return;
+      chat.executionEvents.push(action.payload.event);
+      if (chat.executionEvents.length > MAX_EXECUTION_EVENTS) {
+        chat.executionEvents = chat.executionEvents.slice(
+          chat.executionEvents.length - MAX_EXECUTION_EVENTS,
+        );
+      }
+    },
+
     // Called on chat page mount to clear stale in-flight state left by a
     // previous session that ended mid-stream (e.g. browser refresh).
     sanitizeStaleStreaming: (state, action: PayloadAction<string>) => {
@@ -391,6 +414,7 @@ export const {
   applyArtifactUpdate,
   applyToolCall,
   applyAgentMessage,
+  appendExecutionEvent,
   sanitizeStaleStreaming,
 } = chatsSlice.actions;
 
