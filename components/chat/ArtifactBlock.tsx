@@ -1,22 +1,29 @@
 import type { ArtifactItem } from "@/lib/features/chats/chatsSlice";
 import { PartRenderer } from "./PartRenderer";
 import { Caption, MicroLabel } from "@/components/typography";
-
-import { Cpu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { getArtifactText, isEditableArtifact } from "@/lib/features/chats/artifactRevision";
+import { Cpu, PencilIcon } from "lucide-react";
+import { useState } from "react";
 
 interface Props {
   item: ArtifactItem;
   onInspect?: () => void;
+  onSubmitRevision?: (item: ArtifactItem, revisedText: string) => Promise<void> | void;
 }
 
-export function ArtifactBlock({ item, onInspect }: Props) {
+export function ArtifactBlock({ item, onInspect, onSubmitRevision }: Props) {
   const label = item.name ?? "Artifact";
   const hasOnlyText = item.parts.every((p) => p.kind === "text");
-  
+  const [isEditing, setIsEditing] = useState(false);
+  const [revisedText, setRevisedText] = useState(() => getArtifactText(item));
+  const [isSaving, setIsSaving] = useState(false);
+
   // Extract token usage if available
   const usage = item.metadata?.usage as
     | { input_tokens?: number; output_tokens?: number; total_tokens?: number }
     | undefined;
+  const canEdit = isEditableArtifact(item) && Boolean(onSubmitRevision);
 
   return (
     <div className="my-1 rounded-lg border bg-card overflow-hidden text-sm group relative">
@@ -26,6 +33,20 @@ export function ArtifactBlock({ item, onInspect }: Props) {
           <Caption className="truncate">{item.description}</Caption>
         )}
         <div className="ms-auto flex items-center gap-3">
+          {canEdit && !item.isStreaming && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 gap-1 px-2 text-xs"
+              onClick={() => {
+                setRevisedText(getArtifactText(item));
+                setIsEditing((value) => !value);
+              }}
+            >
+              <PencilIcon className="size-3" />
+              {isEditing ? "Close editor" : "Revise"}
+            </Button>
+          )}
           {usage?.total_tokens !== undefined && (
             <Caption className="flex items-center gap-1 text-muted-foreground" title={`Input: ${usage.input_tokens} | Output: ${usage.output_tokens}`}>
               <Cpu size={12} className="text-muted-foreground/60" />
@@ -48,6 +69,43 @@ export function ArtifactBlock({ item, onInspect }: Props) {
           <Caption className="animate-pulse">…</Caption>
         )}
       </div>
+      {isEditing && canEdit && (
+        <div className="border-t bg-muted/20 px-3 py-3">
+          <textarea
+            className="min-h-36 w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+            value={revisedText}
+            onChange={(event) => setRevisedText(event.target.value)}
+          />
+          <div className="mt-3 flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setRevisedText(getArtifactText(item));
+                setIsEditing(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={isSaving || revisedText === getArtifactText(item)}
+              onClick={async () => {
+                if (!onSubmitRevision) return;
+                setIsSaving(true);
+                try {
+                  await onSubmitRevision(item, revisedText);
+                  setIsEditing(false);
+                } finally {
+                  setIsSaving(false);
+                }
+              }}
+            >
+              {isSaving ? "Sending..." : "Send revision"}
+            </Button>
+          </div>
+        </div>
+      )}
       {onInspect && (
         <button
           onClick={onInspect}

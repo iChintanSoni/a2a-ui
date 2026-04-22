@@ -9,6 +9,7 @@ import {
   ArchiveRestoreIcon,
   CopyIcon,
   DownloadIcon,
+  GitCompareArrowsIcon,
   PencilIcon,
   PinIcon,
   Trash2Icon,
@@ -149,6 +150,19 @@ export default function ConversationsPage() {
           <Muted>Search, rename, archive, delete, and export saved chats.</Muted>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={selectedChats.length !== 2}
+            onClick={() =>
+              router.push(
+                `/dashboard/compare?left=${selectedChats[0].id}&right=${selectedChats[1].id}`,
+              )
+            }
+          >
+            <GitCompareArrowsIcon className="size-4" />
+            Compare Runs
+          </Button>
           <Button
             variant="outline"
             size="sm"

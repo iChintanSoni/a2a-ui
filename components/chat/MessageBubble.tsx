@@ -1,12 +1,14 @@
 import type { UserMessageItem, AgentMessageItem } from "@/lib/features/chats/chatsSlice";
+import { RotateCcwIcon } from "lucide-react";
 import { PartRenderer } from "./PartRenderer";
 
 interface UserBubbleProps {
   item: UserMessageItem;
   onInspect?: () => void;
+  onRerun?: () => void;
 }
 
-export function UserBubble({ item, onInspect }: UserBubbleProps) {
+export function UserBubble({ item, onInspect, onRerun }: UserBubbleProps) {
   return (
     <div className="flex justify-end group">
       <div className="relative flex max-w-[75%] flex-col items-end gap-1.5">
@@ -23,6 +25,15 @@ export function UserBubble({ item, onInspect }: UserBubbleProps) {
         <div className="rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
           <span className="whitespace-pre-wrap">{item.text}</span>
         </div>
+        {onRerun && (
+          <button
+            onClick={onRerun}
+            className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground shadow-sm"
+            title="Rerun this prompt in a fresh run"
+          >
+            <RotateCcwIcon className="size-3" />
+          </button>
+        )}
         {onInspect && (
           <button
             onClick={onInspect}

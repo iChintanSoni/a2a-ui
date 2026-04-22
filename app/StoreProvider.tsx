@@ -3,10 +3,16 @@
 import { useEffect, useState } from "react";
 import { Provider } from "react-redux";
 import { makeStore, type AppStore } from "@/lib/store";
-import { loadPersistedState, persistAgents, persistChats } from "@/lib/persistence";
+import {
+  loadPersistedState,
+  persistAgents,
+  persistChats,
+  persistWorkbench,
+} from "@/lib/persistence";
 import { hydrateAgents, updateAgentCard, updateAgentStatus } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
 import { hydrateChats } from "@/lib/features/chats/chatsSlice";
+import { hydrateWorkbench } from "@/lib/features/workbench/workbenchSlice";
 
 export default function StoreProvider({ children }: { children: React.ReactNode }) {
   const [store, setStore] = useState<AppStore | null>(null);
@@ -15,9 +21,10 @@ export default function StoreProvider({ children }: { children: React.ReactNode 
     const s = makeStore();
 
     loadPersistedState()
-      .then(({ agents, chats }) => {
+      .then(({ agents, chats, workbench }) => {
         s.dispatch(hydrateAgents(agents));
         s.dispatch(hydrateChats(chats));
+        s.dispatch(hydrateWorkbench(workbench));
 
         const disconnected = agents.filter((a) => a.status === "disconnected");
         for (const agent of disconnected) {
@@ -40,6 +47,7 @@ export default function StoreProvider({ children }: { children: React.ReactNode 
         // Subscribe to persist changes after hydration is done
         let prevAgents = s.getState().agents.agents;
         let prevChats = s.getState().chats.chats;
+        let prevWorkbench = s.getState().workbench;
         s.subscribe(() => {
           const state = s.getState();
           if (state.agents.agents !== prevAgents) {
@@ -49,6 +57,10 @@ export default function StoreProvider({ children }: { children: React.ReactNode 
           if (state.chats.chats !== prevChats) {
             prevChats = state.chats.chats;
             persistChats(state.chats.chats).catch(console.error);
+          }
+          if (state.workbench !== prevWorkbench) {
+            prevWorkbench = state.workbench;
+            persistWorkbench(state.workbench).catch(console.error);
           }
         });
 

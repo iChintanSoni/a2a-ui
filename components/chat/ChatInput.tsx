@@ -1,9 +1,19 @@
 import { useState, useRef, type KeyboardEvent } from "react";
-import { SendIcon, PaperclipIcon, SlidersHorizontalIcon, XIcon, PlusIcon, SquareIcon } from "lucide-react";
+import {
+  SendIcon,
+  PaperclipIcon,
+  SlidersHorizontalIcon,
+  XIcon,
+  PlusIcon,
+  SquareIcon,
+  BookmarkPlusIcon,
+  RotateCcwIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { isAttachmentMode } from "@/lib/utils/modes";
+import type { PromptPreset } from "@/lib/features/workbench/workbenchSlice";
 
 interface MetadataRow {
   key: string;
@@ -23,9 +33,33 @@ interface Props {
   isInputRequired?: boolean;
   /** Agent's defaultInputModes — controls whether the file picker is shown and which types are accepted */
   inputModes?: string[];
+  promptPresets?: PromptPreset[];
+  defaultMetadata?: Record<string, string>;
+  onSavePromptPreset?: (text: string, metadata?: Record<string, string>) => void;
+  onSaveDefaultMetadata?: (metadata: Record<string, string>) => void;
+  onApplyPromptPreset?: (presetId: string) => void;
 }
 
-export function ChatInput({ onSend, onCancel, disabled, isStreaming, isInputRequired, inputModes = [] }: Props) {
+function rowsFromMetadata(metadata?: Record<string, string>): MetadataRow[] {
+  const entries = Object.entries(metadata ?? {});
+  return entries.length > 0
+    ? entries.map(([key, value]) => ({ key, value }))
+    : [{ key: "", value: "" }];
+}
+
+export function ChatInput({
+  onSend,
+  onCancel,
+  disabled,
+  isStreaming,
+  isInputRequired,
+  inputModes = [],
+  promptPresets = [],
+  defaultMetadata,
+  onSavePromptPreset,
+  onSaveDefaultMetadata,
+  onApplyPromptPreset,
+}: Props) {
   // Derive file-picker visibility and accepted MIME types from inputModes.
   // Text modes describe the message body; only non-text modes allow attachments.
   const acceptedMimeTypes = inputModes.filter(isAttachmentMode);
@@ -37,7 +71,7 @@ export function ChatInput({ onSend, onCancel, disabled, isStreaming, isInputRequ
 
   // Metadata state
   const [metaOpen, setMetaOpen] = useState(false);
-  const [metaRows, setMetaRows] = useState<MetadataRow[]>([{ key: "", value: "" }]);
+  const [metaRows, setMetaRows] = useState<MetadataRow[]>(rowsFromMetadata(defaultMetadata));
 
   // Attachments state
   const [attachments, setAttachments] = useState<AttachmentPreview[]>([]);
@@ -89,7 +123,7 @@ export function ChatInput({ onSend, onCancel, disabled, isStreaming, isInputRequ
     );
 
     setText("");
-    setMetaRows([{ key: "", value: "" }]);
+    setMetaRows(rowsFromMetadata(defaultMetadata));
     setMetaOpen(false);
     setAttachments([]);
     if (textareaRef.current) textareaRef.current.style.height = "auto";
@@ -147,6 +181,31 @@ export function ChatInput({ onSend, onCancel, disabled, isStreaming, isInputRequ
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const currentMetadata = metaRows
+    .filter((row) => row.key.trim())
+    .reduce<Record<string, string>>((acc, row) => {
+      acc[row.key.trim()] = row.value;
+      return acc;
+    }, {});
+
+  const hasPromptDraft = text.trim().length > 0;
+  const hasMetadataDraft = Object.keys(currentMetadata).length > 0;
+  const hasDefaultMetadata = Object.keys(defaultMetadata ?? {}).length > 0;
+
+  const applyPromptPreset = (preset: PromptPreset) => {
+    setText(preset.text);
+    setMetaRows(rowsFromMetadata(preset.metadata));
+    setMetaOpen(Boolean(preset.metadata && Object.keys(preset.metadata).length > 0));
+    onApplyPromptPreset?.(preset.id);
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+      }
+    });
+  };
+
   return (
     <div
       className={cn(
@@ -157,6 +216,22 @@ export function ChatInput({ onSend, onCancel, disabled, isStreaming, isInputRequ
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      {promptPresets.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {promptPresets.slice(0, 6).map((preset) => (
+            <button
+              key={preset.id}
+              onClick={() => applyPromptPreset(preset)}
+              disabled={disabled}
+              className="rounded-full border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+              title={preset.text}
+            >
+              {preset.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* input-required banner */}
       {isInputRequired && (
         <div className="flex items-center gap-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-1.5 text-xs text-blue-700 dark:text-blue-300">
@@ -227,6 +302,26 @@ export function ChatInput({ onSend, onCancel, disabled, isStreaming, isInputRequ
             <PlusIcon className="size-3" />
             Add row
           </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {hasDefaultMetadata && (
+              <button
+                onClick={() => setMetaRows(rowsFromMetadata(defaultMetadata))}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <RotateCcwIcon className="size-3" />
+                Apply agent defaults
+              </button>
+            )}
+            {hasMetadataDraft && onSaveDefaultMetadata && (
+              <button
+                onClick={() => onSaveDefaultMetadata(currentMetadata)}
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <BookmarkPlusIcon className="size-3" />
+                Save as agent defaults
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -282,6 +377,26 @@ export function ChatInput({ onSend, onCancel, disabled, isStreaming, isInputRequ
         >
           <SlidersHorizontalIcon className="size-4" />
         </button>
+
+        {onSavePromptPreset && (
+          <button
+            onClick={() =>
+              onSavePromptPreset(text.trim(), hasMetadataDraft ? currentMetadata : undefined)
+            }
+            disabled={!hasPromptDraft || disabled}
+            className={cn(
+              "shrink-0 transition-colors",
+              hasPromptDraft
+                ? "text-muted-foreground hover:text-foreground"
+                : "text-muted-foreground/50",
+              disabled && "opacity-50 cursor-not-allowed"
+            )}
+            title="Save as repeatable prompt"
+            aria-label="Save prompt preset"
+          >
+            <BookmarkPlusIcon className="size-4" />
+          </button>
+        )}
 
         {isStreaming ? (
           <Button

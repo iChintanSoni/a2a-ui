@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { TaskState } from "@a2a-js/sdk";
-import { ArrowRightIcon } from "lucide-react";
+import { ArrowRightIcon, BookmarkPlusIcon, Trash2Icon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -14,11 +15,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { H2, Muted, Caption, Small } from "@/components/typography";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   buildTaskSummaries,
   type TaskSummary,
 } from "@/lib/features/chats/taskIndex";
+import {
+  removeTaskFilterPreset,
+  saveTaskFilterPreset,
+} from "@/lib/features/workbench/workbenchSlice";
 
 type TaskFilter = "all" | TaskState;
 
@@ -46,7 +51,9 @@ function taskSearchText(task: TaskSummary) {
 }
 
 export default function TasksPage() {
+  const dispatch = useAppDispatch();
   const chats = useAppSelector((state) => state.chats.chats);
+  const presets = useAppSelector((state) => state.workbench.taskFilterPresets);
   const [query, setQuery] = useState("");
   const [stateFilter, setStateFilter] = useState<TaskFilter>("all");
 
@@ -93,6 +100,44 @@ export default function TasksPage() {
             <SelectItem value="unknown">Unknown</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            dispatch(
+              saveTaskFilterPreset({
+                query,
+                state: stateFilter,
+              }),
+            )
+          }
+        >
+          <BookmarkPlusIcon className="size-4" />
+          Save current filter
+        </Button>
+        {presets.map((preset) => (
+          <div key={preset.id} className="flex items-center gap-1 rounded-full border bg-muted/30 px-2 py-1">
+            <button
+              onClick={() => {
+                setQuery(preset.query);
+                setStateFilter(preset.state);
+              }}
+              className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {preset.label}
+            </button>
+            <button
+              onClick={() => dispatch(removeTaskFilterPreset(preset.id))}
+              className="text-muted-foreground transition-colors hover:text-foreground"
+              aria-label={`Remove ${preset.label}`}
+            >
+              <Trash2Icon className="size-3" />
+            </button>
+          </div>
+        ))}
       </div>
 
       {filteredTasks.length === 0 ? (
