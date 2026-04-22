@@ -14,16 +14,15 @@ export function useA2ADebug() {
   const [validationWarnings, setValidationWarnings] = useState<ValidationWarning[]>([]);
 
   const append = useCallback((entry: AppendLogInput) => {
-    setLogs((prev) =>
-      appendLog(prev, {
-        id: entry.id ?? crypto.randomUUID(),
-        timestamp: entry.timestamp ?? Date.now(),
-        type: entry.type,
-        method: entry.method,
-        payload: entry.payload,
-        transport: entry.transport,
-      }),
-    );
+    const nextEntry: LogEntry = {
+      id: entry.id ?? crypto.randomUUID(),
+      timestamp: entry.timestamp ?? Date.now(),
+      type: entry.type,
+      method: entry.method,
+      payload: entry.payload,
+      transport: entry.transport,
+    };
+    setLogs((prev) => appendLog(prev, nextEntry));
   }, []);
   const interceptor = useMemo(() => new DebugInterceptor(append), [append]);
   const interceptors = useMemo(() => [interceptor], [interceptor]);

@@ -1,5 +1,6 @@
 import type { AgentCard, AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
 import type { Chat } from "@/lib/features/chats/chatsSlice";
+import type { ExecutionEvent } from "@/lib/a2a/execution-events";
 import type { LogEntry } from "@/lib/utils/debugInterceptor";
 import type { ValidationWarning } from "@/lib/utils/compliance";
 
@@ -38,7 +39,7 @@ export interface A2AHostConfig {
 
 export interface A2AExternalMessageStore {
   chat?: Chat;
-  ensureChat: (chat: Omit<Chat, "items">) => void;
+  ensureChat: (chat: Omit<Chat, "items" | "executionEvents">) => void;
   sanitizeStaleStreaming: (contextId: string) => void;
   addUserMessage: (payload: {
     chatId: string;
@@ -78,6 +79,10 @@ export interface A2AExternalMessageStore {
     messageId: string;
     taskId?: string;
     parts: import("@/lib/features/chats/chatsSlice").PartData[];
+  }) => void;
+  appendExecutionEvent: (payload: {
+    chatId: string;
+    event: ExecutionEvent;
   }) => void;
 }
 

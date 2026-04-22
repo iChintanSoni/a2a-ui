@@ -11,13 +11,16 @@ import reducer, {
   applyArtifactUpdate,
   applyToolCall,
   applyAgentMessage,
+  appendExecutionEvent,
   type Chat,
   type ChatsState,
 } from "@/lib/features/chats/chatsSlice";
 
 const INITIAL_STATE: ChatsState = { chats: [], activeChatId: null };
 
-function makeChat(overrides: Partial<Omit<Chat, "items">> = {}): Omit<Chat, "items"> {
+function makeChat(
+  overrides: Partial<Omit<Chat, "items" | "executionEvents">> = {},
+): Omit<Chat, "items" | "executionEvents"> {
   return {
     id: "chat-1",
     title: "Test Chat",
@@ -76,6 +79,7 @@ describe("chatsSlice", () => {
         importChat({
           ...makeChat({ id: "imported" }),
           items: [{ kind: "user-message", id: "m1", text: "hello", timestamp: 1 }],
+          executionEvents: [],
         })
       );
       expect(state.chats[0].items).toHaveLength(1);
@@ -311,6 +315,34 @@ describe("chatsSlice", () => {
         applyAgentMessage({ chatId: "unknown", messageId: "m1", parts: [] })
       );
       expect(state.chats[0].items).toHaveLength(0);
+    });
+  });
+
+  describe("appendExecutionEvent", () => {
+    it("appends normalized execution events to the chat", () => {
+      let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1" })));
+      state = reducer(
+        state,
+        appendExecutionEvent({
+          chatId: "c1",
+          event: {
+            id: "evt-1",
+            chatId: "c1",
+            kind: "task-status",
+            level: "info",
+            timestamp: 123,
+            summary: "Task working",
+            taskId: "t1",
+            traceId: null,
+            spanId: null,
+            parentSpanId: null,
+            details: { state: "working" },
+          },
+        }),
+      );
+
+      expect(state.chats[0].executionEvents).toHaveLength(1);
+      expect(state.chats[0].executionEvents[0].taskId).toBe("t1");
     });
   });
 });

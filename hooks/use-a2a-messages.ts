@@ -7,6 +7,7 @@ import chatsReducer, {
   addUserMessage,
   applyAgentMessage,
   applyArtifactUpdate,
+  appendExecutionEvent,
   applyStatusUpdate,
   applyToolCall,
   hydrateChats,
@@ -21,6 +22,9 @@ import type {
   A2AExternalMessageStore,
   A2ASessionPersistenceMode,
 } from "@/lib/a2a/types";
+import {
+  createExecutionEventFromLog,
+} from "@/lib/a2a/execution-events";
 import { validateIncomingEvent, validateOutgoingMessage } from "@/lib/utils/compliance";
 import { useA2AConnection } from "@/hooks/use-a2a-connection";
 import { useA2ADebug } from "@/hooks/use-a2a-debug";
@@ -31,18 +35,21 @@ type ChatAction =
   | ReturnType<typeof addUserMessage>
   | ReturnType<typeof applyStatusUpdate>
   | ReturnType<typeof applyArtifactUpdate>
+  | ReturnType<typeof appendExecutionEvent>
   | ReturnType<typeof applyToolCall>
   | ReturnType<typeof applyAgentMessage>
   | ReturnType<typeof sanitizeStaleStreaming>
   | ReturnType<typeof hydrateChats>;
 
-type MemoryStoreAction = ChatAction | { type: "a2a/reset"; payload: Omit<Chat, "items"> };
+type MemoryStoreAction =
+  | ChatAction
+  | { type: "a2a/reset"; payload: Omit<Chat, "items" | "executionEvents"> };
 
 function createChatMeta(input: {
   contextId: string;
   agentUrl: string;
   agentName: string;
-}): Omit<Chat, "items"> {
+}): Omit<Chat, "items" | "executionEvents"> {
   return {
     id: input.contextId,
     title: `Chat with ${input.agentName}`,
@@ -56,7 +63,7 @@ function createChatMeta(input: {
 function memoryStoreReducer(state: ChatsState, action: MemoryStoreAction): ChatsState {
   if (action.type === "a2a/reset") {
     return {
-      chats: [{ ...action.payload, items: [] }],
+      chats: [{ ...action.payload, items: [], executionEvents: [] }],
       activeChatId: action.payload.id,
     };
   }
@@ -115,6 +122,7 @@ function useMemoryMessageStore(options: {
       applyArtifactUpdate: (payload) => dispatch(applyArtifactUpdate(payload)),
       applyToolCall: (payload) => dispatch(applyToolCall(payload)),
       applyAgentMessage: (payload) => dispatch(applyAgentMessage(payload)),
+      appendExecutionEvent: (payload) => dispatch(appendExecutionEvent(payload)),
     }),
     [chat],
   );
@@ -146,6 +154,8 @@ export function useA2AMessages({
     persistenceMode: persistenceMode === "external" ? "memory" : persistenceMode,
   });
   const messageStore = store ?? memoryStore;
+  const processedLogsRef = useRef(0);
+  const lastContextIdRef = useRef(session.contextId);
 
   const chat = messageStore.chat;
   const currentAgentName = agentName ?? connection.card?.name ?? chat?.agentName ?? "Agent";
@@ -165,6 +175,27 @@ export function useA2AMessages({
     messageStore.sanitizeStaleStreaming(session.contextId);
   }, [messageStore, session.contextId]);
 
+  useEffect(() => {
+    if (lastContextIdRef.current !== session.contextId) {
+      processedLogsRef.current = debug.logs.length;
+      lastContextIdRef.current = session.contextId;
+      return;
+    }
+
+    if (processedLogsRef.current > debug.logs.length) {
+      processedLogsRef.current = 0;
+    }
+
+    const newLogs = debug.logs.slice(processedLogsRef.current);
+    for (const entry of newLogs) {
+      messageStore.appendExecutionEvent({
+        chatId: session.contextId,
+        event: createExecutionEventFromLog(session.contextId, entry),
+      });
+    }
+    processedLogsRef.current = debug.logs.length;
+  }, [debug.logs, messageStore, session.contextId]);
+
   const pendingInputTask = chat?.items
     .filter((item) => item.kind === "task-status")
     .findLast((item) => item.kind === "task-status");
@@ -178,6 +209,25 @@ export function useA2AMessages({
         chatId: session.contextId,
         taskId: session.activeTaskId,
         state: "canceled",
+      });
+      messageStore.appendExecutionEvent({
+        chatId: session.contextId,
+        event: {
+          id: crypto.randomUUID(),
+          chatId: session.contextId,
+          kind: "task-status",
+          level: "warning",
+          timestamp: Date.now(),
+          summary: "Task canceled",
+          taskId: session.activeTaskId,
+          traceId: null,
+          spanId: null,
+          parentSpanId: null,
+          details: {
+            state: "canceled",
+            source: "user",
+          },
+        },
       });
       connection.cancelTask(session.activeTaskId).catch(() => {});
     }
@@ -200,6 +250,30 @@ export function useA2AMessages({
         attachments: fileParts.length > 0 ? fileParts : undefined,
         metadata: metadata && Object.keys(metadata).length > 0 ? metadata : undefined,
         isInputResponse: inputRequiredTaskId != null,
+      });
+      messageStore.appendExecutionEvent({
+        chatId: session.contextId,
+        event: {
+          id: crypto.randomUUID(),
+          chatId: session.contextId,
+          kind: "outgoing-message",
+          level: "info",
+          timestamp: Date.now(),
+          summary: inputRequiredTaskId ? "Input response submitted" : "Message submitted",
+          taskId: inputRequiredTaskId,
+          messageId,
+          traceId: null,
+          spanId: null,
+          parentSpanId: null,
+          details: {
+            text,
+            metadata,
+            attachmentCount: fileParts.length,
+            hiddenContextConfigured:
+              Boolean(context?.hiddenSystemContext) ||
+              Boolean(context?.messageContextEnrichers?.length),
+          },
+        },
       });
 
       try {
@@ -248,6 +322,32 @@ export function useA2AMessages({
                 ? { parts: statusEvent.status.message.parts as PartData[] }
                 : undefined,
             });
+            messageStore.appendExecutionEvent({
+              chatId: session.contextId,
+              event: {
+                id: crypto.randomUUID(),
+                chatId: session.contextId,
+                kind: "task-status",
+                level:
+                  statusEvent.status.state === "failed" ||
+                  statusEvent.status.state === "rejected"
+                    ? "error"
+                    : statusEvent.status.state === "input-required" ||
+                        statusEvent.status.state === "auth-required"
+                      ? "warning"
+                      : "info",
+                timestamp: Date.now(),
+                summary: `Task ${statusEvent.status.state}`,
+                taskId: statusEvent.taskId,
+                traceId: null,
+                spanId: null,
+                parentSpanId: null,
+                details: {
+                  state: statusEvent.status.state,
+                  message: statusEvent.status.message,
+                },
+              },
+            });
             continue;
           }
 
@@ -270,6 +370,34 @@ export function useA2AMessages({
                   resultCount: data.resultCount,
                   phase: data.phase,
                 });
+                messageStore.appendExecutionEvent({
+                  chatId: session.contextId,
+                  event: {
+                    id: crypto.randomUUID(),
+                    chatId: session.contextId,
+                    kind: "tool-call",
+                    level: data.phase === "error" ? "error" : "info",
+                    timestamp: Date.now(),
+                    summary:
+                      data.phase === "running"
+                        ? `${data.toolName} started`
+                        : data.phase === "done"
+                          ? `${data.toolName} finished`
+                          : `${data.toolName} failed`,
+                    taskId: artifactEvent.taskId,
+                    artifactId: artifactEvent.artifact.artifactId,
+                    runId: artifactEvent.artifact.artifactId,
+                    traceId: null,
+                    spanId: null,
+                    parentSpanId: null,
+                    details: {
+                      phase: data.phase,
+                      toolName: data.toolName,
+                      query: data.query,
+                      resultCount: data.resultCount,
+                    },
+                  },
+                });
               }
               continue;
             }
@@ -285,6 +413,31 @@ export function useA2AMessages({
               append: artifactEvent.append ?? false,
               lastChunk: artifactEvent.lastChunk ?? false,
             });
+            messageStore.appendExecutionEvent({
+              chatId: session.contextId,
+              event: {
+                id: crypto.randomUUID(),
+                chatId: session.contextId,
+                kind: "artifact-update",
+                level: "info",
+                timestamp: Date.now(),
+                summary: artifactEvent.lastChunk
+                  ? `${artifactEvent.artifact.name ?? "Artifact"} completed`
+                  : `${artifactEvent.artifact.name ?? "Artifact"} updated`,
+                taskId: artifactEvent.taskId,
+                artifactId: artifactEvent.artifact.artifactId,
+                traceId: null,
+                spanId: null,
+                parentSpanId: null,
+                details: {
+                  name: artifactEvent.artifact.name,
+                  description: artifactEvent.artifact.description,
+                  append: artifactEvent.append ?? false,
+                  lastChunk: artifactEvent.lastChunk ?? false,
+                  metadata: artifactEvent.artifact.metadata,
+                },
+              },
+            });
             continue;
           }
 
@@ -296,6 +449,25 @@ export function useA2AMessages({
                 messageId: agentMessage.messageId,
                 taskId: agentMessage.taskId,
                 parts: agentMessage.parts as PartData[],
+              });
+              messageStore.appendExecutionEvent({
+                chatId: session.contextId,
+                event: {
+                  id: crypto.randomUUID(),
+                  chatId: session.contextId,
+                  kind: "agent-message",
+                  level: "info",
+                  timestamp: Date.now(),
+                  summary: "Agent message received",
+                  taskId: agentMessage.taskId,
+                  messageId: agentMessage.messageId,
+                  traceId: null,
+                  spanId: null,
+                  parentSpanId: null,
+                  details: {
+                    partCount: agentMessage.parts.length,
+                  },
+                },
               });
             }
           }

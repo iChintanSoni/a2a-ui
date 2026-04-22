@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { BugIcon, SquarePenIcon } from "lucide-react";
+import { ActivityIcon, BugIcon, SquarePenIcon } from "lucide-react";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { SessionInfoBar } from "@/components/chat/SessionInfoBar";
 import { A2ADebugPanel } from "@/components/chat/A2ADebugPanel";
+import { EventExplorer } from "@/components/chat/EventExplorer";
 import { Button } from "@/components/ui/button";
 import { Muted, Small } from "@/components/typography";
 import type { A2AContextConfig, A2ASessionPersistenceMode } from "@/lib/a2a/types";
@@ -25,6 +26,7 @@ interface A2AChatProps {
   context?: A2AContextConfig;
   title?: string;
   showDebugPanel?: boolean;
+  showEventExplorer?: boolean;
 }
 
 export function A2AChat({
@@ -37,6 +39,7 @@ export function A2AChat({
   context,
   title,
   showDebugPanel = true,
+  showEventExplorer = true,
 }: A2AChatProps) {
   const debug = useA2ADebug();
   const connection = useA2AConnection({
@@ -57,6 +60,7 @@ export function A2AChat({
     persistenceMode,
   });
   const [debugOpen, setDebugOpen] = useState(false);
+  const [eventsOpen, setEventsOpen] = useState(false);
   const effectiveDebugOpen = showDebugPanel && (debugOpen || session.error != null);
 
   const inputModes = connection.card?.defaultInputModes ?? initialCard?.defaultInputModes ?? [];
@@ -77,6 +81,17 @@ export function A2AChat({
           <Small className="truncate">{title ?? chat.title}</Small>
           <Muted className="truncate text-xs">{connection.card?.name ?? chat.agentName}</Muted>
         </div>
+        {showEventExplorer && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0"
+            onClick={() => setEventsOpen((open) => !open)}
+            title="Toggle event explorer"
+          >
+            <ActivityIcon className="size-4" />
+          </Button>
+        )}
         {showDebugPanel && (
           <Button
             variant="ghost"
@@ -117,6 +132,13 @@ export function A2AChat({
         isInputRequired={isInputRequired}
         inputModes={inputModes}
       />
+
+      {showEventExplorer && eventsOpen && (
+        <EventExplorer
+          events={chat.executionEvents}
+          onClose={() => setEventsOpen(false)}
+        />
+      )}
 
       {effectiveDebugOpen && (
         <A2ADebugPanel debug={debug} onClose={() => setDebugOpen(false)} />
