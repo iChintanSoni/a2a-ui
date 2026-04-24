@@ -2,11 +2,13 @@ import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { Part } from "@a2a-js/sdk";
 import type { Agent } from "./features/agents/agentsSlice";
 import type { Chat, ChatItem } from "./features/chats/chatsSlice";
+import type { QaState } from "./features/qa/types";
 import type { WorkbenchState } from "./features/workbench/workbenchSlice";
 
 interface A2ASchema extends DBSchema {
   agents: { key: string; value: Agent };
   chats: { key: string; value: Chat };
+  qa: { key: string; value: QaState };
   workbench: { key: string; value: WorkbenchState };
 }
 
@@ -14,7 +16,7 @@ let _db: Promise<IDBPDatabase<A2ASchema>> | null = null;
 
 function getDB(): Promise<IDBPDatabase<A2ASchema>> {
   if (!_db) {
-    _db = openDB<A2ASchema>("a2a-ui", 2, {
+    _db = openDB<A2ASchema>("a2a-ui", 3, {
       upgrade(db) {
         if (!db.objectStoreNames.contains("agents")) {
           db.createObjectStore("agents", { keyPath: "id" });
@@ -24,6 +26,9 @@ function getDB(): Promise<IDBPDatabase<A2ASchema>> {
         }
         if (!db.objectStoreNames.contains("workbench")) {
           db.createObjectStore("workbench");
+        }
+        if (!db.objectStoreNames.contains("qa")) {
+          db.createObjectStore("qa");
         }
       },
     });
@@ -54,12 +59,14 @@ export async function loadPersistedState(): Promise<{
   agents: Agent[];
   chats: Chat[];
   workbench: WorkbenchState;
+  qa: QaState;
 }> {
   const db = await getDB();
-  const [agents, chats, workbench] = await Promise.all([
+  const [agents, chats, workbench, qa] = await Promise.all([
     db.getAll("agents"),
     db.getAll("chats"),
     db.get("workbench", "state"),
+    db.get("qa", "state"),
   ]);
   // Reset runtime-only fields: status is re-evaluated on each page load
   const restoredAgents = agents.map((a) => ({
@@ -83,6 +90,10 @@ export async function loadPersistedState(): Promise<{
       taskFilterPresets: workbench?.taskFilterPresets ?? [],
       agentSettings: workbench?.agentSettings ?? {},
     },
+    qa: {
+      suites: qa?.suites ?? [],
+      runs: qa?.runs ?? [],
+    },
   };
 }
 
@@ -105,4 +116,9 @@ export async function persistChats(chats: Chat[]): Promise<void> {
 export async function persistWorkbench(workbench: WorkbenchState): Promise<void> {
   const db = await getDB();
   await db.put("workbench", workbench, "state");
+}
+
+export async function persistQa(qa: QaState): Promise<void> {
+  const db = await getDB();
+  await db.put("qa", qa, "state");
 }
