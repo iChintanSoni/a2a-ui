@@ -1,4 +1,5 @@
 import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
+import { A2UI_EXTENSION_HEADER, A2UI_EXTENSION_VALUE } from "@/lib/a2a/a2ui";
 import { createDebugFetch, type LogEntry } from "@/lib/utils/debugInterceptor";
 import {
   ClientFactory,
@@ -32,7 +33,8 @@ function shouldProxyRequest(targetUrl: string): boolean {
 /** Compute the HTTP headers that correspond to an auth config + custom headers. */
 export function buildRequestHeaders(
   auth: AuthConfig,
-  customHeaders: CustomHeader[]
+  customHeaders: CustomHeader[],
+  options: { a2uiEnabled?: boolean } = {}
 ): Record<string, string> {
   const headers: Record<string, string> = {};
 
@@ -61,6 +63,10 @@ export function buildRequestHeaders(
     if (h.key.trim()) {
       headers[h.key.trim()] = h.value;
     }
+  }
+
+  if (options.a2uiEnabled && !headers[A2UI_EXTENSION_HEADER]) {
+    headers[A2UI_EXTENSION_HEADER] = A2UI_EXTENSION_VALUE;
   }
 
   return headers;
@@ -114,9 +120,10 @@ export function createClientFactory(
   auth: AuthConfig,
   customHeaders: CustomHeader[],
   interceptors?: CallInterceptor[],
-  onTransportLog?: (entry: LogEntry) => void
+  onTransportLog?: (entry: LogEntry) => void,
+  options: { a2uiEnabled?: boolean } = {}
 ): ClientFactory {
-  const extraHeaders = buildRequestHeaders(auth, customHeaders);
+  const extraHeaders = buildRequestHeaders(auth, customHeaders, options);
   const clientConfig =
     interceptors && interceptors.length > 0 ? { interceptors } : undefined;
 

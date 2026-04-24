@@ -355,6 +355,7 @@ export default function ChatPage({ params }: PageProps) {
       {/* Messages */}
       <ChatMessages
         chat={chat}
+        a2uiEnabled={agent?.a2uiEnabled}
         onRetry={(item) => sendMessage(item.parts, item.metadata)}
         onRerunMessage={rerunMessage}
         onSubmitArtifactRevision={submitArtifactRevision}

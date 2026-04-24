@@ -130,7 +130,9 @@ export async function executeQaSuite({
   const startedAt = Date.now();
   const runnerClient =
     client ??
-    (await createClientFactory(agent.auth, agent.customHeaders).createFromUrl(agent.url));
+    (await createClientFactory(agent.auth, agent.customHeaders, undefined, undefined, {
+      a2uiEnabled: agent.a2uiEnabled,
+    }).createFromUrl(agent.url));
   const caseResults: QaCaseResult[] = [];
 
   for (const testCase of suite.cases) {

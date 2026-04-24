@@ -6,13 +6,13 @@ export function createAgentCard(baseUrl: string): AgentCard {
 
   return {
     name: "Chat Agent",
-    description: "A conversational A2A agent with search, image input, and image generation.",
+    description: "A conversational A2A agent with search, image input, image generation, and A2UI demo surfaces.",
     url: jsonRpcUrl,
     version: "1.0.0",
     protocolVersion: "0.3.0",
     preferredTransport: "JSONRPC",
     defaultInputModes: ["text/plain", "image/*"],
-    defaultOutputModes: ["text/plain", "image/png"],
+    defaultOutputModes: ["text/plain", "image/png", "application/vnd.a2ui+json"],
     capabilities: {
       streaming: true,
       stateTransitionHistory: true,
@@ -39,6 +39,15 @@ export function createAgentCard(baseUrl: string): AgentCard {
         examples: ["Generate an image of a sunset over mountains", "Draw a futuristic city at night"],
         inputModes: ["text/plain"],
         outputModes: ["image/png"],
+      },
+      {
+        id: "a2ui-demo",
+        name: "A2UI Demo",
+        description: "Return a read-only structured UI fixture for renderer testing.",
+        tags: ["a2ui", "structured-ui", "demo"],
+        examples: ["Show me an A2UI demo surface", "Render a structured status summary"],
+        inputModes: ["text/plain"],
+        outputModes: ["application/vnd.a2ui+json"],
       },
     ],
   };

@@ -7,6 +7,7 @@ export type ExecutionEventKind =
   | "task-status"
   | "artifact-update"
   | "tool-call"
+  | "structured-ui"
   | "agent-message";
 
 export type ExecutionEventLevel = "info" | "warning" | "error";

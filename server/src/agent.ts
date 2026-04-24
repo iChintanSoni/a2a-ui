@@ -185,6 +185,69 @@ function contentToText(content: unknown): string {
     .join("");
 }
 
+function shouldReturnA2UIDemo(content: string | ContentBlock[]): boolean {
+  return contentToText(content).toLowerCase().includes("a2ui");
+}
+
+function publishA2UIDemo(eventBus: ExecutionEventBus, taskId: string, contextId: string) {
+  eventBus.publish({
+    kind: "artifact-update",
+    taskId,
+    contextId,
+    append: false,
+    lastChunk: true,
+    artifact: {
+      artifactId: crypto.randomUUID(),
+      name: "a2ui-demo",
+      description: "Read-only A2UI fixture",
+      parts: [
+        {
+          kind: "data",
+          data: {
+            a2ui: {
+              kind: "surface",
+              version: "1",
+              title: "Deployment Readiness",
+              description: "Demo structured surface emitted by the local A2A server.",
+              components: [
+                { kind: "badge", label: "Ready", tone: "success" },
+                {
+                  kind: "key-value",
+                  items: [
+                    { label: "Environment", value: "local" },
+                    { label: "Checks passed", value: 6 },
+                    { label: "Approval required", value: false },
+                  ],
+                },
+                {
+                  kind: "table",
+                  columns: [
+                    { key: "check", label: "Check" },
+                    { key: "status", label: "Status" },
+                  ],
+                  rows: [
+                    { check: "Agent card", status: "ok" },
+                    { check: "Streaming", status: "ok" },
+                    { check: "Renderer", status: "read-only" },
+                  ],
+                },
+                {
+                  kind: "markdown",
+                  markdown: "This fixture intentionally avoids executable code and only renders a constrained component subset.",
+                },
+              ],
+            },
+          },
+          metadata: { mimeType: "application/vnd.a2ui+json" },
+        },
+      ],
+      metadata: {
+        a2ui: { version: "1", mode: "read-only" },
+      },
+    },
+  });
+}
+
 function isAbortError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
   return error.name === "AbortError" || error.message.includes("AbortError") || error.message.includes("aborted");
@@ -413,6 +476,19 @@ export const chatAgentExecutor: AgentExecutor = {
     activeContextIds.set(taskId, contextId);
 
     try {
+      if (shouldReturnA2UIDemo(content)) {
+        publishA2UIDemo(eventBus, taskId, contextId);
+        eventBus.publish({
+          kind: "status-update",
+          taskId,
+          contextId,
+          final: true,
+          status: { state: "completed", timestamp: new Date().toISOString() },
+        });
+        eventBus.finished();
+        return;
+      }
+
       const result = await streamAgentResponse(
         agent,
         content,

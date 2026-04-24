@@ -9,12 +9,19 @@ import { getTaskTimelineStages } from "@/lib/a2a/execution-events";
 
 interface Props {
   chat: Chat;
+  a2uiEnabled?: boolean;
   onRetry?: (item: UserMessageItem) => void;
   onRerunMessage?: (item: UserMessageItem) => void;
   onSubmitArtifactRevision?: (item: ArtifactItem, revisedText: string) => Promise<void> | void;
 }
 
-export function ChatMessages({ chat, onRetry, onRerunMessage, onSubmitArtifactRevision }: Props) {
+export function ChatMessages({
+  chat,
+  a2uiEnabled = false,
+  onRetry,
+  onRerunMessage,
+  onSubmitArtifactRevision,
+}: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const [inspectData, setInspectData] = useState<unknown>(null);
 
@@ -38,13 +45,21 @@ export function ChatMessages({ chat, onRetry, onRerunMessage, onSubmitArtifactRe
             <UserBubble
               key={item.id}
               item={item}
+              a2uiEnabled={a2uiEnabled}
               onInspect={() => setInspectData(item)}
               onRerun={onRerunMessage ? () => onRerunMessage(item) : undefined}
             />
           );
         }
         if (item.kind === "agent-message") {
-          return <AgentBubble key={item.id} item={item} onInspect={() => setInspectData(item)} />;
+          return (
+            <AgentBubble
+              key={item.id}
+              item={item}
+              a2uiEnabled={a2uiEnabled}
+              onInspect={() => setInspectData(item)}
+            />
+          );
         }
         if (item.kind === "task-status") {
           return (
@@ -74,6 +89,7 @@ export function ChatMessages({ chat, onRetry, onRerunMessage, onSubmitArtifactRe
             <ArtifactBlock
               key={`${item.taskId}-${item.id}`}
               item={item}
+              a2uiEnabled={a2uiEnabled}
               onInspect={() => setInspectData(item)}
               onSubmitRevision={onSubmitArtifactRevision}
             />

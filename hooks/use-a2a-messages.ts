@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
-import type { Message, TaskArtifactUpdateEvent, TaskStatusUpdateEvent } from "@a2a-js/sdk";
+import type { Message, Part, TaskArtifactUpdateEvent, TaskStatusUpdateEvent } from "@a2a-js/sdk";
 import { getTextPartsText } from "@/lib/a2a/parts";
 import chatsReducer, {
   addChat,
@@ -26,6 +26,7 @@ import type {
 import {
   createExecutionEventFromLog,
 } from "@/lib/a2a/execution-events";
+import { detectA2UISurface } from "@/lib/a2a/a2ui";
 import { validateIncomingEvent, validateOutgoingMessage } from "@/lib/utils/compliance";
 import { useA2AConnection } from "@/hooks/use-a2a-connection";
 import { useA2ADebug } from "@/hooks/use-a2a-debug";
@@ -59,6 +60,18 @@ function createChatMeta(input: {
     lastMessage: "",
     timestamp: Date.now(),
   };
+}
+
+function getDataPartMimeType(part: Extract<Part, { kind: "data" }>): string | undefined {
+  const metadata = (part as { metadata?: { mimeType?: unknown } }).metadata;
+  return typeof metadata?.mimeType === "string" ? metadata.mimeType : undefined;
+}
+
+function countA2UISurfaces(parts: Part[]) {
+  return parts.reduce((count, part) => {
+    if (part.kind !== "data") return count;
+    return detectA2UISurface(part.data, getDataPartMimeType(part)) ? count + 1 : count;
+  }, 0);
 }
 
 function memoryStoreReducer(state: ChatsState, action: MemoryStoreAction): ChatsState {
@@ -408,6 +421,7 @@ export function useA2AMessages({
               continue;
             }
 
+            const structuredSurfaceCount = countA2UISurfaces(artifactEvent.artifact.parts);
             messageStore.applyArtifactUpdate({
               chatId: session.contextId,
               taskId: artifactEvent.taskId,
@@ -444,12 +458,36 @@ export function useA2AMessages({
                 },
               },
             });
+            if (structuredSurfaceCount > 0) {
+              messageStore.appendExecutionEvent({
+                chatId: session.contextId,
+                event: {
+                  id: crypto.randomUUID(),
+                  chatId: session.contextId,
+                  kind: "structured-ui",
+                  level: "info",
+                  timestamp: Date.now(),
+                  summary: `${structuredSurfaceCount} structured UI surface${structuredSurfaceCount === 1 ? "" : "s"} detected`,
+                  taskId: artifactEvent.taskId,
+                  artifactId: artifactEvent.artifact.artifactId,
+                  traceId: null,
+                  spanId: null,
+                  parentSpanId: null,
+                  details: {
+                    source: "artifact",
+                    enabled: connection.a2uiEnabled,
+                    surfaceCount: structuredSurfaceCount,
+                  },
+                },
+              });
+            }
             continue;
           }
 
           if (event.kind === "message") {
             const agentMessage = event as Message;
             if (agentMessage.role === "agent") {
+              const structuredSurfaceCount = countA2UISurfaces(agentMessage.parts);
               messageStore.applyAgentMessage({
                 chatId: session.contextId,
                 messageId: agentMessage.messageId,
@@ -475,6 +513,29 @@ export function useA2AMessages({
                   },
                 },
               });
+              if (structuredSurfaceCount > 0) {
+                messageStore.appendExecutionEvent({
+                  chatId: session.contextId,
+                  event: {
+                    id: crypto.randomUUID(),
+                    chatId: session.contextId,
+                    kind: "structured-ui",
+                    level: "info",
+                    timestamp: Date.now(),
+                    summary: `${structuredSurfaceCount} structured UI surface${structuredSurfaceCount === 1 ? "" : "s"} detected`,
+                    taskId: agentMessage.taskId,
+                    messageId: agentMessage.messageId,
+                    traceId: null,
+                    spanId: null,
+                    parentSpanId: null,
+                    details: {
+                      source: "message",
+                      enabled: connection.a2uiEnabled,
+                      surfaceCount: structuredSurfaceCount,
+                    },
+                  },
+                });
+              }
             }
           }
         }

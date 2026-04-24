@@ -41,6 +41,7 @@ export function useChatSession(chatId: string): ChatSessionState {
     agentUrl: agent?.url ?? "",
     auth: agent?.auth,
     headers: agent?.customHeaders,
+    a2uiEnabled: agent?.a2uiEnabled,
     debug,
     autoConnect: Boolean(agent),
     initialCard: agent?.card,

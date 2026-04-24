@@ -85,6 +85,7 @@ export function normalizeImportedAgent(agent: Agent): Agent {
     id: crypto.randomUUID(),
     tags: agent.tags ?? [],
     favorite: agent.favorite ?? false,
+    a2uiEnabled: agent.a2uiEnabled ?? false,
     status: "disconnected",
     error: undefined,
     auth: agent.auth ?? { type: "none" },

@@ -11,6 +11,7 @@ interface UseA2AConnectionOptions {
   agentUrl: string;
   auth?: AuthConfig;
   headers?: CustomHeader[];
+  a2uiEnabled?: boolean;
   debug?: ReturnType<typeof useA2ADebug>;
   autoConnect?: boolean;
   autoLoadCard?: boolean;
@@ -21,6 +22,7 @@ export function useA2AConnection({
   agentUrl,
   auth = { type: "none" },
   headers = [],
+  a2uiEnabled = false,
   debug,
   autoConnect = true,
   autoLoadCard = false,
@@ -33,8 +35,9 @@ export function useA2AConnection({
         agentUrl,
         auth,
         headers,
+        a2uiEnabled,
       }),
-    [agentUrl, auth, headers],
+    [agentUrl, auth, headers, a2uiEnabled],
   );
   const [transportState, setTransportState] = useState<{
     key: string;
@@ -89,6 +92,7 @@ export function useA2AConnection({
         headers,
         debugRef.current?.interceptors,
         debugRef.current?.onTransportLog,
+        { a2uiEnabled },
       );
       const client = await factory.createFromUrl(agentUrl);
       clientRef.current = client;
@@ -113,7 +117,7 @@ export function useA2AConnection({
       });
       throw err;
     }
-  }, [agentUrl, auth, configKey, headers]);
+  }, [a2uiEnabled, agentUrl, auth, configKey, headers]);
 
   const refreshAgentCard = useCallback(async () => {
     const client = await getClient();
@@ -148,6 +152,7 @@ export function useA2AConnection({
 
   return {
     agentUrl,
+    a2uiEnabled,
     card,
     error,
     status,

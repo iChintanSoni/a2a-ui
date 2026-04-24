@@ -290,6 +290,9 @@ Exit criteria:
 
 ### Phase 5: A2UI And Structured Rich Surfaces
 
+Status:
+Complete.
+
 Objective:
 Support interactive, structured agent-rendered UI where the protocol or extension supports it.
 
@@ -432,7 +435,7 @@ The platform expands carefully into local-first execution and richer modalities.
 - [x] Add compare-runs support
 - [x] Define QA test-case schema
 - [x] Build saved test suites and run history
-- [ ] Add A2UI payload detection and renderer MVP
+- [x] Add A2UI payload detection and renderer MVP
 - [ ] Write local tool bridge trust model before implementation
 
 ## Explicit Non-Goals For The Next Phase
