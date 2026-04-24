@@ -12,6 +12,7 @@ import {
   MessageSquarePlusIcon,
   ListTodoIcon,
   PinIcon,
+  ShieldCheckIcon,
 } from "lucide-react";
 
 import {
@@ -109,6 +110,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Link href="/dashboard/tasks">
                     <ListTodoIcon className="size-4 shrink-0" />
                     <span>Tasks</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/dashboard/qa"}>
+                  <Link href="/dashboard/qa">
+                    <ShieldCheckIcon className="size-4 shrink-0" />
+                    <span>QA Harness</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

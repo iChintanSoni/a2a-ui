@@ -244,6 +244,9 @@ Exit criteria:
 
 ### Phase 4: QA Harness
 
+Status:
+Complete.
+
 Objective:
 Let developers define repeatable agent checks and run them against local or remote agents.
 
@@ -427,8 +430,8 @@ The platform expands carefully into local-first execution and richer modalities.
 - [x] Add a task explorer view
 - [x] Add run clone and rerun actions
 - [x] Add compare-runs support
-- [ ] Define QA test-case schema
-- [ ] Build saved test suites and run history
+- [x] Define QA test-case schema
+- [x] Build saved test suites and run history
 - [ ] Add A2UI payload detection and renderer MVP
 - [ ] Write local tool bridge trust model before implementation
 

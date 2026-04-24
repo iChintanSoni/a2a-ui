@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import agentsReducer from "./features/agents/agentsSlice";
 import chatsReducer from "./features/chats/chatsSlice";
+import qaReducer from "./features/qa/qaSlice";
 import workbenchReducer from "./features/workbench/workbenchSlice";
 
 export const makeStore = () => {
@@ -8,6 +9,7 @@ export const makeStore = () => {
     reducer: {
       agents: agentsReducer,
       chats: chatsReducer,
+      qa: qaReducer,
       workbench: workbenchReducer,
     },
   });
