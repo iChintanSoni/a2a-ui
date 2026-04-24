@@ -22,23 +22,42 @@ export function ChatMessages({
   onRerunMessage,
   onSubmitArtifactRevision,
 }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const shouldStickToBottomRef = useRef(true);
   const [inspectData, setInspectData] = useState<unknown>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    shouldStickToBottomRef.current = true;
+  }, [chat.id]);
+
+  useEffect(() => {
+    if (!shouldStickToBottomRef.current) return;
+    bottomRef.current?.scrollIntoView({ block: "end" });
   }, [chat.items.length, chat.items]);
+
+  const handleScroll = () => {
+    const container = containerRef.current;
+    if (!container) return;
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    shouldStickToBottomRef.current = distanceFromBottom < 120;
+  };
 
   if (chat.items.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center text-muted-foreground text-sm">
+      <div className="flex min-h-0 flex-1 basis-0 items-center justify-center text-muted-foreground text-sm">
         Send a message to start chatting with <span className="font-medium ms-1">{chat.agentName}</span>.
       </div>
     );
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
+    <div
+      ref={containerRef}
+      className="min-h-0 flex-1 basis-0 space-y-3 overflow-y-auto overscroll-contain px-4 py-4"
+      onScroll={handleScroll}
+    >
       {chat.items.map((item, index) => {
         if (item.kind === "user-message") {
           return (
