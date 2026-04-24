@@ -9,6 +9,22 @@ iterating on task outputs, and running repeatable QA checks. The dashboard is
 built on reusable hooks and embeddable chat primitives, so the same client
 foundation can be used inside other apps.
 
+## Screenshots
+
+![A2A UI home screen with add-agent flow](docs/screenshots/01-home-add-agent.png)
+
+![A2A Workbench dashboard](docs/screenshots/02-workbench.png)
+
+![Agent Library with connected demo agents](docs/screenshots/03-agent-library.png)
+
+![Chat view with task artifacts and debugging context](docs/screenshots/04-chat-debug.png)
+
+![Conversations manager](docs/screenshots/05-conversations.png)
+
+![Task explorer](docs/screenshots/06-tasks.png)
+
+![QA Harness](docs/screenshots/07-qa-harness.png)
+
 ## What You Can Do
 
 - Connect to A2A agents over HTTP or HTTPS.
