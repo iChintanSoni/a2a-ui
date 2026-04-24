@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { H2, Muted, Caption, Small } from "@/components/typography";
+import { PageTitle, Muted, Caption, Small } from "@/components/typography";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   buildTaskSummaries,
@@ -68,9 +68,9 @@ export default function TasksPage() {
   }, [query, stateFilter, tasks]);
 
   return (
-    <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div>
-        <H2>Tasks</H2>
+        <PageTitle>Tasks</PageTitle>
         <Muted>
           Explore task-centric runs across chats, including state, artifacts, and correlated
           warnings.
@@ -115,7 +115,7 @@ export default function TasksPage() {
             )
           }
         >
-          <BookmarkPlusIcon className="size-4" />
+          <BookmarkPlusIcon data-icon="inline-start" />
           Save current filter
         </Button>
         {presets.map((preset) => (

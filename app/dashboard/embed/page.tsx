@@ -2,7 +2,7 @@
 
 import { A2AAgentCard } from "@/components/chat/A2AAgentCard";
 import { A2AChat } from "@/components/chat/A2AChat";
-import { Caption, H2, Muted, P } from "@/components/typography";
+import { Caption, PageTitle, Muted, P } from "@/components/typography";
 import { useA2AConnection } from "@/hooks/use-a2a-connection";
 
 const DEMO_AGENT_URL =
@@ -17,9 +17,9 @@ export default function EmbedDemoPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
-      <div className="max-w-3xl space-y-2">
+      <div className="flex max-w-3xl flex-col gap-2">
         <Caption>Phase 1 Demo</Caption>
-        <H2>Embeddable A2A Chat</H2>
+        <PageTitle>Embeddable A2A Chat</PageTitle>
         <P className="text-sm text-muted-foreground">
           This route uses the new headless hooks and embeddable components directly, without the
           dashboard chat route owning session orchestration.

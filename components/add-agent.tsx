@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon, Trash2Icon } from "lucide-react";
@@ -33,7 +34,13 @@ import {
 
 const DEFAULT_AUTH: AuthConfig = { type: "none" };
 
-export function AddAgent() {
+type AddAgentProps = {
+  className?: string;
+  variant?: ComponentProps<typeof Button>["variant"];
+  size?: ComponentProps<typeof Button>["size"];
+};
+
+export function AddAgent({ className, variant = "outline", size }: AddAgentProps) {
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState("http://localhost:3001");
   const [loading, setLoading] = useState(false);
@@ -145,7 +152,10 @@ export function AddAgent() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline">Add Agent</Button>
+        <Button variant={variant} size={size} className={className}>
+          <PlusIcon data-icon="inline-start" />
+          Add Agent
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={handleAddAgent}>
@@ -188,7 +198,7 @@ export function AddAgent() {
             </TabsContent>
 
             {/* ── Authentication ─────────────────────────────────────── */}
-            <TabsContent value="auth" className="mt-4 space-y-4">
+            <TabsContent value="auth" className="mt-4">
               <FieldGroup>
                 <Field>
                   <Label>Auth Type</Label>
@@ -290,7 +300,7 @@ export function AddAgent() {
             </TabsContent>
 
             {/* ── Custom Headers ─────────────────────────────────────── */}
-            <TabsContent value="headers" className="mt-4 space-y-3">
+            <TabsContent value="headers" className="mt-4 flex flex-col gap-3">
               {headers.length === 0 && (
                 <Muted>No custom headers. Add key-value pairs below.</Muted>
               )}
@@ -318,7 +328,7 @@ export function AddAgent() {
                     disabled={loading}
                     aria-label="Remove header"
                   >
-                    <Trash2Icon className="size-4" />
+                    <Trash2Icon />
                   </Button>
                 </div>
               ))}
@@ -329,7 +339,7 @@ export function AddAgent() {
                 onClick={addHeaderRow}
                 disabled={loading}
               >
-                <PlusIcon className="size-4" />
+                <PlusIcon data-icon="inline-start" />
                 Add Header
               </Button>
             </TabsContent>

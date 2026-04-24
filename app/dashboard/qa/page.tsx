@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { H2, Muted, Caption, Small } from "@/components/typography";
+import { PageTitle, Muted, Caption, Small } from "@/components/typography";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { createDemoSmokeSuite } from "@/lib/features/qa/demoSuite";
 import {
@@ -159,9 +159,9 @@ export default function QaPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div>
-        <H2>QA Harness</H2>
+        <PageTitle>QA Harness</PageTitle>
         <Muted>
           Save repeatable agent checks, run suites, and export pass/fail reports.
         </Muted>
@@ -173,9 +173,9 @@ export default function QaPage() {
         </div>
       ) : (
         <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
-          <div className="space-y-4 rounded-md border p-4">
+          <div className="flex flex-col gap-4 rounded-md border p-4">
             <div className="flex items-center gap-2">
-              <ClipboardCheckIcon className="size-4" />
+              <ClipboardCheckIcon />
               <Small>Suite builder</Small>
             </div>
 

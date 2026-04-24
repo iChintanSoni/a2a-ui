@@ -12,7 +12,6 @@ import {
 import type { TaskStatusItem } from "@/lib/features/chats/chatsSlice";
 import type { TaskTimelineStage } from "@/lib/a2a/execution-events";
 import { PartRenderer } from "./PartRenderer";
-import { Muted } from "@/components/typography";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -129,11 +128,11 @@ export function TaskStatusRow({ item, timelineStages = [], onInspect, onRetry }:
         </div>
       )}
       {item.statusMessage && item.statusMessage.parts.length > 0 && (
-        <Muted className="ms-5">
+        <div className="ms-5 text-sm text-muted-foreground">
           {item.statusMessage.parts.map((part, i) => (
             <PartRenderer key={i} part={part} />
           ))}
-        </Muted>
+        </div>
       )}
       {item.state === "canceled" && onRetry && (
         <div className="ms-5 mt-1">

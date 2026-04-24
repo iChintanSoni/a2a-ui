@@ -1,12 +1,54 @@
 "use client";
 
 import Link from "next/link";
+import type { LucideIcon } from "lucide-react";
 import { BotIcon, MessageSquareIcon, StarIcon, ListTodoIcon } from "lucide-react";
 import { AddAgent } from "@/components/add-agent";
 import { WorkspaceActions } from "@/components/workspace-actions";
 import { Button } from "@/components/ui/button";
-import { H2, Muted, P, Caption } from "@/components/typography";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Muted, P, PageTitle } from "@/components/typography";
 import { useAppSelector } from "@/lib/hooks";
+
+type MetricCardProps = {
+  title: string;
+  value: number;
+  description: string;
+  href?: string;
+  icon: LucideIcon;
+};
+
+function MetricCard({ title, value, description, href, icon: Icon }: MetricCardProps) {
+  const content = (
+    <Card size="sm" className="h-full transition-colors hover:bg-muted/40">
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardAction>
+          <Icon />
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        <div className="text-3xl font-semibold tabular-nums">{value}</div>
+        <CardDescription className="mt-2">{description}</CardDescription>
+      </CardContent>
+    </Card>
+  );
+
+  if (!href) return content;
+
+  return (
+    <Link href={href} className="block h-full">
+      {content}
+    </Link>
+  );
+}
 
 export default function DashboardPage() {
   const agents = useAppSelector((state) => state.agents.agents);
@@ -19,53 +61,48 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex-1 space-y-8 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
         <div>
-          <H2>A2A Workbench</H2>
+          <PageTitle>A2A Workbench</PageTitle>
           <P className="mt-1 text-sm text-muted-foreground">
             Connect agents, inspect protocol behavior, and manage saved conversations.
           </P>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <WorkspaceActions />
-          <AddAgent />
+          <AddAgent variant="default" />
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Link href="/dashboard/agents" className="rounded-md border p-4 transition-colors hover:bg-muted/40">
-          <div className="flex items-center gap-2">
-            <BotIcon className="size-4" />
-            <Caption className="font-medium text-foreground">Agents</Caption>
-          </div>
-          <div className="mt-3 text-3xl font-semibold">{agents.length}</div>
-          <Muted className="mt-1">Search, filter, tag, and favorite local agents.</Muted>
-        </Link>
-        <Link href="/dashboard/conversations" className="rounded-md border p-4 transition-colors hover:bg-muted/40">
-          <div className="flex items-center gap-2">
-            <MessageSquareIcon className="size-4" />
-            <Caption className="font-medium text-foreground">Conversations</Caption>
-          </div>
-          <div className="mt-3 text-3xl font-semibold">{activeChats.length}</div>
-          <Muted className="mt-1">Rename, archive, delete, and export chats.</Muted>
-        </Link>
-        <Link href="/dashboard/tasks" className="rounded-md border p-4 transition-colors hover:bg-muted/40">
-          <div className="flex items-center gap-2">
-            <ListTodoIcon className="size-4" />
-            <Caption className="font-medium text-foreground">Tasks</Caption>
-          </div>
-          <div className="mt-3 text-3xl font-semibold">{taskCount}</div>
-          <Muted className="mt-1">Review task states, artifacts, and correlated warnings.</Muted>
-        </Link>
-        <div className="rounded-md border p-4">
-          <div className="flex items-center gap-2">
-            <StarIcon className="size-4" />
-            <Caption className="font-medium text-foreground">Favorites</Caption>
-          </div>
-          <div className="mt-3 text-3xl font-semibold">{favoriteAgents.length}</div>
-          <Muted className="mt-1">Pinned agents appear first in the library.</Muted>
-        </div>
+        <MetricCard
+          href="/dashboard/agents"
+          icon={BotIcon}
+          title="Agents"
+          value={agents.length}
+          description="Search, filter, tag, and favorite local agents."
+        />
+        <MetricCard
+          href="/dashboard/conversations"
+          icon={MessageSquareIcon}
+          title="Conversations"
+          value={activeChats.length}
+          description="Rename, archive, delete, and export chats."
+        />
+        <MetricCard
+          href="/dashboard/tasks"
+          icon={ListTodoIcon}
+          title="Tasks"
+          value={taskCount}
+          description="Review task states, artifacts, and correlated warnings."
+        />
+        <MetricCard
+          icon={StarIcon}
+          title="Favorites"
+          value={favoriteAgents.length}
+          description="Pinned agents appear first in the library."
+        />
       </div>
 
       {agents.length === 0 ? (
@@ -76,7 +113,7 @@ export default function DashboardPage() {
           </P>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
             <WorkspaceActions />
-            <AddAgent />
+            <AddAgent variant="default" />
           </div>
         </div>
       ) : (

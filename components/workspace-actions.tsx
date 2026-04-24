@@ -95,7 +95,7 @@ export function WorkspaceActions() {
         onClick={exportWorkspace}
         title="Export agents and workspace data without secrets"
       >
-        <DownloadIcon className="size-4" />
+        <DownloadIcon data-icon="inline-start" />
         Export Workspace
       </Button>
       <Button
@@ -104,7 +104,7 @@ export function WorkspaceActions() {
         onClick={() => importRef.current?.click()}
         title="Import workspace JSON"
       >
-        <UploadIcon className="size-4" />
+        <UploadIcon data-icon="inline-start" />
         Import
       </Button>
     </div>
