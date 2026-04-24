@@ -375,6 +375,9 @@ Exit criteria:
 
 ### Phase 7: Rich Modalities
 
+Status:
+Complete.
+
 Objective:
 Add voice and richer live media only after the workbench foundation is solid.
 
@@ -436,6 +439,7 @@ The platform expands carefully into local-first execution and richer modalities.
 - [x] Define QA test-case schema
 - [x] Build saved test suites and run history
 - [x] Add A2UI payload detection and renderer MVP
+- [x] Add voice input capture and rich artifact revision modes
 - [ ] Write local tool bridge trust model before implementation
 
 ## Explicit Non-Goals For The Next Phase
