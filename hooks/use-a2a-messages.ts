@@ -27,6 +27,7 @@ import {
   createExecutionEventFromLog,
 } from "@/lib/a2a/execution-events";
 import { detectA2UISurface } from "@/lib/a2a/a2ui";
+import { modalityFamily } from "@/lib/a2a/modalities";
 import { validateIncomingEvent, validateOutgoingMessage } from "@/lib/utils/compliance";
 import { useA2AConnection } from "@/hooks/use-a2a-connection";
 import { useA2ADebug } from "@/hooks/use-a2a-debug";
@@ -72,6 +73,19 @@ function countA2UISurfaces(parts: Part[]) {
     if (part.kind !== "data") return count;
     return detectA2UISurface(part.data, getDataPartMimeType(part)) ? count + 1 : count;
   }, 0);
+}
+
+function summarizePartModalities(parts: Part[]) {
+  return parts.reduce<Record<string, number>>((summary, part) => {
+    const family =
+      part.kind === "text"
+        ? "text"
+        : part.kind === "data"
+          ? "data"
+          : modalityFamily(part.file.mimeType ?? "application/octet-stream");
+    summary[family] = (summary[family] ?? 0) + 1;
+    return summary;
+  }, {});
 }
 
 function memoryStoreReducer(state: ChatsState, action: MemoryStoreAction): ChatsState {
@@ -261,6 +275,7 @@ export function useA2AMessages({
       const text = getTextPartsText(parts);
       const fileCount = parts.filter((part) => part.kind === "file").length;
       const dataCount = parts.filter((part) => part.kind === "data").length;
+      const modalities = summarizePartModalities(parts);
 
       messageStore.addUserMessage({
         chatId: session.contextId,
@@ -289,6 +304,7 @@ export function useA2AMessages({
             partCount: parts.length,
             fileCount,
             dataCount,
+            modalities,
             hiddenContextConfigured:
               Boolean(context?.hiddenSystemContext) ||
               Boolean(context?.messageContextEnrichers?.length),
@@ -452,6 +468,7 @@ export function useA2AMessages({
                 details: {
                   name: artifactEvent.artifact.name,
                   description: artifactEvent.artifact.description,
+                  modalities: summarizePartModalities(artifactEvent.artifact.parts),
                   append: artifactEvent.append ?? false,
                   lastChunk: artifactEvent.lastChunk ?? false,
                   metadata: artifactEvent.artifact.metadata,
@@ -510,6 +527,7 @@ export function useA2AMessages({
                   parentSpanId: null,
                   details: {
                     partCount: agentMessage.parts.length,
+                    modalities: summarizePartModalities(agentMessage.parts),
                   },
                 },
               });

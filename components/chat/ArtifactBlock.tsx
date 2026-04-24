@@ -2,8 +2,13 @@ import type { ArtifactItem } from "@/lib/features/chats/chatsSlice";
 import { PartRenderer } from "./PartRenderer";
 import { Caption, MicroLabel } from "@/components/typography";
 import { Button } from "@/components/ui/button";
-import { getArtifactText, isEditableArtifact } from "@/lib/features/chats/artifactRevision";
-import { Cpu, PencilIcon } from "lucide-react";
+import {
+  getArtifactRevisionLabel,
+  getArtifactText,
+  getEditableArtifactKind,
+  isEditableArtifact,
+} from "@/lib/features/chats/artifactRevision";
+import { Cpu, PencilIcon, Table2Icon, Code2Icon, WorkflowIcon, FileTextIcon } from "lucide-react";
 import { useState } from "react";
 
 interface Props {
@@ -25,6 +30,20 @@ export function ArtifactBlock({ item, a2uiEnabled = false, onInspect, onSubmitRe
     | { input_tokens?: number; output_tokens?: number; total_tokens?: number }
     | undefined;
   const canEdit = isEditableArtifact(item) && Boolean(onSubmitRevision);
+  const artifactKind = getEditableArtifactKind(item);
+  const revisionLabel = getArtifactRevisionLabel(item);
+  const editorClassName =
+    artifactKind === "code" || artifactKind === "diagram" || artifactKind === "table"
+      ? "font-mono text-xs"
+      : "text-sm";
+  const KindIcon =
+    artifactKind === "code"
+      ? Code2Icon
+      : artifactKind === "table"
+        ? Table2Icon
+        : artifactKind === "diagram"
+          ? WorkflowIcon
+          : FileTextIcon;
 
   return (
     <div className="my-1 rounded-lg border bg-card overflow-hidden text-sm group relative">
@@ -45,7 +64,7 @@ export function ArtifactBlock({ item, a2uiEnabled = false, onInspect, onSubmitRe
               }}
             >
               <PencilIcon className="size-3" />
-              {isEditing ? "Close editor" : "Revise"}
+              {isEditing ? "Close editor" : revisionLabel}
             </Button>
           )}
           {usage?.total_tokens !== undefined && (
@@ -72,10 +91,15 @@ export function ArtifactBlock({ item, a2uiEnabled = false, onInspect, onSubmitRe
       </div>
       {isEditing && canEdit && (
         <div className="border-t bg-muted/20 px-3 py-3">
+          <div className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+            <KindIcon className="size-3.5" />
+            <span className="capitalize">{artifactKind} artifact</span>
+          </div>
           <textarea
-            className="min-h-36 w-full resize-y rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+            className={`min-h-36 w-full resize-y rounded-md border bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-ring ${editorClassName}`}
             value={revisedText}
             onChange={(event) => setRevisedText(event.target.value)}
+            spellCheck={artifactKind === "text" || artifactKind === "markdown"}
           />
           <div className="mt-3 flex items-center justify-end gap-2">
             <Button

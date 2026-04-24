@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import {
   SendIcon,
   PaperclipIcon,
@@ -8,12 +8,18 @@ import {
   SquareIcon,
   BookmarkPlusIcon,
   RotateCcwIcon,
+  MicIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { isAttachmentMode } from "@/lib/utils/modes";
+import {
+  extensionForMimeType,
+  preferredAudioMimeType,
+  supportsAudioInput,
+} from "@/lib/a2a/modalities";
 import type { PromptPreset } from "@/lib/features/workbench/workbenchSlice";
 import type { OutgoingMessagePartInput } from "@/lib/a2a/types";
 
@@ -71,6 +77,7 @@ export function ChatInput({
   // Text modes describe the message body; only non-text modes allow attachments.
   const acceptedMimeTypes = inputModes.filter(isAttachmentMode);
   const showFilePicker = acceptedMimeTypes.length > 0;
+  const showVoiceInput = supportsAudioInput(inputModes);
   const acceptAttr = acceptedMimeTypes.join(",");
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -84,6 +91,12 @@ export function ChatInput({
   const [attachments, setAttachments] = useState<AttachmentPreview[]>([]);
   const [dataParts, setDataParts] = useState<DataPartDraft[]>([]);
   const [dataErrors, setDataErrors] = useState<Record<string, string>>({});
+  const [recordingState, setRecordingState] = useState<"idle" | "recording" | "error">("idle");
+  const [recordingError, setRecordingError] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingChunksRef = useRef<BlobPart[]>([]);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
+  const mountedRef = useRef(true);
 
   // Drag-and-drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -192,6 +205,67 @@ export function ChatInput({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const stopTracks = useCallback(() => {
+    recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+    recordingStreamRef.current = null;
+  }, []);
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+  };
+
+  const startRecording = async () => {
+    if (!showVoiceInput || disabled || recordingState === "recording") return;
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setRecordingState("error");
+      setRecordingError("Audio recording is not available in this browser.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = preferredAudioMimeType(inputModes);
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      recordingChunksRef.current = [];
+      recordingStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) recordingChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const type = recorder.mimeType || mimeType || "audio/webm";
+        const blob = new Blob(recordingChunksRef.current, { type });
+        if (blob.size > 0 && mountedRef.current) {
+          const file = new File(
+            [blob],
+            `voice-input-${new Date().toISOString().replace(/[:.]/g, "-")}.${extensionForMimeType(type)}`,
+            { type },
+          );
+          setAttachments((prev) => [...prev, { file }]);
+        }
+        recordingChunksRef.current = [];
+        mediaRecorderRef.current = null;
+        stopTracks();
+        if (mountedRef.current) setRecordingState("idle");
+      };
+      recorder.onerror = () => {
+        stopTracks();
+        if (!mountedRef.current) return;
+        setRecordingState("error");
+        setRecordingError("Audio recording failed.");
+      };
+
+      recorder.start();
+      setRecordingError(null);
+      setRecordingState("recording");
+    } catch (error) {
+      stopTracks();
+      setRecordingState("error");
+      setRecordingError(error instanceof Error ? error.message : "Microphone access failed.");
+    }
+  };
+
   const removeAttachment = (index: number) => {
     setAttachments((prev) => {
       const updated = [...prev];
@@ -201,14 +275,26 @@ export function ChatInput({
     });
   };
 
-  const clearAttachments = () => {
+  const clearAttachments = useCallback(() => {
     setAttachments((prev) => {
       prev.forEach((attachment) => {
         if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
       });
       return [];
     });
-  };
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (mediaRecorderRef.current?.state === "recording") {
+        mediaRecorderRef.current.stop();
+      }
+      stopTracks();
+      clearAttachments();
+    };
+  }, [clearAttachments, stopTracks]);
 
   const updateMetaRow = (index: number, field: "key" | "value", val: string) => {
     setMetaRows((prev) =>
@@ -333,6 +419,12 @@ export function ChatInput({
         <div className="flex items-center gap-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-1.5 text-xs text-blue-700 dark:text-blue-300">
           <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />
           Responding to agent — your message will continue the current task
+        </div>
+      )}
+
+      {recordingError && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs text-destructive">
+          {recordingError}
         </div>
       )}
 
@@ -558,6 +650,24 @@ export function ChatInput({
             aria-label="Save prompt preset"
           >
             <BookmarkPlusIcon className="size-4" />
+          </button>
+        )}
+
+        {showVoiceInput && (
+          <button
+            onClick={recordingState === "recording" ? stopRecording : startRecording}
+            disabled={disabled}
+            className={cn(
+              "shrink-0 transition-colors",
+              recordingState === "recording"
+                ? "text-red-600"
+                : "text-muted-foreground hover:text-foreground",
+              disabled && "opacity-50 cursor-not-allowed",
+            )}
+            title={recordingState === "recording" ? "Stop recording" : "Record voice input"}
+            aria-label={recordingState === "recording" ? "Stop recording" : "Record voice input"}
+          >
+            <MicIcon className={cn("size-4", recordingState === "recording" && "animate-pulse")} />
           </button>
         )}
 
