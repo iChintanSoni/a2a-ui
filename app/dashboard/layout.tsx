@@ -11,12 +11,12 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="h-svh overflow-hidden">
-        <header className="bg-background sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b px-4">
+      <SidebarInset className="h-dvh overflow-hidden">
+        <header className="bg-background sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
           <SidebarTrigger className="-ms-1" />
           <Separator
             orientation="vertical"
-            className="me-2 data-vertical:h-4 data-vertical:self-auto"
+            className="me-1 data-vertical:h-4 data-vertical:self-auto sm:me-2"
           />
           <DashboardBreadcrumb />
         </header>

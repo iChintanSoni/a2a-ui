@@ -80,7 +80,7 @@ export function A2AChat({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card">
-      <div className="flex items-center gap-2 border-b px-4 py-3">
+      <div className="flex flex-wrap items-start gap-2 border-b px-3 py-3 sm:items-center sm:px-4">
         <div className="min-w-0 flex-1">
           <Small className="truncate">{title ?? chat.title}</Small>
           <Muted className="truncate text-xs">{connection.card?.name ?? chat.agentName}</Muted>
@@ -110,12 +110,12 @@ export function A2AChat({
         <Button
           variant="outline"
           size="sm"
-          className="gap-1.5"
+          className="gap-1.5 max-sm:px-2"
           onClick={session.newSession}
           disabled={session.isStreaming}
         >
           <SquarePenIcon className="size-3.5" />
-          New Session
+          <span className="hidden sm:inline">New Session</span>
         </Button>
       </div>
 

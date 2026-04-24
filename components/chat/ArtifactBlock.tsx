@@ -46,13 +46,13 @@ export function ArtifactBlock({ item, a2uiEnabled = false, onInspect, onSubmitRe
           : FileTextIcon;
 
   return (
-    <div className="my-1 rounded-lg border bg-card overflow-hidden text-sm group relative">
-      <div className="flex items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
+    <div className="group relative my-1 min-w-0 overflow-hidden rounded-lg border bg-card text-sm">
+      <div className="flex flex-wrap items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
         <MicroLabel>{label}</MicroLabel>
         {item.description && (
-          <Caption className="truncate">{item.description}</Caption>
+          <Caption className="min-w-0 truncate">{item.description}</Caption>
         )}
-        <div className="ms-auto flex items-center gap-3">
+        <div className="ms-auto flex flex-wrap items-center justify-end gap-2 sm:gap-3">
           {canEdit && !item.isStreaming && (
             <Button
               variant="ghost"
@@ -81,7 +81,7 @@ export function ArtifactBlock({ item, a2uiEnabled = false, onInspect, onSubmitRe
           )}
         </div>
       </div>
-      <div className={`px-3 py-2 ${hasOnlyText ? "" : "space-y-2"}`}>
+      <div className={`min-w-0 px-3 py-2 ${hasOnlyText ? "" : "space-y-2"}`}>
         {item.parts.map((part, i) => (
           <PartRenderer key={i} part={part} a2uiEnabled={a2uiEnabled} />
         ))}

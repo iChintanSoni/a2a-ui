@@ -73,7 +73,7 @@ export function WorkspaceActions() {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
       <input
         ref={importRef}
         type="file"
@@ -81,7 +81,7 @@ export function WorkspaceActions() {
         className="hidden"
         onChange={handleImport}
       />
-      <Label className="flex items-center gap-2 text-xs text-muted-foreground">
+      <Label className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground max-sm:basis-full">
         <input
           type="checkbox"
           checked={includeChats}
@@ -92,6 +92,7 @@ export function WorkspaceActions() {
       <Button
         variant="outline"
         size="sm"
+        className="max-sm:flex-1"
         onClick={exportWorkspace}
         title="Export agents and workspace data without secrets"
       >
@@ -101,6 +102,7 @@ export function WorkspaceActions() {
       <Button
         variant="outline"
         size="sm"
+        className="max-sm:flex-1"
         onClick={() => importRef.current?.click()}
         title="Import workspace JSON"
       >

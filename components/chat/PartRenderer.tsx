@@ -26,7 +26,7 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
 
     if (file.mimeType?.startsWith("image/")) {
       // eslint-disable-next-line @next/next/no-img-element
-      return <img src={src} alt={name} className="max-w-xs rounded border" />;
+      return <img src={src} alt={name} className="max-w-full rounded border sm:max-w-xs" />;
     }
 
     if (file.mimeType?.startsWith("audio/")) {
@@ -34,7 +34,7 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
         <audio
           controls
           src={src}
-          className="max-w-xs rounded"
+          className="max-w-full rounded sm:max-w-xs"
           aria-label={name}
         />
       );
@@ -45,7 +45,7 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
         <video
           controls
           src={src}
-          className="max-w-sm rounded border"
+          className="max-w-full rounded border sm:max-w-sm"
           aria-label={name}
         />
       );
@@ -57,8 +57,7 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
           <object
             data={src}
             type="application/pdf"
-            className="w-full rounded border"
-            style={{ height: "480px" }}
+            className="h-[60dvh] w-full rounded border sm:h-[480px]"
             aria-label={name}
           >
             <a
@@ -95,7 +94,7 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
     }
 
     return (
-      <pre className="bg-muted rounded p-3 text-xs overflow-x-auto">
+      <pre className="overflow-x-auto rounded bg-muted p-3 text-xs">
         {JSON.stringify(part.data, null, 2)}
       </pre>
     );

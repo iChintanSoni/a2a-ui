@@ -235,16 +235,16 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="min-w-0 flex-1 overflow-y-auto">
       {/* Agent identity header */}
-      <div className="border-b px-6 py-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
+      <div className="border-b px-4 py-5 sm:px-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex min-w-0 flex-col gap-1">
             <PageTitle>{agent.displayName ?? agent.card.name}</PageTitle>
             <Mono className="text-muted-foreground break-all">
               {agent.url}
             </Mono>
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               <Badge
                 variant={agent.status === "connected" ? "default" : "destructive"}
               >
@@ -256,8 +256,8 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={copyShareLink} className="gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:shrink-0">
+            <Button variant="outline" size="sm" onClick={copyShareLink} className="justify-center gap-2">
               <LinkIcon className="size-3.5" />
               {linkCopied ? "Copied!" : "Copy Link"}
             </Button>
@@ -265,7 +265,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
               variant="outline"
               size="sm"
               onClick={() => dispatch(toggleAgentFavorite(agent.id))}
-              className="gap-2"
+              className="justify-center gap-2"
             >
               {agent.favorite ? <StarIcon className="size-3.5 fill-current" /> : <StarOffIcon className="size-3.5" />}
               {agent.favorite ? "Favorited" : "Favorite"}
@@ -273,7 +273,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
 
           <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="destructive" size="sm">
+              <Button className="w-full sm:w-auto" variant="destructive" size="sm">
                 Remove Agent
               </Button>
             </DialogTrigger>
@@ -300,9 +300,9 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
       </div>
 
       {/* Settings tabs */}
-      <div className="px-6 py-6 max-w-2xl">
+      <div className="max-w-2xl px-4 py-6 sm:px-6">
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList>
+          <TabsList className="max-w-full justify-start overflow-x-auto">
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="auth">Authentication</TabsTrigger>
             <TabsTrigger value="headers">Custom Headers</TabsTrigger>
@@ -472,12 +472,12 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
           <TabsContent value="headers" className="mt-6 space-y-4">
             <Muted>Additional headers sent with every request to this agent.</Muted>
 
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               {headers.length === 0 && (
                 <Muted className="py-2">No custom headers configured.</Muted>
               )}
               {headers.map((row, i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={i} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
                   <Input
                     placeholder="Header name"
                     value={row.key}
@@ -503,7 +503,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
               ))}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Button
                 type="button"
                 variant="outline"
@@ -523,7 +523,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
           <TabsContent value="card" className="mt-6 space-y-8">
 
             {/* Re-fetch controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -561,7 +561,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                 <div className="space-y-1">
                   <Caption>Additional interfaces</Caption>
                   {agent.card.additionalInterfaces.map((entry, index) => (
-                    <div key={`${entry.url}-${entry.transport}-${index}`} className="flex gap-2 text-xs">
+                    <div key={`${entry.url}-${entry.transport}-${index}`} className="flex min-w-0 flex-col gap-1 text-xs sm:flex-row sm:gap-2">
                       <Badge variant="secondary">{entry.transport}</Badge>
                       <Mono className="break-all">{entry.url}</Mono>
                     </div>
@@ -614,7 +614,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
 
             {/* Compliance */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <SectionTitle>A2A Spec Compliance</SectionTitle>
                 <Caption className="inline">
                   {compliance.passCount}/{compliance.checks.length} checks passed

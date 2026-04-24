@@ -4,7 +4,7 @@ export function H1({ className, ...props }: React.ComponentProps<"h1">) {
   return (
     <h1
       className={cn(
-        "scroll-m-20 text-center text-4xl font-extrabold text-balance",
+        "scroll-m-20 text-center text-3xl font-extrabold text-balance sm:text-4xl",
         className,
       )}
       {...props}
@@ -16,7 +16,7 @@ export function H2({ className, ...props }: React.ComponentProps<"h2">) {
   return (
     <h2
       className={cn(
-        "scroll-m-20 border-b pb-2 text-3xl font-semibold first:mt-0",
+        "scroll-m-20 border-b pb-2 text-2xl font-semibold first:mt-0 sm:text-3xl",
         className,
       )}
       {...props}
@@ -39,7 +39,7 @@ export function Blockquote({ className, ...props }: React.ComponentProps<"blockq
 }
 
 export function Lead({ className, ...props }: React.ComponentProps<"p">) {
-  return <p className={cn("text-muted-foreground text-xl", className)} {...props} />;
+  return <p className={cn("text-muted-foreground text-lg sm:text-xl", className)} {...props} />;
 }
 
 export function Large({ className, ...props }: React.ComponentProps<"p">) {

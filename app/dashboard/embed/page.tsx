@@ -16,7 +16,7 @@ export default function EmbedDemoPage() {
   });
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div className="flex max-w-3xl flex-col gap-2">
         <Caption>Phase 1 Demo</Caption>
         <PageTitle>Embeddable A2A Chat</PageTitle>
@@ -29,7 +29,7 @@ export default function EmbedDemoPage() {
         </Muted>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+      <div className="grid min-h-0 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
         <A2AChat
           agentUrl={DEMO_AGENT_URL}
           initialCard={cardConnection.card ?? undefined}

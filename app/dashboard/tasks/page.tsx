@@ -68,7 +68,7 @@ export default function TasksPage() {
   }, [query, stateFilter, tasks]);
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div>
         <PageTitle>Tasks</PageTitle>
         <Muted>
@@ -77,7 +77,7 @@ export default function TasksPage() {
         </Muted>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-[1fr_220px]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_220px]">
         <Input
           placeholder="Search by task, context, chat, agent, or artifact"
           value={query}
@@ -147,7 +147,7 @@ export default function TasksPage() {
       ) : (
         <div className="space-y-3">
           {filteredTasks.map((task) => (
-            <div key={`${task.chatId}:${task.taskId}`} className="rounded-md border p-4">
+            <div key={`${task.chatId}:${task.taskId}`} className="min-w-0 rounded-md border p-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -179,9 +179,9 @@ export default function TasksPage() {
                     </div>
                   )}
                   {task.artifactNames.length > 0 && (
-                    <Caption className="mt-3 block truncate">
-                      Artifacts: {task.artifactNames.join(", ")}
-                    </Caption>
+                  <Caption className="mt-3 block break-words">
+                    Artifacts: {task.artifactNames.join(", ")}
+                  </Caption>
                   )}
                 </div>
 

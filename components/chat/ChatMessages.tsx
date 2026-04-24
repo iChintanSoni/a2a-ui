@@ -55,7 +55,7 @@ export function ChatMessages({
   return (
     <div
       ref={containerRef}
-      className="min-h-0 flex-1 basis-0 space-y-3 overflow-y-auto overscroll-contain px-4 py-4"
+      className="min-h-0 flex-1 basis-0 space-y-3 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4 sm:py-4"
       onScroll={handleScroll}
     >
       {chat.items.map((item, index) => {

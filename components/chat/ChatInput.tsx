@@ -391,7 +391,7 @@ export function ChatInput({
   return (
     <div
       className={cn(
-        "sticky bottom-0 z-20 flex shrink-0 flex-col gap-2 border-t bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] transition-colors",
+        "sticky bottom-0 z-20 flex shrink-0 flex-col gap-2 border-t bg-background px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] transition-colors sm:px-4",
         isDragging && showFilePicker && "bg-primary/5 border-primary"
       )}
       onDragOver={handleDragOver}
@@ -432,7 +432,7 @@ export function ChatInput({
       {showFilePicker && attachments.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {attachments.map((a, i) => (
-            <div key={i} className="relative flex items-center gap-1.5 rounded-lg border bg-muted/50 px-2 py-1.5 text-xs max-w-45">
+            <div key={i} className="relative flex max-w-full items-center gap-1.5 rounded-lg border bg-muted/50 px-2 py-1.5 text-xs sm:max-w-45">
               {a.previewUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={a.previewUrl} alt={a.file.name} className="size-8 rounded object-cover shrink-0" />
@@ -515,7 +515,7 @@ export function ChatInput({
         <div className="rounded-lg border bg-muted/20 px-3 py-2 flex flex-col gap-2">
           <p className="text-xs font-medium text-muted-foreground">Message metadata</p>
           {metaRows.map((row, i) => (
-            <div key={i} className="flex items-center gap-1.5">
+            <div key={i} className="flex flex-col gap-1.5 sm:flex-row sm:items-center">
               <Input
                 className="h-7 text-xs flex-1"
                 placeholder="key"
@@ -569,7 +569,7 @@ export function ChatInput({
       )}
 
       {/* Main input row */}
-      <div className="flex min-h-12 items-end gap-2 rounded-xl border bg-muted/30 px-3 py-2 focus-within:ring-1 focus-within:ring-ring">
+      <div className="flex min-h-12 min-w-0 items-end gap-1.5 rounded-xl border bg-muted/30 px-2 py-2 focus-within:ring-1 focus-within:ring-ring sm:gap-2 sm:px-3">
         {/* File picker — hidden input + paperclip button, only when agent accepts non-text input */}
         {showFilePicker && (
           <>
@@ -597,7 +597,7 @@ export function ChatInput({
 
         <textarea
           ref={textareaRef}
-          className="max-h-40 min-h-8 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 outline-none placeholder:text-muted-foreground"
+          className="max-h-40 min-h-8 min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 outline-none placeholder:text-muted-foreground"
           placeholder={isInputRequired ? "Respond to agent… (Enter to send)" : "Message agent… (Enter to send, Shift+Enter for newline)"}
           rows={1}
           value={text}

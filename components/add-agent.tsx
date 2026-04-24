@@ -157,7 +157,7 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
           Add Agent
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
         <form onSubmit={handleAddAgent}>
           <DialogHeader>
             <DialogTitle>Add Agent</DialogTitle>
@@ -167,7 +167,7 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
           </DialogHeader>
 
           <Tabs defaultValue="connection" className="mt-4">
-            <TabsList className="w-full">
+            <TabsList className="w-full overflow-x-auto">
               <TabsTrigger value="connection" className="flex-1">
                 Connection
               </TabsTrigger>
@@ -305,7 +305,7 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
                 <Muted>No custom headers. Add key-value pairs below.</Muted>
               )}
               {headers.map((row, i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={i} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
                   <Input
                     placeholder="Header name"
                     value={row.key}

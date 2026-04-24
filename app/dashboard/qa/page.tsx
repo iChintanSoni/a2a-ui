@@ -159,7 +159,7 @@ export default function QaPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div>
         <PageTitle>QA Harness</PageTitle>
         <Muted>
@@ -172,8 +172,8 @@ export default function QaPage() {
           <Muted>Add an agent before creating QA suites.</Muted>
         </div>
       ) : (
-        <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
-          <div className="flex flex-col gap-4 rounded-md border p-4">
+        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
+          <div className="flex min-w-0 flex-col gap-4 rounded-md border p-4">
             <div className="flex items-center gap-2">
               <ClipboardCheckIcon />
               <Small>Suite builder</Small>
@@ -290,9 +290,9 @@ export default function QaPage() {
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-6">
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Small>Saved suites</Small>
                 <Button variant="outline" size="sm" onClick={() => dispatch(clearQaRunHistory(undefined))}>
                   Clear history
@@ -308,7 +308,7 @@ export default function QaPage() {
                   const latestRun = runs.find((run) => run.suiteId === suite.id);
                   const isRunning = runningSuiteId === suite.id;
                   return (
-                    <div key={suite.id} className="rounded-md border p-4">
+                    <div key={suite.id} className="min-w-0 rounded-md border p-4">
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
@@ -326,8 +326,9 @@ export default function QaPage() {
                           {suite.description && <Muted className="mt-2">{suite.description}</Muted>}
                         </div>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                           <Button
+                            className="justify-center"
                             size="sm"
                             onClick={() => runSuite(suite)}
                             disabled={isRunning}
@@ -336,6 +337,7 @@ export default function QaPage() {
                             {isRunning ? "Running" : "Run"}
                           </Button>
                           <Button
+                            className="justify-center"
                             variant="outline"
                             size="sm"
                             onClick={() => downloadJson(`${suite.name}-qa-report.json`, {
@@ -362,7 +364,7 @@ export default function QaPage() {
               )}
             </div>
 
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               <Small>Run history</Small>
               {runs.length === 0 ? (
                 <div className="rounded-md border border-dashed p-6 text-center">
@@ -370,7 +372,7 @@ export default function QaPage() {
                 </div>
               ) : (
                 runs.slice(0, 12).map((run) => (
-                  <div key={run.id} className="rounded-md border p-4">
+                  <div key={run.id} className="min-w-0 rounded-md border p-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <Small>{run.suiteName}</Small>
                       <Badge variant={run.passed ? "default" : "destructive"}>
@@ -383,7 +385,7 @@ export default function QaPage() {
                     <Caption className="mt-1 block">
                       {new Date(run.completedAt).toLocaleString()} · {run.agentName}
                     </Caption>
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-3 flex flex-col gap-2">
                       {run.caseResults.map((result) => (
                         <div key={result.caseId} className="rounded-md bg-muted/30 p-3">
                           <div className="flex flex-wrap items-center gap-2">

@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className="min-h-dvh overflow-x-hidden antialiased">
         <StoreProvider>
           <ThemeProvider defaultTheme="system" enableSystem>
             <TooltipProvider>

@@ -144,13 +144,13 @@ export default function ConversationsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
         <div>
           <PageTitle>Conversations</PageTitle>
           <Muted>Search, rename, archive, delete, and export saved chats.</Muted>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
           <Button
             variant="outline"
             size="sm"
@@ -191,7 +191,7 @@ export default function ConversationsPage() {
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-[1fr_180px_160px]">
+      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-[1fr_180px_160px]">
         <Input placeholder="Search titles, agents, messages, or tool calls" value={query} onChange={(e) => setQuery(e.target.value)} />
         <Select value={archiveFilter} onValueChange={(value) => setArchiveFilter(value as ArchiveFilter)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
@@ -216,9 +216,9 @@ export default function ConversationsPage() {
           <Muted>No conversations match the current filters.</Muted>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {filteredChats.map((chat) => (
-            <div key={chat.id} className="rounded-md border p-4">
+            <div key={chat.id} className="min-w-0 rounded-md border p-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
                   <input
@@ -230,7 +230,7 @@ export default function ConversationsPage() {
                   />
                   <div className="min-w-0 flex-1">
                     {editingId === chat.id ? (
-                      <div className="flex gap-2">
+                      <div className="flex flex-col gap-2 sm:flex-row">
                         <Input value={editingTitle} onChange={(e) => setEditingTitle(e.target.value)} />
                         <Button size="sm" onClick={saveRename}>Save</Button>
                       </div>
@@ -250,11 +250,11 @@ export default function ConversationsPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" asChild>
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+                  <Button className="justify-center" size="sm" variant="outline" asChild>
                     <Link href={`/dashboard/chat/${chat.id}`}>Open</Link>
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => startRename(chat)}>
+                  <Button className="justify-center" size="sm" variant="outline" onClick={() => startRename(chat)}>
                     <PencilIcon className="size-4" />
                     Rename
                   </Button>
@@ -278,9 +278,10 @@ export default function ConversationsPage() {
                     }}
                   >
                     <CopyIcon className="size-4" />
-                    Clone Run
+                    <span className="truncate">Clone</span>
                   </Button>
                   <Button
+                    className="justify-center"
                     size="sm"
                     variant="outline"
                     onClick={() => dispatch(setChatArchived({ chatId: chat.id, archived: !chat.archived }))}
@@ -289,6 +290,7 @@ export default function ConversationsPage() {
                     {chat.archived ? "Restore" : "Archive"}
                   </Button>
                   <Button
+                    className="justify-center"
                     size="sm"
                     variant="destructive"
                     onClick={() => {
