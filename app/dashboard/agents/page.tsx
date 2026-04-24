@@ -115,19 +115,19 @@ export default function AgentsPage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
         <div>
           <PageTitle>Agent Library</PageTitle>
           <Muted>Search, filter, sort, tag, and favorite local A2A agents.</Muted>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <WorkspaceActions />
-          <AddAgent variant="default" />
+          <AddAgent variant="default" className="max-sm:flex-1" />
         </div>
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-[1fr_160px_160px_160px_160px]">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_160px_160px_160px_160px]">
         <Input placeholder="Search agents, skills, tags, or URLs" value={query} onChange={(e) => setQuery(e.target.value)} />
         <Select value={status} onValueChange={(value) => setStatus(value as StatusFilter)}>
           <SelectTrigger><SelectValue /></SelectTrigger>
@@ -175,7 +175,7 @@ export default function AgentsPage() {
             const agentName = agent.displayName ?? agent.card.name;
             const lastUsed = lastUsedByAgent.get(agent.url);
             return (
-              <div key={agent.id} className="rounded-md border p-4">
+              <div key={agent.id} className="min-w-0 rounded-md border p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">
                     <Small className="truncate">{agentName}</Small>
@@ -200,11 +200,11 @@ export default function AgentsPage() {
                   {lastUsed ? `Last used ${new Date(lastUsed).toLocaleString()}` : "No conversations yet"}
                 </Caption>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Button size="sm" disabled={agent.status !== "connected"} onClick={() => startChat(agent.url, agentName)}>
+                  <Button className="max-sm:flex-1" size="sm" disabled={agent.status !== "connected"} onClick={() => startChat(agent.url, agentName)}>
                     <MessageSquarePlusIcon className="size-4" />
                     New Chat
                   </Button>
-                  <Button size="sm" variant="outline" asChild>
+                  <Button className="max-sm:flex-1" size="sm" variant="outline" asChild>
                     <Link href={`/dashboard/agents/${agent.id}/settings`}>
                       <SettingsIcon className="size-4" />
                       Settings

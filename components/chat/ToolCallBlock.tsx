@@ -70,11 +70,11 @@ export function ToolCallBlock({ item, onInspect }: Props) {
     );
 
   return (
-    <div className="bg-muted/40 text-muted-foreground group relative flex w-fit max-w-sm items-start gap-2 rounded-lg border px-3 py-2 text-xs">
+    <div className="bg-muted/40 text-muted-foreground group relative flex w-fit max-w-full items-start gap-2 rounded-lg border px-3 py-2 text-xs sm:max-w-sm">
       {getToolIcon(toolName)}
       <div className="flex min-w-0 flex-col gap-1">
         <Small className="text-foreground/70">{toolName}</Small>
-        <Caption className="truncate">
+        <Caption className="break-words">
           <span className="text-muted-foreground/60">query: </span>
           {query}
         </Caption>

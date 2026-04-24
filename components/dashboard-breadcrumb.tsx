@@ -34,25 +34,25 @@ export function DashboardBreadcrumb() {
   if (agentSettingsMatch) {
     const agent = agents.find((a) => a.id === agentSettingsMatch[1]);
     return (
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
+      <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
+        <BreadcrumbList className="min-w-0 flex-nowrap overflow-hidden">
+          <BreadcrumbItem className="hidden shrink-0 sm:inline-flex">
             <BreadcrumbLink asChild>
               <Link href="/dashboard">Workbench</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
+          <BreadcrumbSeparator className="hidden sm:inline-flex" />
+          <BreadcrumbItem className="shrink-0">
             <BreadcrumbLink asChild>
               <Link href="/dashboard/agents">Agent Library</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{agent?.card.name ?? "Unknown"}</BreadcrumbPage>
+          <BreadcrumbSeparator className="shrink-0" />
+          <BreadcrumbItem className="min-w-0">
+            <BreadcrumbPage className="block truncate">{agent?.card.name ?? "Unknown"}</BreadcrumbPage>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
+          <BreadcrumbSeparator className="hidden shrink-0 sm:inline-flex" />
+          <BreadcrumbItem className="hidden shrink-0 sm:inline-flex">
             <BreadcrumbPage>Settings</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
@@ -65,16 +65,16 @@ export function DashboardBreadcrumb() {
   if (chatMatch) {
     const chat = chats.find((c) => c.id === chatMatch[1]);
     return (
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
+      <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
+        <BreadcrumbList className="min-w-0 flex-nowrap overflow-hidden">
+          <BreadcrumbItem className="shrink-0">
             <BreadcrumbLink asChild>
               <Link href="/dashboard">Workbench</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>{chat?.title ?? "Chat"}</BreadcrumbPage>
+          <BreadcrumbSeparator className="shrink-0" />
+          <BreadcrumbItem className="min-w-0">
+            <BreadcrumbPage className="block truncate">{chat?.title ?? "Chat"}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -85,10 +85,10 @@ export function DashboardBreadcrumb() {
   const label = pageLabels[pathname];
   if (label) {
     return (
-      <Breadcrumb>
+      <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbPage>{label}</BreadcrumbPage>
+            <BreadcrumbPage className="block truncate">{label}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -97,7 +97,7 @@ export function DashboardBreadcrumb() {
 
   // /dashboard (fallback)
   return (
-    <Breadcrumb>
+    <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbPage>Workbench</BreadcrumbPage>

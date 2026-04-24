@@ -245,7 +245,7 @@ export default function ChatPage({ params }: PageProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b px-4 py-3">
+      <div className="flex flex-wrap items-start gap-2 border-b px-3 py-3 sm:items-center sm:px-4">
         <div className="flex min-w-0 flex-1 flex-col">
           <Small className="truncate leading-tight">{chat.title}</Small>
           <Caption className="truncate">{chat.agentName}</Caption>
@@ -301,11 +301,11 @@ export default function ChatPage({ params }: PageProps) {
           size="sm"
           onClick={cloneRun}
           disabled={isStreaming}
-          className="shrink-0 gap-1.5"
+          className="shrink-0 gap-1.5 max-sm:px-2"
           title="Clone into a fresh run"
         >
           <CopyIcon className="size-3.5" />
-          Clone Run
+          <span className="hidden sm:inline">Clone Run</span>
         </Button>
 
         {lastUserMessage && (
@@ -314,19 +314,19 @@ export default function ChatPage({ params }: PageProps) {
             size="sm"
             onClick={() => rerunMessage(lastUserMessage)}
             disabled={isStreaming}
-            className="shrink-0 gap-1.5"
+            className="shrink-0 gap-1.5 max-sm:px-2"
             title="Rerun the latest prompt in a fresh run"
           >
             <RotateCcwIcon className="size-3.5" />
-            Rerun Prompt
+            <span className="hidden sm:inline">Rerun Prompt</span>
           </Button>
         )}
 
         {compareHref && (
-          <Button variant="outline" size="sm" className="shrink-0 gap-1.5" asChild>
+          <Button variant="outline" size="sm" className="shrink-0 gap-1.5 max-sm:px-2" asChild>
             <Link href={compareHref}>
               <GitCompareArrowsIcon className="size-3.5" />
-              Compare Source
+              <span className="hidden sm:inline">Compare Source</span>
             </Link>
           </Button>
         )}
@@ -336,11 +336,11 @@ export default function ChatPage({ params }: PageProps) {
           size="sm"
           onClick={newSession}
           disabled={isStreaming}
-          className="shrink-0 gap-1.5"
+          className="shrink-0 gap-1.5 max-sm:px-2"
           title="New session (⌘⇧N)"
         >
           <SquarePenIcon className="size-3.5" />
-          New Session
+          <span className="hidden sm:inline">New Session</span>
         </Button>
       </div>
 

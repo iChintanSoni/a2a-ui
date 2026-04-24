@@ -61,7 +61,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex flex-1 flex-col gap-8 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:gap-8 sm:p-6 md:p-8">
       <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
         <div>
           <PageTitle>A2A Workbench</PageTitle>
@@ -69,13 +69,13 @@ export default function DashboardPage() {
             Connect agents, inspect protocol behavior, and manage saved conversations.
           </P>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <WorkspaceActions />
-          <AddAgent variant="default" />
+          <AddAgent variant="default" className="max-sm:flex-1" />
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           href="/dashboard/agents"
           icon={BotIcon}
@@ -118,16 +118,16 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
-          <Button asChild>
+          <Button className="max-sm:flex-1" asChild>
             <Link href="/dashboard/agents">Open Agent Library</Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" className="max-sm:flex-1" asChild>
             <Link href="/dashboard/conversations">Open Conversations</Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" className="max-sm:flex-1" asChild>
             <Link href="/dashboard/tasks">Open Tasks</Link>
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" className="max-sm:flex-1" asChild>
             <Link href="/dashboard/embed">Open Embed Demo</Link>
           </Button>
         </div>

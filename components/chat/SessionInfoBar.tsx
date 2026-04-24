@@ -43,14 +43,14 @@ export function SessionInfoBar({
   return (
     <div className="border-b bg-muted/30">
       {/* Summary row — always visible */}
-      <div className="flex items-center gap-2 px-4 py-1.5 text-xs text-muted-foreground">
+      <div className="flex min-w-0 items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground sm:px-4">
         <MicroLabel>Session</MicroLabel>
 
         {/* Context ID */}
         <button
           onClick={handleCopy}
           title="Copy context ID"
-          className="flex items-center gap-1 rounded px-1.5 py-0.5 font-mono hover:bg-muted transition-colors cursor-pointer"
+          className="flex min-w-0 items-center gap-1 rounded px-1.5 py-0.5 font-mono transition-colors hover:bg-muted"
         >
           <span>{truncated}</span>
           {copied ? (
@@ -70,7 +70,8 @@ export function SessionInfoBar({
         {/* Modalities — collapsed: show count; expanded: see below */}
         {!expanded && (inputModes.length > 0 || outputModes.length > 0) && (
           <Caption className="text-[10px]">
-            {inputModes.length + outputModes.length} modalities
+            <span className="hidden sm:inline">{inputModes.length + outputModes.length} modalities</span>
+            <span className="sm:hidden">{inputModes.length + outputModes.length} modes</span>
           </Caption>
         )}
 
@@ -93,9 +94,9 @@ export function SessionInfoBar({
 
       {/* Expanded modalities row */}
       {expanded && (inputModes.length > 0 || outputModes.length > 0) && (
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 pb-2 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 pb-2 text-xs text-muted-foreground sm:px-4">
           {inputModes.length > 0 && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <MicroLabel>In</MicroLabel>
               {inputModes.map((m) => (
                 <Badge key={m} variant="secondary" className="text-[10px] px-1.5 py-0 h-4 flex items-center gap-1">
@@ -106,7 +107,7 @@ export function SessionInfoBar({
             </div>
           )}
           {outputModes.length > 0 && (
-            <div className="flex items-center gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <MicroLabel>Out</MicroLabel>
               {outputModes.map((m) => (
                 <Badge key={m} variant="secondary" className="text-[10px] px-1.5 py-0 h-4 flex items-center gap-1">

@@ -46,9 +46,9 @@ function renderComponent(component: A2UIComponent, index: number) {
 
   if (component.kind === "key-value") {
     return (
-      <dl key={index} className="grid grid-cols-[minmax(7rem,0.45fr)_1fr] gap-x-3 gap-y-2 text-sm">
+      <dl key={index} className="grid gap-x-3 gap-y-2 text-sm sm:grid-cols-[minmax(7rem,0.45fr)_1fr]">
         {component.items.map((item) => (
-          <div key={item.label} className="contents">
+          <div key={item.label} className="grid gap-1 sm:contents">
             <dt className="text-muted-foreground">{item.label}</dt>
             <dd className="min-w-0 break-words font-medium">{formatValue(item.value)}</dd>
           </div>
@@ -62,7 +62,7 @@ function renderComponent(component: A2UIComponent, index: number) {
     return (
       <List
         key={index}
-        className={`list-inside space-y-1 text-sm leading-6 ${component.ordered ? "list-decimal" : "list-disc"}`}
+        className={`list-inside text-sm leading-6 ${component.ordered ? "list-decimal" : "list-disc"}`}
       >
         {component.items.map((item) => (
           <li key={item}>{item}</li>
@@ -112,7 +112,7 @@ export function A2UISurfaceRenderer({ surface }: Props) {
           {surface.description && <Caption className="mt-1">{surface.description}</Caption>}
         </div>
       )}
-      <div className="space-y-3 px-3 py-3">
+      <div className="flex flex-col gap-3 px-3 py-3">
         {surface.components.map(renderComponent)}
       </div>
     </section>

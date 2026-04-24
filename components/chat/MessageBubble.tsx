@@ -12,7 +12,7 @@ interface UserBubbleProps {
 export function UserBubble({ item, a2uiEnabled = false, onInspect, onRerun }: UserBubbleProps) {
   return (
     <div className="flex justify-end group">
-      <div className="relative flex max-w-[75%] flex-col items-end gap-1.5">
+      <div className="relative flex max-w-[92%] flex-col items-end gap-1.5 sm:max-w-[75%]">
         {item.parts.map((part, i) =>
           part.kind === "text" ? (
             <div
@@ -62,7 +62,7 @@ interface AgentBubbleProps {
 export function AgentBubble({ item, a2uiEnabled = false, onInspect }: AgentBubbleProps) {
   return (
     <div className="flex justify-start group">
-      <div className="relative max-w-[75%] rounded-2xl rounded-bl-sm bg-muted px-4 py-2.5 text-sm space-y-1">
+      <div className="relative max-w-[92%] rounded-2xl rounded-bl-sm bg-muted px-4 py-2.5 text-sm sm:max-w-[75%]">
         {item.parts.map((part, i) => (
           <PartRenderer key={i} part={part} a2uiEnabled={a2uiEnabled} />
         ))}

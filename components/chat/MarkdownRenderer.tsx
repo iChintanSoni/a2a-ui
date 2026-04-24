@@ -63,7 +63,7 @@ const components: Components = {
 
   // Code blocks
   pre: ({ children }) => (
-    <pre className="bg-muted rounded-md p-3 overflow-x-auto text-sm font-mono mb-2 leading-relaxed">
+    <pre className="mb-2 overflow-x-auto rounded-md bg-muted p-3 font-mono text-sm leading-relaxed">
       {children}
     </pre>
   ),
@@ -103,7 +103,7 @@ const components: Components = {
 
   // Tables (GFM)
   table: ({ children }) => (
-    <div className="overflow-x-auto mb-2">
+    <div className="mb-2 overflow-x-auto">
       <table className="w-full text-sm border-collapse">{children}</table>
     </div>
   ),
@@ -134,7 +134,7 @@ interface Props {
 
 export function MarkdownRenderer({ content }: Props) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 break-words">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeSanitize, rehypeHighlight]}

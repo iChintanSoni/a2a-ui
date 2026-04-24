@@ -50,7 +50,7 @@ export default function CompareRunsPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div>
         <PageTitle>Compare Runs</PageTitle>
         <Muted>
@@ -88,22 +88,22 @@ export default function CompareRunsPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-md border p-4">
           <Caption>Left prompt</Caption>
-          <pre className="mt-2 whitespace-pre-wrap text-sm">{comparison.left.latestPrompt || "No prompt captured."}</pre>
+          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words text-sm">{comparison.left.latestPrompt || "No prompt captured."}</pre>
         </div>
         <div className="rounded-md border p-4">
           <Caption>Right prompt</Caption>
-          <pre className="mt-2 whitespace-pre-wrap text-sm">{comparison.right.latestPrompt || "No prompt captured."}</pre>
+          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words text-sm">{comparison.right.latestPrompt || "No prompt captured."}</pre>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-md border p-4">
           <Caption>Left output</Caption>
-          <pre className="mt-2 whitespace-pre-wrap text-sm">{comparison.left.latestOutput || "No output captured."}</pre>
+          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words text-sm">{comparison.left.latestOutput || "No output captured."}</pre>
         </div>
         <div className="rounded-md border p-4">
           <Caption>Right output</Caption>
-          <pre className="mt-2 whitespace-pre-wrap text-sm">{comparison.right.latestOutput || "No output captured."}</pre>
+          <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-words text-sm">{comparison.right.latestOutput || "No output captured."}</pre>
         </div>
       </div>
 
@@ -127,10 +127,10 @@ export default function CompareRunsPage() {
                   )}
                 </div>
                 <div className="mt-3 grid gap-4 lg:grid-cols-2">
-                  <pre className="whitespace-pre-wrap rounded-md border bg-background p-3 text-sm">
+                  <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-md border bg-background p-3 text-sm">
                     {artifact.left || "No artifact text."}
                   </pre>
-                  <pre className="whitespace-pre-wrap rounded-md border bg-background p-3 text-sm">
+                  <pre className="overflow-x-auto whitespace-pre-wrap break-words rounded-md border bg-background p-3 text-sm">
                     {artifact.right || "No artifact text."}
                   </pre>
                 </div>
