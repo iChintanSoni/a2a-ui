@@ -391,7 +391,7 @@ export function ChatInput({
   return (
     <div
       className={cn(
-        "border-t bg-background px-4 py-3 flex flex-col gap-2 transition-colors",
+        "sticky bottom-0 z-20 flex shrink-0 flex-col gap-2 border-t bg-background px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] transition-colors",
         isDragging && showFilePicker && "bg-primary/5 border-primary"
       )}
       onDragOver={handleDragOver}
@@ -569,7 +569,7 @@ export function ChatInput({
       )}
 
       {/* Main input row */}
-      <div className="flex items-end gap-2 rounded-xl border bg-muted/30 px-3 py-2 focus-within:ring-1 focus-within:ring-ring">
+      <div className="flex min-h-12 items-end gap-2 rounded-xl border bg-muted/30 px-3 py-2 focus-within:ring-1 focus-within:ring-ring">
         {/* File picker — hidden input + paperclip button, only when agent accepts non-text input */}
         {showFilePicker && (
           <>
@@ -585,7 +585,7 @@ export function ChatInput({
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled}
               className={cn(
-                "shrink-0 text-muted-foreground hover:text-foreground transition-colors",
+                "flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
                 disabled && "opacity-50 cursor-not-allowed"
               )}
               aria-label="Attach files"
@@ -597,7 +597,7 @@ export function ChatInput({
 
         <textarea
           ref={textareaRef}
-          className="flex-1 resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          className="max-h-40 min-h-8 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 outline-none placeholder:text-muted-foreground"
           placeholder={isInputRequired ? "Respond to agent… (Enter to send)" : "Message agent… (Enter to send, Shift+Enter for newline)"}
           rows={1}
           value={text}
@@ -611,7 +611,7 @@ export function ChatInput({
           onClick={addDataPart}
           disabled={disabled}
           className={cn(
-            "shrink-0 rounded-md border px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground",
+            "flex h-8 shrink-0 items-center rounded-md border px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
             disabled && "opacity-50 cursor-not-allowed"
           )}
           title="Add a JSON data part"
@@ -624,7 +624,7 @@ export function ChatInput({
           onClick={() => setMetaOpen((v) => !v)}
           disabled={disabled}
           className={cn(
-            "shrink-0 transition-colors",
+            "flex size-8 shrink-0 items-center justify-center rounded-md transition-colors",
             metaOpen ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             disabled && "opacity-50 cursor-not-allowed"
           )}
@@ -640,7 +640,7 @@ export function ChatInput({
             }
             disabled={!hasPromptDraft || disabled}
             className={cn(
-              "shrink-0 transition-colors",
+              "flex size-8 shrink-0 items-center justify-center rounded-md transition-colors",
               hasPromptDraft
                 ? "text-muted-foreground hover:text-foreground"
                 : "text-muted-foreground/50",
@@ -658,7 +658,7 @@ export function ChatInput({
             onClick={recordingState === "recording" ? stopRecording : startRecording}
             disabled={disabled}
             className={cn(
-              "shrink-0 transition-colors",
+              "flex size-8 shrink-0 items-center justify-center rounded-md transition-colors",
               recordingState === "recording"
                 ? "text-red-600"
                 : "text-muted-foreground hover:text-foreground",
