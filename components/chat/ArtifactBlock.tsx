@@ -8,11 +8,12 @@ import { useState } from "react";
 
 interface Props {
   item: ArtifactItem;
+  a2uiEnabled?: boolean;
   onInspect?: () => void;
   onSubmitRevision?: (item: ArtifactItem, revisedText: string) => Promise<void> | void;
 }
 
-export function ArtifactBlock({ item, onInspect, onSubmitRevision }: Props) {
+export function ArtifactBlock({ item, a2uiEnabled = false, onInspect, onSubmitRevision }: Props) {
   const label = item.name ?? "Artifact";
   const hasOnlyText = item.parts.every((p) => p.kind === "text");
   const [isEditing, setIsEditing] = useState(false);
@@ -63,7 +64,7 @@ export function ArtifactBlock({ item, onInspect, onSubmitRevision }: Props) {
       </div>
       <div className={`px-3 py-2 ${hasOnlyText ? "" : "space-y-2"}`}>
         {item.parts.map((part, i) => (
-          <PartRenderer key={i} part={part} />
+          <PartRenderer key={i} part={part} a2uiEnabled={a2uiEnabled} />
         ))}
         {item.isStreaming && item.parts.length === 0 && (
           <Caption className="animate-pulse">…</Caption>

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildRequestHeaders } from "@/lib/utils/auth";
+import { A2UI_EXTENSION_HEADER, A2UI_EXTENSION_VALUE } from "@/lib/a2a/a2ui";
 import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
 
 const NO_HEADERS: CustomHeader[] = [];
@@ -126,6 +127,22 @@ describe("buildRequestHeaders", () => {
       const custom: CustomHeader[] = [{ key: "Authorization", value: "Custom override" }];
       const result = buildRequestHeaders(auth, custom);
       expect(result["Authorization"]).toBe("Custom override");
+    });
+
+    it("adds the A2UI extension header when enabled", () => {
+      const result = buildRequestHeaders({ type: "none" }, [], {
+        a2uiEnabled: true,
+      });
+      expect(result[A2UI_EXTENSION_HEADER]).toBe(A2UI_EXTENSION_VALUE);
+    });
+
+    it("does not override a custom A2UI extension header", () => {
+      const result = buildRequestHeaders(
+        { type: "none" },
+        [{ key: A2UI_EXTENSION_HEADER, value: "custom-extension" }],
+        { a2uiEnabled: true },
+      );
+      expect(result[A2UI_EXTENSION_HEADER]).toBe("custom-extension");
     });
   });
 });

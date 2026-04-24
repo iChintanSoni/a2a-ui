@@ -23,6 +23,7 @@ const FILTERS: { label: string; value: EventFilter }[] = [
   { label: "Tasks", value: "task-status" },
   { label: "Artifacts", value: "artifact-update" },
   { label: "Tools", value: "tool-call" },
+  { label: "A2UI", value: "structured-ui" },
   { label: "Agent", value: "agent-message" },
   { label: "Outgoing", value: "outgoing-message" },
 ];
@@ -34,6 +35,7 @@ const KIND_STYLES: Record<ExecutionEvent["kind"], string> = {
   "task-status": "border-amber-500/20 bg-amber-500/15 text-amber-700 dark:text-amber-300",
   "artifact-update": "border-indigo-500/20 bg-indigo-500/15 text-indigo-700 dark:text-indigo-300",
   "tool-call": "border-emerald-500/20 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
+  "structured-ui": "border-fuchsia-500/20 bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300",
   "agent-message": "border-green-500/20 bg-green-500/15 text-green-700 dark:text-green-300",
 };
 

@@ -1,11 +1,20 @@
 import type { Part } from "@a2a-js/sdk";
+import { detectA2UISurface } from "@/lib/a2a/a2ui";
+import { A2UISurfaceRenderer } from "./A2UISurfaceRenderer";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
 interface Props {
   part: Part;
+  a2uiEnabled?: boolean;
 }
 
-export function PartRenderer({ part }: Props) {
+function getPartMimeType(part: Part): string | undefined {
+  if (part.kind === "file") return part.file.mimeType;
+  const metadata = (part as { metadata?: { mimeType?: unknown } }).metadata;
+  return typeof metadata?.mimeType === "string" ? metadata.mimeType : undefined;
+}
+
+export function PartRenderer({ part, a2uiEnabled = false }: Props) {
   if (part.kind === "text") {
     return <MarkdownRenderer content={part.text} />;
   }
@@ -80,6 +89,11 @@ export function PartRenderer({ part }: Props) {
   }
 
   if (part.kind === "data") {
+    const detection = detectA2UISurface(part.data, getPartMimeType(part));
+    if (a2uiEnabled && detection) {
+      return <A2UISurfaceRenderer surface={detection.surface} />;
+    }
+
     return (
       <pre className="bg-muted rounded p-3 text-xs overflow-x-auto">
         {JSON.stringify(part.data, null, 2)}

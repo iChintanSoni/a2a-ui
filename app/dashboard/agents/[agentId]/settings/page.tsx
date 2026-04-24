@@ -10,6 +10,7 @@ import {
   updateAgentDisplayName,
   updateAgentTags,
   toggleAgentFavorite,
+  setAgentA2UIEnabled,
   updateAgentCard,
   removeAgent,
   type AuthConfig,
@@ -64,6 +65,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
   // Local copies for editing
   const [displayName, setDisplayName] = useState(agent?.displayName ?? "");
   const [tagText, setTagText] = useState((agent?.tags ?? []).join(", "));
+  const [a2uiEnabled, setA2uiEnabled] = useState(agent?.a2uiEnabled ?? false);
   const [displayNameSaved, setDisplayNameSaved] = useState(false);
   const [auth, setAuth] = useState<AuthConfig>(
     agent?.auth ?? { type: "none" }
@@ -111,6 +113,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
         tags: tagText.split(",").map((tag) => tag.trim()).filter(Boolean),
       })
     );
+    dispatch(setAgentA2UIEnabled({ agentId, enabled: a2uiEnabled }));
     setDisplayNameSaved(true);
     setTimeout(() => setDisplayNameSaved(false), 2000);
   };
@@ -122,7 +125,9 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
     setRefetchSuccess(false);
     try {
       const normalizedUrl = normalizeAgentUrl(agent.url);
-      const factory = createClientFactory(agent.auth, agent.customHeaders);
+      const factory = createClientFactory(agent.auth, agent.customHeaders, undefined, undefined, {
+        a2uiEnabled: agent.a2uiEnabled,
+      });
 
       let client: Client;
 
@@ -332,6 +337,26 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                   }}
                 />
                 <Caption>Separate tags with commas.</Caption>
+              </Field>
+              <Field>
+                <div className="flex items-start gap-3 rounded-md border px-3 py-3">
+                  <input
+                    id="a2ui-enabled"
+                    type="checkbox"
+                    className="mt-0.5 size-4"
+                    checked={a2uiEnabled}
+                    onChange={(event) => {
+                      setA2uiEnabled(event.target.checked);
+                      setDisplayNameSaved(false);
+                    }}
+                  />
+                  <div className="space-y-1">
+                    <Label htmlFor="a2ui-enabled">Enable A2UI read-only surfaces</Label>
+                    <Caption>
+                      Sends the A2UI extension header and renders supported structured payloads safely.
+                    </Caption>
+                  </div>
+                </div>
               </Field>
             </FieldGroup>
             <Button onClick={saveDisplayName} className="gap-2">

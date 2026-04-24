@@ -10,6 +10,7 @@ import reducer, {
   updateAgentCard,
   updateAgentTags,
   toggleAgentFavorite,
+  setAgentA2UIEnabled,
   type Agent,
 } from "@/lib/features/agents/agentsSlice";
 
@@ -245,6 +246,12 @@ describe("agentsSlice", () => {
       let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1", favorite: false })));
       state = reducer(state, toggleAgentFavorite("a1"));
       expect(state.agents[0].favorite).toBe(true);
+    });
+
+    it("stores the A2UI capability toggle", () => {
+      let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1" })));
+      state = reducer(state, setAgentA2UIEnabled({ agentId: "a1", enabled: true }));
+      expect(state.agents[0].a2uiEnabled).toBe(true);
     });
   });
 });

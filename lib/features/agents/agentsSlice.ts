@@ -24,6 +24,7 @@ export interface Agent {
   displayName?: string;
   tags?: string[];
   favorite?: boolean;
+  a2uiEnabled?: boolean;
   card: SDKAgentCard;
   status: "connected" | "disconnected" | "error";
   error?: string;
@@ -63,6 +64,7 @@ function normalizeAgent(agent: Agent): Agent {
     card: normalizeAgentCard(agent.card),
     tags: agent.tags ?? [],
     favorite: agent.favorite ?? false,
+    a2uiEnabled: agent.a2uiEnabled ?? false,
   };
 }
 
@@ -157,6 +159,15 @@ export const agentsSlice = createSlice({
         agent.favorite = !agent.favorite;
       }
     },
+    setAgentA2UIEnabled: (
+      state,
+      action: PayloadAction<{ agentId: string; enabled: boolean }>
+    ) => {
+      const agent = state.agents.find((a) => a.id === action.payload.agentId);
+      if (agent) {
+        agent.a2uiEnabled = action.payload.enabled;
+      }
+    },
     updateAgentCard: (
       state,
       action: PayloadAction<{ agentId: string; card: SDKAgentCard }>
@@ -182,6 +193,7 @@ export const {
   updateAgentDisplayName,
   updateAgentTags,
   toggleAgentFavorite,
+  setAgentA2UIEnabled,
   updateAgentCard,
 } = agentsSlice.actions;
 

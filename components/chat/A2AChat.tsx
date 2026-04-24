@@ -25,6 +25,7 @@ interface A2AChatProps {
   initialContextId?: string;
   persistenceMode?: Exclude<A2ASessionPersistenceMode, "external">;
   context?: A2AContextConfig;
+  a2uiEnabled?: boolean;
   title?: string;
   showDebugPanel?: boolean;
   showEventExplorer?: boolean;
@@ -38,6 +39,7 @@ export function A2AChat({
   initialContextId,
   persistenceMode = "memory",
   context,
+  a2uiEnabled = false,
   title,
   showDebugPanel = true,
   showEventExplorer = true,
@@ -47,6 +49,7 @@ export function A2AChat({
     agentUrl,
     auth,
     headers,
+    a2uiEnabled,
     debug,
     autoConnect: true,
     initialCard,
@@ -125,6 +128,7 @@ export function A2AChat({
 
       <ChatMessages
         chat={chat}
+        a2uiEnabled={a2uiEnabled}
         onRetry={(item) => sendMessage(item.parts, item.metadata)}
       />
 
