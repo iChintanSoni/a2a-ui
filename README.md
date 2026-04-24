@@ -1,136 +1,82 @@
 # A2A UI
 
-A web-based tool for developers to inspect, debug, and validate A2A (Agent2Agent) protocol servers. Provides a user-friendly interface to interact with A2A agents, monitor communications, and ensure specification compliance.
+A2A UI is a local-first developer workbench for building, testing, and debugging
+Agent2Agent (A2A) protocol servers.
 
-## Features
+It gives you a browser UI for connecting to agents, inspecting agent cards,
+chatting through the A2A transport, reviewing structured execution events,
+iterating on task outputs, and running repeatable QA checks. The dashboard is
+built on reusable hooks and embeddable chat primitives, so the same client
+foundation can be used inside other apps.
 
-### 🔗 Agent Connection & Management
+## What You Can Do
 
-- Connect to A2A-compliant agent servers via URL (`http://` and `https://`)
-- Manage multiple agents simultaneously with per-agent status monitoring
-- Auto-discovery of agent capabilities using agent cards
-- Real-time connection status indicators (connected, disconnected, error)
-- Pre-fill agent connections from shareable URLs via query parameters
-- Export and import all agent configurations as JSON
+- Connect to A2A agents over HTTP or HTTPS.
+- Configure per-agent auth, custom headers, display names, tags, and favorites.
+- Inspect agent cards, declared capabilities, skills, modalities, and protocol
+  compliance results.
+- Chat with agents using persistent sessions, file attachments, custom metadata,
+  streaming task updates, artifacts, tool calls, and raw JSON inspection.
+- Explore normalized execution events across requests, responses, tasks,
+  artifacts, tool calls, validation warnings, and transport timing.
+- Browse task history with correlated artifacts and warnings.
+- Clone sessions, rerun prompts, edit text or markdown artifacts, and compare
+  saved runs by prompt, output, artifact content, and timing.
+- Save and run QA suites with expected task states, output modes, regex
+  assertions, JSON-path assertions, run history, and exportable reports.
+- Render supported A2UI structured surfaces and richer A2A message parts.
+- Import and export workspaces for local backup or sharing.
+- Try the included Ollama-powered demo A2A server.
 
-**Authentication Support:**
+## Dashboard Areas
 
-- None (open endpoints)
-- Bearer Token (OAuth/JWT)
-- API Key (custom header-based)
-- Basic Auth (username/password)
+- `Workbench` shows workspace metrics and entry points.
+- `Agent Library` manages connected agents, status, tags, favorites, settings,
+  cards, auth, headers, and compliance checks.
+- `Conversations` manages saved chats, pinned runs, archived chats, exports,
+  clones, and reruns.
+- `Tasks` provides a task-oriented view of A2A runs, states, artifacts, and
+  warnings.
+- `Compare Runs` compares two saved conversations.
+- `QA Harness` builds and executes repeatable agent test suites.
+- `Embed Demo` demonstrates the headless hooks and embeddable chat components.
 
-**Custom Headers:** Add arbitrary HTTP headers to all agent requests
+## Embeddable Client Primitives
 
-### 📋 Agent Card Viewer
+The dashboard uses the same primitives exposed for host applications:
 
-- Automatically fetch and display agent cards on connection
-- Structured view of agent metadata (name, description, version, protocol version)
-- Capabilities display: streaming, push notifications, state transition history
-- Skills browser with descriptions, tags, input/output modes, and examples
-- Raw JSON agent card viewer with syntax highlighting
-- Re-fetch agent card on demand
+- `useA2AConnection`
+- `useA2ASession`
+- `useA2AMessages`
+- `useA2ADebug`
+- `A2AChat`
+- `A2AAgentCard`
+- `A2ADebugPanel`
 
-### ✅ Specification Compliance
-
-- Automated A2A protocol compliance validation:
-  - Required field checks (name, description, version, protocolVersion)
-  - URL validity
-  - Capabilities and skills array presence
-  - Default input/output mode validation
-  - Per-skill field completeness (id, name, description)
-- Pass/fail count with color-coded compliance badges (compliant / partial / non-compliant)
-- Actionable error messages for each failing check
-
-### 💬 Chat Interface
-
-- Interactive multi-turn chat with A2A agents
-- Multiple concurrent chat sessions across different agents
-- Persistent message history (stored in IndexedDB, survives page reload)
-- Recent chats list in sidebar (last 10 chats)
-- Auto-generated chat titles and chat export (JSON or Markdown)
-
-**Message Input:**
-
-- Auto-expanding multi-line textarea
-- Keyboard shortcuts: `Enter` to send, `Shift+Enter` for newline, `Cmd/Ctrl+Shift+N` for new session
-- Drag-and-drop or click-to-attach file uploads with image thumbnails
-- Custom message metadata editor (key-value pairs)
-- MIME type filtering based on agent's declared input modes
-- "Input Required" banner when the agent requests additional user input
-
-**Message Rendering:**
-
-- User and agent message bubbles with timestamps
-- Markdown rendering with GitHub Flavored Markdown (GFM) and code syntax highlighting
-- Task status messages with icons (submitted, working, input required, completed, failed, etc.)
-- Artifact blocks for generated content (text, files, data)
-- Tool call blocks showing tool name, execution phase, and results
-- JSON inspection modal to view raw data for any message
-
-### 🐛 Debug Console
-
-- Slide-out panel for real-time JSON-RPC 2.0 message inspection
-- Filter logs by type: All, Request, Response, Error
-- Timestamped, collapsible log entries with JSON syntax highlighting
-- Drag to resize the panel (160px–600px)
-- Keyboard shortcut toggle: `Cmd/Ctrl+Shift+D`
-- Session info bar: context ID (copyable), transport method, and input/output modalities
-
-### 🗂️ Session Management
-
-- Create new sessions (fresh context ID / UUID) without losing chat history
-- Streaming state management with real-time artifact updates
-- Stale state cleanup on mount for clean session starts
-- Client caching with automatic reconnection
-
-### ⚙️ Agent Settings
-
-- **General:** Set a custom display name per agent
-- **Authentication:** Configure auth type and credentials with masked input fields
-- **Custom Headers:** Add, edit, and remove arbitrary request headers
-- **Agent Card:** Re-fetch, view capabilities/skills, run compliance checks, inspect raw JSON
-- Copy shareable agent link (with encoded auth type)
-- Remove agent with confirmation dialog
-
-### 🌙 Theming
-
-- Light, Dark, and System preference modes
-- Persistent theme selection via `next-themes`
+Host apps can provide an agent URL, auth configuration, custom headers, initial
+metadata, hidden context, per-message context enrichers, and the desired
+persistence mode.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- A running A2A agent server for testing
+- Node.js 18 or newer
+- npm
+- An A2A-compatible agent server, or the bundled demo server
 
-### Installation
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/ichintansoni/a2a-ui.git
-cd a2a-ui
-```
-
-2. Install dependencies:
+### Run The UI
 
 ```bash
 npm install
-```
-
-3. Start the development server:
-
-```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
-### Demo Server
+### Run The Demo Server
 
-This repo includes a sample A2A server in `server/`.
+The repo includes a sample A2A server in `server/` backed by Ollama.
 
 ```bash
 cd server
@@ -139,11 +85,11 @@ npm install
 npm run dev
 ```
 
-The demo server listens on [http://localhost:3001](http://localhost:3001) by default and uses Ollama for its LangChain agent. Configure `OLLAMA_HOST`, `OLLAMA_LLM_MODEL`, and `OLLAMA_IMAGE_MODEL` in `server/.env` as needed.
+The demo server listens on [http://localhost:3001](http://localhost:3001) by
+default. Configure `OLLAMA_HOST`, `OLLAMA_LLM_MODEL`, and
+`OLLAMA_IMAGE_MODEL` in `server/.env` as needed.
 
-### Docker
-
-Run the UI and bundled demo server together:
+### Run With Docker Compose
 
 ```bash
 cp .env.example .env
@@ -154,76 +100,70 @@ docker compose up --build
 - UI: [http://localhost:3000](http://localhost:3000)
 - Demo server: [http://localhost:3001](http://localhost:3001)
 
-### Usage
+## Typical Workflow
 
-1. **Connect to an Agent**: Click "Add Agent" in the sidebar and enter the base URL of your A2A agent server.
-2. **View Agent Card**: Once connected, the agent card is automatically fetched and displayed with compliance status.
-3. **Start Chatting**: Select the agent and open a chat to send messages and view responses.
-4. **Attach Files**: Drag and drop files or use the attachment button — accepted types are filtered by the agent's declared capabilities.
-5. **Debug Messages**: Open the debug console (`Cmd/Ctrl+Shift+D`) to inspect raw JSON-RPC communications.
-6. **Export a Chat**: Use the export dropdown in the chat header to save the conversation as JSON or Markdown.
+1. Add an agent from the sidebar or import an existing workspace.
+2. Review the fetched agent card, skills, modalities, and compliance results.
+3. Start a conversation and send prompts, metadata, or attachments.
+4. Use the debug panel and event explorer to inspect protocol behavior.
+5. Review generated tasks and artifacts from the task explorer.
+6. Clone or rerun conversations while iterating on agent behavior.
+7. Compare two runs when validating regressions.
+8. Save important checks in the QA harness and rerun them against the agent.
+
+## Configuration Notes
+
+- Agent credentials and workspace data are stored locally in the browser.
+- Workspace import and export are JSON-based.
+- Debug exports mask sensitive headers where possible.
+- File attachment options are filtered against an agent's declared input modes.
+- The same-origin proxy route helps browser clients reach agents that would
+  otherwise fail cross-origin requests.
 
 ## Development
 
-### Available Scripts
+### Scripts
 
-- `npm run dev` — Start development server
-- `npm run build` — Build for production
-- `npm run start` — Start production server
-- `npm run lint` — Run ESLint
-- `npm run typecheck` — Run TypeScript without emitting files
-- `npm run format` — Format code with Prettier
-- `npm run test` — Run tests with Vitest
-- `npm run test:e2e` — Run Playwright smoke tests
-- `npm run test:watch` — Run tests in watch mode
-- `npm run test:coverage` — Run tests with coverage report
+- `npm run dev` starts the Next.js development server.
+- `npm run build` builds the production app.
+- `npm run start` starts the production server.
+- `npm run lint` runs ESLint.
+- `npm run typecheck` runs TypeScript without emitting files.
+- `npm run format` formats the repo with Prettier.
+- `npm run test` runs the Vitest suite.
+- `npm run test:watch` runs Vitest in watch mode.
+- `npm run test:coverage` runs tests with coverage.
+- `npm run test:e2e` runs Playwright smoke tests.
 
 ### Project Structure
 
-```
+```text
 a2a-ui/
-├── .github/workflows/      # CI workflow
-├── app/                    # Next.js app directory
-│   ├── globals.css         # Global styles
-│   ├── layout.tsx          # Root layout
-│   └── page.tsx            # Home page
-├── components/             # React components
-│   ├── chat/               # Chat UI and message rendering
-│   └── ui/                 # Shared UI primitives (shadcn/ui)
-├── e2e/                    # Playwright smoke tests
-├── lib/                    # Utility functions and helpers
-├── public/                 # Static assets
+├── app/                    # Next.js App Router pages and API routes
+├── components/             # Dashboard, chat, and shared UI components
+├── hooks/                  # Headless A2A connection, session, message, and debug hooks
+├── lib/a2a/                # A2A message parts, modalities, A2UI, and event helpers
+├── lib/features/           # Redux slices for agents, chats, QA, and workbench state
+├── lib/utils/              # Auth, compliance, protocol reports, proxy, and workspace helpers
 ├── server/                 # Bundled demo A2A server
-└── tests/                  # Vitest unit and integration tests
+├── tests/                  # Vitest unit and integration tests
+└── e2e/                    # Playwright smoke tests
 ```
 
-### Technologies Used
+### Tech Stack
 
-- **Framework**: Next.js 16 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS v4 + shadcn/ui
-- **State Management**: Redux Toolkit + React-Redux
-- **Persistence**: IndexedDB via `idb`
-- **A2A SDK**: `@a2a-js/sdk`
-- **Markdown**: `react-markdown` with `remark-gfm` and `rehype-highlight`
-- **Syntax Highlighting**: `highlight.js`
-- **Icons**: Lucide React
-- **Testing**: Vitest + Testing Library
+- Next.js 16 App Router
+- React 19
+- TypeScript
+- Tailwind CSS 4
+- shadcn/ui and Radix UI
+- Redux Toolkit and React Redux
+- IndexedDB via `idb`
+- `@a2a-js/sdk`
+- Vitest, Testing Library, and Playwright
 
-## Contributing
+## Useful References
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Learn More
-
-- [A2A Protocol Specification](https://a2a-protocol.org/latest/specification/) — Official A2A protocol documentation
-- [Next.js Documentation](https://nextjs.org/docs) — Learn about Next.js features
-- [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification) — JSON-RPC protocol details
+- [A2A Protocol Specification](https://a2a-protocol.org/latest/specification/)
+- [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
+- [Next.js Documentation](https://nextjs.org/docs)
