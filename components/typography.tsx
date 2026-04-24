@@ -4,7 +4,7 @@ export function H1({ className, ...props }: React.ComponentProps<"h1">) {
   return (
     <h1
       className={cn(
-        "scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance",
+        "scroll-m-20 text-center text-4xl font-extrabold text-balance",
         className,
       )}
       {...props}
@@ -16,7 +16,7 @@ export function H2({ className, ...props }: React.ComponentProps<"h2">) {
   return (
     <h2
       className={cn(
-        "scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0",
+        "scroll-m-20 border-b pb-2 text-3xl font-semibold first:mt-0",
         className,
       )}
       {...props}
@@ -26,7 +26,7 @@ export function H2({ className, ...props }: React.ComponentProps<"h2">) {
 
 export function H3({ className, ...props }: React.ComponentProps<"h3">) {
   return (
-    <h3 className={cn("scroll-m-20 text-2xl font-semibold tracking-tight", className)} {...props} />
+    <h3 className={cn("scroll-m-20 text-2xl font-semibold", className)} {...props} />
   );
 }
 
@@ -56,7 +56,7 @@ export function Muted({ className, ...props }: React.ComponentProps<"p">) {
 
 /** App-level page heading (dashboard, settings pages). Smaller than prose H1/H2. */
 export function PageTitle({ className, ...props }: React.ComponentProps<"h1">) {
-  return <h1 className={cn("text-xl font-semibold", className)} {...props} />;
+  return <h1 className={cn("text-xl font-semibold leading-tight", className)} {...props} />;
 }
 
 /** Within-card or within-panel subsection label. */
@@ -79,11 +79,11 @@ export function ErrorText({ className, ...props }: React.ComponentProps<"p">) {
   return <p className={cn("text-sm font-medium text-destructive", className)} {...props} />;
 }
 
-/** Uppercase tracking label used in dense UI bars (session info, debug panel). */
+/** Uppercase label used in dense UI bars (session info, debug panel). */
 export function MicroLabel({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
-      className={cn("text-[10px] font-medium uppercase tracking-wide text-foreground/60", className)}
+      className={cn("text-[10px] font-medium uppercase text-foreground/60", className)}
       {...props}
     />
   );

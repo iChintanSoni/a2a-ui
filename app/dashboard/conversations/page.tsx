@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { H2, Muted, Caption, Small } from "@/components/typography";
+import { PageTitle, Muted, Caption, Small } from "@/components/typography";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   removeChat,
@@ -144,10 +144,10 @@ export default function ConversationsPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
         <div>
-          <H2>Conversations</H2>
+          <PageTitle>Conversations</PageTitle>
           <Muted>Search, rename, archive, delete, and export saved chats.</Muted>
         </div>
         <div className="flex flex-wrap items-center gap-2">

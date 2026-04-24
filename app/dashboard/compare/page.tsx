@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { H2, Muted, Caption, Small } from "@/components/typography";
+import { PageTitle, Muted, Caption, Small } from "@/components/typography";
 import { useAppSelector } from "@/lib/hooks";
 import { compareRuns } from "@/lib/features/chats/compareRuns";
 
@@ -50,9 +50,9 @@ export default function CompareRunsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div>
-        <H2>Compare Runs</H2>
+        <PageTitle>Compare Runs</PageTitle>
         <Muted>
           Compare prompts, outputs, artifacts, and timing across two saved runs.
         </Muted>
@@ -112,7 +112,7 @@ export default function CompareRunsPage() {
         {comparison.artifactComparisons.length === 0 ? (
           <Muted className="mt-2">No text artifacts available to compare.</Muted>
         ) : (
-          <div className="mt-4 space-y-4">
+          <div className="mt-4 flex flex-col gap-4">
             {comparison.artifactComparisons.map((artifact) => (
               <div key={artifact.key} className="rounded-md border bg-muted/10 p-4">
                 <div className="flex flex-wrap items-center gap-2">

@@ -1,32 +1,50 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
+import { MonitorIcon, MoonIcon, PaletteIcon, SunIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/theme-provider";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 export function ModeToggle() {
-  const { setTheme } = useTheme();
+  const { setTheme, theme } = useTheme();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-          <Moon className="absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-          <span className="sr-only">Toggle theme</span>
+        <Button variant="ghost" className="w-full justify-start">
+          <PaletteIcon data-icon="inline-start" />
+          Appearance
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+      <DropdownMenuContent align="start" side="right" className="w-44">
+        <DropdownMenuLabel>Theme</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuRadioGroup
+          value={theme ?? "system"}
+          onValueChange={value => setTheme(value as "system" | "light" | "dark")}
+        >
+          <DropdownMenuRadioItem value="system">
+            <MonitorIcon data-icon="inline-start" />
+            System
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="light">
+            <SunIcon data-icon="inline-start" />
+            Light
+          </DropdownMenuRadioItem>
+          <DropdownMenuRadioItem value="dark">
+            <MoonIcon data-icon="inline-start" />
+            Dark
+          </DropdownMenuRadioItem>
+        </DropdownMenuRadioGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

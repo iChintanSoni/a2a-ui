@@ -20,7 +20,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
         <StoreProvider>
-          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeProvider defaultTheme="system" enableSystem>
             <TooltipProvider>
               <ToastProvider>{children}</ToastProvider>
             </TooltipProvider>

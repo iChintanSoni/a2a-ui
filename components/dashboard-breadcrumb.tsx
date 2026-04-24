@@ -17,6 +17,16 @@ export function DashboardBreadcrumb() {
   const agents = useAppSelector((s) => s.agents.agents);
   const chats = useAppSelector((s) => s.chats.chats);
 
+  const pageLabels: Record<string, string> = {
+    "/dashboard": "Workbench",
+    "/dashboard/agents": "Agent Library",
+    "/dashboard/conversations": "Conversations",
+    "/dashboard/tasks": "Tasks",
+    "/dashboard/compare": "Compare Runs",
+    "/dashboard/qa": "QA Harness",
+    "/dashboard/embed": "Embed Demo",
+  };
+
   // /dashboard/agents/[agentId]/settings
   const agentSettingsMatch = pathname.match(
     /^\/dashboard\/agents\/([^/]+)\/settings/
@@ -28,7 +38,13 @@ export function DashboardBreadcrumb() {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/dashboard">Agents</Link>
+              <Link href="/dashboard">Workbench</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/dashboard/agents">Agent Library</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -53,7 +69,7 @@ export function DashboardBreadcrumb() {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/dashboard">Agents</Link>
+              <Link href="/dashboard">Workbench</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
@@ -65,12 +81,26 @@ export function DashboardBreadcrumb() {
     );
   }
 
-  // /dashboard (default)
+  // Known dashboard sections
+  const label = pageLabels[pathname];
+  if (label) {
+    return (
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbPage>{label}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  }
+
+  // /dashboard (fallback)
   return (
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
-          <BreadcrumbPage>Agents</BreadcrumbPage>
+          <BreadcrumbPage>Workbench</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>

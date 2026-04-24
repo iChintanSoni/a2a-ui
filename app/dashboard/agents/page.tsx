@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { H2, Muted, Caption, Mono, Small } from "@/components/typography";
+import { PageTitle, Muted, Caption, Mono, Small } from "@/components/typography";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { addChat } from "@/lib/features/chats/chatsSlice";
 import { setActiveAgent, toggleAgentFavorite, type Agent } from "@/lib/features/agents/agentsSlice";
@@ -115,15 +115,15 @@ export default function AgentsPage() {
   };
 
   return (
-    <div className="flex-1 space-y-6 overflow-y-auto p-4 sm:p-6 md:p-8">
+    <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
         <div>
-          <H2>Agent Library</H2>
+          <PageTitle>Agent Library</PageTitle>
           <Muted>Search, filter, sort, tag, and favorite local A2A agents.</Muted>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <WorkspaceActions />
-          <AddAgent />
+          <AddAgent variant="default" />
         </div>
       </div>
 
