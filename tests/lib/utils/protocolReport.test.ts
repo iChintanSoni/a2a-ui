@@ -83,7 +83,7 @@ describe("protocol reports", () => {
       validationWarnings: [],
     });
 
-    expect(report.executionEventCount).toBe(1);
+    expect(report.executionEventCount).toBe(2);
     expect(report.executionEvents[0].requestId).toBe("req-1");
     expect(report.failedRequests).toHaveLength(1);
     expect(

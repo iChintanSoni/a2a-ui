@@ -34,7 +34,7 @@ export default function HomePage() {
               width={220}
               height={60}
               priority
-              className="h-auto max-w-full object-contain"
+              className="h-auto w-auto max-w-full object-contain"
             />
           </div>
         </div>

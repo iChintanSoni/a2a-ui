@@ -13,6 +13,7 @@ import type { TaskStatusItem } from "@/lib/features/chats/chatsSlice";
 import type { TaskTimelineStage } from "@/lib/a2a/execution-events";
 import { PartRenderer } from "./PartRenderer";
 import { Button } from "@/components/ui/button";
+import { TaskTimeline } from "@/components/task-timeline";
 
 interface Props {
   item: TaskStatusItem;
@@ -116,16 +117,7 @@ export function TaskStatusRow({ item, timelineStages = [], onInspect, onRetry }:
         <span>{config.label}</span>
       </div>
       {timelineStages.length > 0 && (
-        <div className="ms-5 flex flex-wrap gap-1">
-          {timelineStages.map((stage) => (
-            <span
-              key={stage.key}
-              className="rounded-full border bg-muted/40 px-2 py-0.5 text-[10px] text-muted-foreground"
-            >
-              {stage.label}
-            </span>
-          ))}
-        </div>
+        <TaskTimeline stages={timelineStages} compact className="ms-5" />
       )}
       {item.statusMessage && item.statusMessage.parts.length > 0 && (
         <div className="ms-5 text-sm text-muted-foreground">

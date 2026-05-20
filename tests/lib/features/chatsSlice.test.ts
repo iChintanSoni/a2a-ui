@@ -151,20 +151,60 @@ describe("chatsSlice", () => {
       expect(state.chats[0].pinned).toBe(false);
     });
 
-    it("clones a chat into a fresh run with no items", () => {
+    it("clones prompts into a fresh run by default", () => {
       let state = reducer(
         INITIAL_STATE,
         addChat(makeChat({ id: "c1", title: "Original chat", lastMessage: "hello" })),
       );
       state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", parts: userTextParts("Hello") }));
+      state = reducer(state, applyStatusUpdate({ chatId: "c1", taskId: "t1", state: "completed" }));
       state = reducer(state, cloneChat({ chatId: "c1", newChatId: "c2" }));
 
       expect(state.activeChatId).toBe("c2");
       expect(state.chats[0].id).toBe("c2");
       expect(state.chats[0].sourceChatId).toBe("c1");
-      expect(state.chats[0].items).toEqual([]);
+      expect(state.chats[0].items).toHaveLength(1);
+      expect(state.chats[0].items[0].kind).toBe("user-message");
       expect(state.chats[0].executionEvents).toEqual([]);
+      expect(state.chats[0].lastMessage).toBe("Hello");
+      expect(state.chats[0].title).toBe("Prompt clone · Original chat");
+    });
+
+    it("labels a prompt clone with no messages as a new run", () => {
+      let state = reducer(
+        INITIAL_STATE,
+        addChat(makeChat({ id: "c1", title: "Original chat", lastMessage: "hello" })),
+      );
+      state = reducer(state, cloneChat({ chatId: "c1", newChatId: "c2" }));
+
+      expect(state.chats[0].items).toEqual([]);
       expect(state.chats[0].title).toBe("New run · Original chat");
+    });
+
+    it("can clone the full run history explicitly", () => {
+      let state = reducer(INITIAL_STATE, addChat(makeChat({ id: "c1", title: "Original chat" })));
+      state = reducer(state, addUserMessage({ chatId: "c1", id: "m1", parts: userTextParts("Hello") }));
+      state = reducer(state, applyStatusUpdate({ chatId: "c1", taskId: "t1", state: "completed" }));
+      state = reducer(
+        state,
+        appendExecutionEvent({
+          chatId: "c1",
+          event: {
+            id: "event-1",
+            chatId: "c1",
+            kind: "task-status",
+            level: "info",
+            timestamp: 123,
+            summary: "Completed",
+            taskId: "t1",
+          },
+        }),
+      );
+      state = reducer(state, cloneChat({ chatId: "c1", newChatId: "c2", mode: "full" }));
+
+      expect(state.chats[0].items).toHaveLength(2);
+      expect(state.chats[0].executionEvents).toHaveLength(1);
+      expect(state.chats[0].title).toBe("Full copy · Original chat");
     });
   });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ActivityIcon, BugIcon, SquarePenIcon } from "lucide-react";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ChatMessages } from "@/components/chat/ChatMessages";
@@ -69,6 +69,18 @@ export function A2AChat({
 
   const inputModes = connection.card?.defaultInputModes ?? initialCard?.defaultInputModes ?? [];
   const outputModes = connection.card?.defaultOutputModes ?? initialCard?.defaultOutputModes ?? [];
+  const skillPromptStarters = useMemo(() => {
+    const card = connection.card ?? initialCard;
+    return (card?.skills ?? []).flatMap((skill) =>
+      (skill.examples ?? []).map((example, index) => ({
+        id: `agent-example-${skill.id}-${index}`,
+        label: example.slice(0, 40) || skill.name,
+        text: example,
+        createdAt: 0,
+        useCount: 0,
+      })),
+    );
+  }, [connection.card, initialCard]);
 
   if (!chat) {
     return (
@@ -90,8 +102,13 @@ export function A2AChat({
             variant="ghost"
             size="icon"
             className="size-8 shrink-0"
-            onClick={() => setEventsOpen((open) => !open)}
+            onClick={() => {
+              setEventsOpen((open) => !open);
+              setDebugOpen(false);
+            }}
             title="Toggle event explorer"
+            aria-label="Toggle event explorer"
+            aria-pressed={eventsOpen}
           >
             <ActivityIcon className="size-4" />
           </Button>
@@ -101,8 +118,13 @@ export function A2AChat({
             variant="ghost"
             size="icon"
             className="size-8 shrink-0"
-            onClick={() => setDebugOpen((open) => !open)}
+            onClick={() => {
+              setDebugOpen((open) => !open);
+              setEventsOpen(false);
+            }}
             title="Toggle debug console"
+            aria-label="Toggle debug console"
+            aria-pressed={debugOpen}
           >
             <BugIcon className="size-4" />
           </Button>
@@ -113,6 +135,7 @@ export function A2AChat({
           className="gap-1.5 max-sm:px-2"
           onClick={session.newSession}
           disabled={session.isStreaming}
+          aria-label="New session"
         >
           <SquarePenIcon className="size-3.5" />
           <span className="hidden sm:inline">New Session</span>
@@ -139,6 +162,7 @@ export function A2AChat({
         disabled={session.isStreaming}
         isInputRequired={isInputRequired}
         inputModes={inputModes}
+        promptPresets={skillPromptStarters}
       />
 
       {showEventExplorer && eventsOpen && (

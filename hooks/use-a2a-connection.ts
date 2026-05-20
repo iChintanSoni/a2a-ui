@@ -7,6 +7,9 @@ import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice
 import { createClientFactory } from "@/lib/utils/auth";
 import { useA2ADebug } from "@/hooks/use-a2a-debug";
 
+const DEFAULT_AUTH: AuthConfig = { type: "none" };
+const EMPTY_HEADERS: CustomHeader[] = [];
+
 interface UseA2AConnectionOptions {
   agentUrl: string;
   auth?: AuthConfig;
@@ -20,15 +23,20 @@ interface UseA2AConnectionOptions {
 
 export function useA2AConnection({
   agentUrl,
-  auth = { type: "none" },
-  headers = [],
+  auth: authProp,
+  headers: headersProp,
   a2uiEnabled = false,
   debug,
   autoConnect = true,
   autoLoadCard = false,
   initialCard,
 }: UseA2AConnectionOptions) {
+  const auth = authProp ?? DEFAULT_AUTH;
+  const headers = headersProp ?? EMPTY_HEADERS;
   const clientRef = useRef<Client | null>(null);
+  const clientKeyRef = useRef<string | null>(null);
+  const pendingClientRef = useRef<{ key: string; promise: Promise<Client> } | null>(null);
+  const pendingCardRef = useRef<{ key: string; promise: Promise<AgentCard> } | null>(null);
   const configKey = useMemo(
     () =>
       JSON.stringify({
@@ -59,12 +67,14 @@ export function useA2AConnection({
     transportState.key === configKey ? transportState.transportMethod : null;
   const status =
     transportState.key === configKey
-      ? transportState.status
+      ? transportState.status === "idle" && initialCard
+        ? "connected"
+        : transportState.status
       : initialCard
         ? "connected"
         : "idle";
   const error = transportState.key === configKey ? transportState.error : null;
-  const card = cardState.key === configKey ? cardState.card : (initialCard ?? null);
+  const card = cardState.key === configKey ? (cardState.card ?? initialCard ?? null) : (initialCard ?? null);
 
   // Keep debug in a ref so getClient doesn't need it as a dep (debug is a new
   // object every render, which would otherwise cause getClient to change and
@@ -76,17 +86,23 @@ export function useA2AConnection({
 
   const resetConnection = useCallback(() => {
     clientRef.current = null;
+    clientKeyRef.current = null;
+    pendingClientRef.current = null;
+    pendingCardRef.current = null;
   }, []);
 
   const getClient = useCallback(async (): Promise<Client> => {
-    if (clientRef.current) return clientRef.current;
+    if (clientRef.current && clientKeyRef.current === configKey) return clientRef.current;
+    if (pendingClientRef.current?.key === configKey) return pendingClientRef.current.promise;
+
     setTransportState({
       key: configKey,
       transportMethod: null,
       status: "connecting",
       error: null,
     });
-    try {
+
+    const promise = (async () => {
       const factory = createClientFactory(
         auth,
         headers,
@@ -96,6 +112,7 @@ export function useA2AConnection({
       );
       const client = await factory.createFromUrl(agentUrl);
       clientRef.current = client;
+      clientKeyRef.current = configKey;
 
       const protocol =
         (client as unknown as { transport?: { protocolName?: string } }).transport
@@ -107,8 +124,15 @@ export function useA2AConnection({
         error: null,
       });
       return client;
+    })();
+
+    pendingClientRef.current = { key: configKey, promise };
+
+    try {
+      return await promise;
     } catch (err) {
       clientRef.current = null;
+      clientKeyRef.current = null;
       setTransportState({
         key: configKey,
         transportMethod: null,
@@ -116,14 +140,31 @@ export function useA2AConnection({
         error: err instanceof Error ? err.message : String(err),
       });
       throw err;
+    } finally {
+      if (pendingClientRef.current?.key === configKey) {
+        pendingClientRef.current = null;
+      }
     }
   }, [a2uiEnabled, agentUrl, auth, configKey, headers]);
 
   const refreshAgentCard = useCallback(async () => {
-    const client = await getClient();
-    const nextCard = await client.getAgentCard();
-    setCardState({ key: configKey, card: nextCard });
-    return nextCard;
+    if (pendingCardRef.current?.key === configKey) return pendingCardRef.current.promise;
+
+    const promise = getClient().then(async (client) => {
+      const nextCard = await client.getAgentCard();
+      setCardState({ key: configKey, card: nextCard });
+      return nextCard;
+    });
+
+    pendingCardRef.current = { key: configKey, promise };
+
+    try {
+      return await promise;
+    } finally {
+      if (pendingCardRef.current?.key === configKey) {
+        pendingCardRef.current = null;
+      }
+    }
   }, [configKey, getClient]);
 
   const cancelTask = useCallback(async (taskId: string) => {
@@ -148,7 +189,7 @@ export function useA2AConnection({
     return () => {
       cancelled = true;
     };
-  }, [autoConnect, autoLoadCard, configKey, getClient, initialCard, refreshAgentCard, resetConnection]);
+  }, [autoConnect, autoLoadCard, configKey, getClient, refreshAgentCard, resetConnection]);
 
   return {
     agentUrl,

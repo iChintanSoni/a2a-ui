@@ -6,11 +6,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useAppDispatch } from "@/lib/hooks";
 import { addAgent, type AuthConfig, type CustomHeader } from "@/lib/features/agents/agentsSlice";
-import { createClientFactory } from "@/lib/utils/auth";
-import { normalizeAgentUrl, getAgentCardUrlFallback } from "@/lib/utils/url";
-import { type Client } from "@a2a-js/sdk/client";
+import {
+  runAgentConnectionDiagnostic,
+  summarizeAuth,
+  summarizeHeaders,
+  type AgentConnectionDiagnostic,
+} from "@/lib/features/agents/diagnostics";
 import { Button } from "@/components/ui/button";
-import { Muted, ErrorText } from "@/components/typography";
+import { Badge } from "@/components/ui/badge";
+import { Muted, ErrorText, Caption, Small } from "@/components/typography";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +49,7 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
   const [url, setUrl] = useState("http://localhost:3001");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [diagnostic, setDiagnostic] = useState<AgentConnectionDiagnostic | null>(null);
 
   // Auth state
   const [auth, setAuth] = useState<AuthConfig>(DEFAULT_AUTH);
@@ -86,6 +91,7 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
     setAuth(DEFAULT_AUTH);
     setHeaders([]);
     setError(null);
+    setDiagnostic(null);
   };
 
   const handleOpenChange = (val: boolean) => {
@@ -97,39 +103,27 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setDiagnostic({
+      status: "checking",
+      inputUrl: url,
+      transports: [],
+      authSummary: summarizeAuth(auth),
+      headerSummary: summarizeHeaders(headers),
+    });
 
     try {
-      const normalizedUrl = normalizeAgentUrl(url);
-      const factory = createClientFactory(auth, headers);
+      const result = await runAgentConnectionDiagnostic({ url, auth, headers });
+      setDiagnostic(result.diagnostic);
 
-      let client: Client;
-      let finalUrl = normalizedUrl;
-
-      try {
-        client = await factory.createFromUrl(normalizedUrl);
-      } catch (err) {
-        // If normalization changed nothing or already ended in .json, don't fallback
-        const fallbackUrl = getAgentCardUrlFallback(normalizedUrl);
-        if (fallbackUrl && fallbackUrl !== normalizedUrl) {
-          try {
-            client = await factory.createFromUrl(fallbackUrl);
-            finalUrl = fallbackUrl;
-          } catch {
-            // If fallback also fails, throw the original error
-            throw err;
-          }
-        } else {
-          throw err;
-        }
+      if (!result.card || !result.finalUrl) {
+        throw new Error(result.diagnostic.error ?? "Failed to fetch agent card.");
       }
-
-      const card = await client.getAgentCard();
 
       dispatch(
         addAgent({
           id: crypto.randomUUID(),
-          url: finalUrl,
-          card,
+          url: result.finalUrl,
+          card: result.card,
           status: "connected",
           auth,
           customHeaders: headers.filter((h) => h.key.trim()),
@@ -143,6 +137,18 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
         err instanceof Error
           ? err.message
           : "Failed to connect. Check the URL and try again."
+      );
+      setDiagnostic((current) =>
+        current
+          ? {
+              ...current,
+              status: "error",
+              error:
+                err instanceof Error
+                  ? err.message
+                  : "Failed to connect. Check the URL and try again.",
+            }
+          : current,
       );
     } finally {
       setLoading(false);
@@ -344,6 +350,76 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
               </Button>
             </TabsContent>
           </Tabs>
+
+          {diagnostic && (
+            <div className="mt-4 rounded-md border bg-muted/20 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <Small>
+                  {diagnostic.status === "checking"
+                    ? "Checking connection"
+                    : diagnostic.status === "connected"
+                      ? "Agent card detected"
+                      : "Connection failed"}
+                </Small>
+                <Badge
+                  variant={
+                    diagnostic.status === "connected"
+                      ? "default"
+                      : diagnostic.status === "error"
+                        ? "destructive"
+                        : "secondary"
+                  }
+                >
+                  {diagnostic.status}
+                </Badge>
+              </div>
+              <div className="mt-3 grid gap-1.5 text-xs text-muted-foreground">
+                <div>
+                  URL:{" "}
+                  <span className="font-mono text-foreground">
+                    {diagnostic.normalizedUrl ?? diagnostic.inputUrl}
+                  </span>
+                </div>
+                <div>
+                  Agent card:{" "}
+                  <span className="font-mono text-foreground">
+                    {diagnostic.attemptedCardUrl ?? "resolving..."}
+                  </span>
+                </div>
+                {diagnostic.agentName && (
+                  <div>
+                    Agent: <span className="text-foreground">{diagnostic.agentName}</span>
+                  </div>
+                )}
+                <div>
+                  Transport:{" "}
+                  <span className="text-foreground">
+                    {diagnostic.transports.length > 0
+                      ? diagnostic.transports.join(", ")
+                      : "detecting..."}
+                  </span>
+                </div>
+                <div>
+                  Path:{" "}
+                  <span className="text-foreground">{diagnostic.proxyPath ?? "detecting..."}</span>
+                </div>
+                <div>
+                  Auth: <span className="text-foreground">{diagnostic.authSummary}</span>
+                </div>
+                <div>
+                  Headers: <span className="text-foreground">{diagnostic.headerSummary}</span>
+                </div>
+                {diagnostic.latencyMs != null && (
+                  <div>
+                    Latency: <span className="text-foreground">{diagnostic.latencyMs} ms</span>
+                  </div>
+                )}
+                {diagnostic.error && (
+                  <Caption className="text-destructive">{diagnostic.error}</Caption>
+                )}
+              </div>
+            </div>
+          )}
 
           {error && <ErrorText className="mt-3">{error}</ErrorText>}
 
