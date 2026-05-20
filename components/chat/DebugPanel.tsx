@@ -71,6 +71,8 @@ function LogRow({ entry }: { entry: LogEntry }) {
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-start gap-2 px-3 py-1.5 text-left hover:bg-muted/40 transition-colors"
+        aria-expanded={open}
+        aria-label={`${open ? "Collapse" : "Expand"} ${entry.type} log ${entry.method}`}
       >
         <Caption className="mt-0.5 shrink-0 font-mono">{time}</Caption>
         <TypeBadge type={entry.type} />
@@ -170,7 +172,7 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
 
   return (
     <div
-      className="flex shrink-0 flex-col border-t bg-background"
+      className="flex max-h-[45dvh] min-h-40 shrink-0 flex-col border-t bg-background"
       style={{ height }}
     >
       {/* Drag handle */}
@@ -220,6 +222,7 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
             className="size-6"
             onClick={onClear}
             title="Clear logs"
+            aria-label="Clear debug logs"
           >
             <Trash2Icon className="size-3.5" />
           </Button>
@@ -229,6 +232,7 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
             className="size-6"
             onClick={onClose}
             title="Close debug console"
+            aria-label="Close debug console"
           >
             <XIcon className="size-3.5" />
           </Button>

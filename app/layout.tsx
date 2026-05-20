@@ -9,6 +9,11 @@ import { ToastProvider } from "@/lib/toast";
 export const metadata: Metadata = {
   title: "A2A UI",
   description: "",
+  icons: {
+    icon: "/a2a-ui.svg",
+    shortcut: "/a2a-ui.svg",
+    apple: "/a2a-ui.svg",
+  },
 };
 
 export default function RootLayout({

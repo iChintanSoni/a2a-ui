@@ -39,6 +39,7 @@ export default function AgentsPage() {
   const dispatch = useAppDispatch();
   const agents = useAppSelector((state) => state.agents.agents);
   const chats = useAppSelector((state) => state.chats.chats);
+  const qaRuns = useAppSelector((state) => state.qa.runs);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
   const [transport, setTransport] = useState("all");
@@ -52,6 +53,16 @@ export default function AgentsPage() {
     }
     return map;
   }, [chats]);
+  const latestQaByAgent = useMemo(() => {
+    const map = new Map<string, (typeof qaRuns)[number]>();
+    for (const run of qaRuns) {
+      const existing = map.get(run.agentUrl);
+      if (!existing || run.completedAt > existing.completedAt) {
+        map.set(run.agentUrl, run);
+      }
+    }
+    return map;
+  }, [qaRuns]);
 
   const tags = useMemo(
     () => Array.from(new Set(agents.flatMap((agent) => agent.tags ?? []))).sort(),
@@ -167,6 +178,9 @@ export default function AgentsPage() {
       {filteredAgents.length === 0 ? (
         <div className="rounded-md border border-dashed p-8 text-center">
           <Muted>No agents match the current filters.</Muted>
+          <Caption className="mt-2 block">
+            Try clearing the status, transport, or tag filters, or add a new agent.
+          </Caption>
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
@@ -174,6 +188,7 @@ export default function AgentsPage() {
             const compliance = checkCompliance(agent.card);
             const agentName = agent.displayName ?? agent.card.name;
             const lastUsed = lastUsedByAgent.get(agent.url);
+            const latestQa = latestQaByAgent.get(agent.url);
             return (
               <div key={agent.id} className="min-w-0 rounded-md border p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -181,7 +196,14 @@ export default function AgentsPage() {
                     <Small className="truncate">{agentName}</Small>
                     <Mono className="block truncate text-muted-foreground">{agent.url}</Mono>
                   </div>
-                  <Button variant="ghost" size="icon" className="size-8" onClick={() => dispatch(toggleAgentFavorite(agent.id))}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    onClick={() => dispatch(toggleAgentFavorite(agent.id))}
+                    aria-label={agent.favorite ? `Unfavorite ${agentName}` : `Favorite ${agentName}`}
+                    title={agent.favorite ? "Remove from favorites" : "Add to favorites"}
+                  >
                     {agent.favorite ? <StarIcon className="size-4 fill-current" /> : <StarOffIcon className="size-4" />}
                   </Button>
                 </div>
@@ -194,10 +216,16 @@ export default function AgentsPage() {
                   <Badge variant={compliance.failCount === 0 ? "default" : "destructive"}>
                     {compliance.failCount === 0 ? "Compliant" : `${compliance.failCount} issue${compliance.failCount === 1 ? "" : "s"}`}
                   </Badge>
+                  {latestQa && (
+                    <Badge variant={latestQa.passed ? "default" : "destructive"}>
+                      QA {latestQa.passed ? "passing" : "failing"}
+                    </Badge>
+                  )}
                   {(agent.tags ?? []).map((item) => <Badge key={item} variant="outline">{item}</Badge>)}
                 </div>
                 <Caption className="mt-3 block">
                   {lastUsed ? `Last used ${new Date(lastUsed).toLocaleString()}` : "No conversations yet"}
+                  {latestQa ? ` · Last QA ${new Date(latestQa.completedAt).toLocaleString()}` : ""}
                 </Caption>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button className="max-sm:flex-1" size="sm" disabled={agent.status !== "connected"} onClick={() => startChat(agent.url, agentName)}>

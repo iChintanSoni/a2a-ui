@@ -4,6 +4,7 @@ import type { Chat } from "@/lib/features/chats/chatsSlice";
 import type { ExecutionEvent } from "@/lib/a2a/execution-events";
 import type { ComplianceResult, ValidationWarning } from "@/lib/utils/compliance";
 import { maskSecrets, type LogEntry } from "@/lib/utils/debugInterceptor";
+import { collectChatTraceEvents } from "@/lib/utils/chatExport";
 
 export interface ProtocolReport {
   generatedAt: string;
@@ -35,10 +36,31 @@ export function buildProtocolReport(input: {
   logs: LogEntry[];
   validationWarnings: ValidationWarning[];
 }): ProtocolReport {
+  const executionEvents = input.chat
+    ? collectChatTraceEvents({ chat: input.chat, logs: input.logs })
+    : [];
   const transportsDetected = Array.from(
     new Set(
-      input.logs
-        .map((log) => log.transport?.protocol ?? log.transport?.jsonRpcMethod ?? log.transport?.httpMethod)
+      [
+        ...input.logs.map(
+          (log) => log.transport?.protocol ?? log.transport?.jsonRpcMethod ?? log.transport?.httpMethod,
+        ),
+        ...executionEvents.map((event) => {
+          const transport = event.details?.transport;
+          if (!transport || typeof transport !== "object") return undefined;
+          const details = transport as {
+            protocol?: unknown;
+            jsonRpcMethod?: unknown;
+            httpMethod?: unknown;
+          };
+          return (
+            (typeof details.protocol === "string" && details.protocol) ||
+            (typeof details.jsonRpcMethod === "string" && details.jsonRpcMethod) ||
+            (typeof details.httpMethod === "string" && details.httpMethod) ||
+            undefined
+          );
+        }),
+      ]
         .filter((value): value is string => typeof value === "string" && value.length > 0)
     )
   );
@@ -63,8 +85,8 @@ export function buildProtocolReport(input: {
     failedRequests,
     validationWarnings: input.validationWarnings,
     debugLogCount: input.logs.length,
-    executionEventCount: input.chat?.executionEvents.length ?? 0,
-    executionEvents: input.chat?.executionEvents ?? [],
+    executionEventCount: executionEvents.length,
+    executionEvents,
     chat: input.chat
       ? {
           id: input.chat.id,

@@ -76,6 +76,8 @@ export interface Chat {
   executionEvents: ExecutionEvent[];
 }
 
+export type ChatCloneMode = "prompt" | "full";
+
 export interface ChatsState {
   chats: Chat[];
   activeChatId: string | null;
@@ -92,6 +94,10 @@ const MAX_EXECUTION_EVENTS = 1000;
 
 function findChat(state: ChatsState, chatId: string): Chat | undefined {
   return state.chats.find(c => c.id === chatId);
+}
+
+function cloneJson<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T;
 }
 
 // ─── Slice ───────────────────────────────────────────────────────────────────
@@ -189,24 +195,50 @@ export const chatsSlice = createSlice({
 
     cloneChat: (
       state,
-      action: PayloadAction<{ chatId: string; newChatId: string; title?: string }>
+      action: PayloadAction<{
+        chatId: string;
+        newChatId: string;
+        title?: string;
+        mode?: ChatCloneMode;
+      }>
     ) => {
       const source = findChat(state, action.payload.chatId);
       if (!source) return;
 
       const now = Date.now();
+      const mode = action.payload.mode ?? "prompt";
+      const items =
+        mode === "full"
+          ? cloneJson(source.items)
+          : cloneJson(source.items.filter((item) => item.kind === "user-message"));
+      for (const item of items) {
+        item.timestamp = now;
+        if (item.kind === "user-message") {
+          item.id = `${item.id}-clone-${now}`;
+        }
+      }
+      const lastPrompt = items.findLast(
+        (item): item is UserMessageItem => item.kind === "user-message",
+      );
+      const title =
+        action.payload.title?.trim() ||
+        (mode === "full"
+          ? `Full copy · ${source.title}`
+          : items.length > 0
+            ? `Prompt clone · ${source.title}`
+            : `New run · ${source.title}`);
       const cloned: Chat = {
         id: action.payload.newChatId,
-        title: action.payload.title?.trim() || `New run · ${source.title}`,
+        title,
         agentUrl: source.agentUrl,
         agentName: source.agentName,
-        lastMessage: "",
+        lastMessage: lastPrompt ? buildPartsPreview(lastPrompt.parts) : "",
         timestamp: now,
         archived: false,
         pinned: false,
         sourceChatId: source.id,
-        items: [],
-        executionEvents: [],
+        items,
+        executionEvents: mode === "full" ? cloneJson(source.executionEvents) : [],
       };
 
       state.chats.unshift(cloned);

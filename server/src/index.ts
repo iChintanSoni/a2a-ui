@@ -28,6 +28,9 @@ app.use(cors());
 app.use(express.json());
 
 app.use(`/${AGENT_CARD_PATH}`, agentCardHandler({ agentCardProvider: requestHandler }));
+app.get("/.well-known/agent.json", (_req, res) => {
+  res.redirect(308, `/${AGENT_CARD_PATH}`);
+});
 app.use(
   "/a2a/jsonrpc",
   jsonRpcHandler({ requestHandler, userBuilder: UserBuilder.noAuthentication }),
@@ -36,5 +39,5 @@ app.use("/a2a/rest", restHandler({ requestHandler, userBuilder: UserBuilder.noAu
 
 app.listen(PORT, () => {
   console.log(`A2A server running at ${BASE_URL}`);
-  console.log(`Agent card: ${BASE_URL}/.well-known/agent.json`);
+  console.log(`Agent card: ${BASE_URL}/${AGENT_CARD_PATH}`);
 });

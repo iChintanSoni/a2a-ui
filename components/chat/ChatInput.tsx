@@ -599,6 +599,7 @@ export function ChatInput({
           ref={textareaRef}
           className="max-h-40 min-h-8 min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 outline-none placeholder:text-muted-foreground"
           placeholder={isInputRequired ? "Respond to agent… (Enter to send)" : "Message agent… (Enter to send, Shift+Enter for newline)"}
+          aria-label={isInputRequired ? "Respond to agent" : "Message agent"}
           rows={1}
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -615,6 +616,7 @@ export function ChatInput({
             disabled && "opacity-50 cursor-not-allowed"
           )}
           title="Add a JSON data part"
+          aria-label="Add JSON data part"
         >
           JSON
         </button>
@@ -677,6 +679,7 @@ export function ChatInput({
             className="size-8 shrink-0 bg-red-500 text-white hover:bg-red-600"
             onClick={onCancel}
             title="Stop generating"
+            aria-label="Stop generating"
           >
             <SquareIcon className="size-3.5 fill-current" />
           </Button>
@@ -686,6 +689,8 @@ export function ChatInput({
             className="size-8 shrink-0"
             onClick={handleSend}
             disabled={!canSend || disabled}
+            aria-label="Send message"
+            title="Send message"
           >
             <SendIcon className="size-4" />
           </Button>

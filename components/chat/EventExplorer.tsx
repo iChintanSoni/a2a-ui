@@ -61,6 +61,8 @@ function EventRow({ event }: { event: ExecutionEvent }) {
       <button
         onClick={() => setOpen((value) => !value)}
         className="flex w-full items-start gap-2 px-3 py-2 text-left transition-colors hover:bg-muted/40"
+        aria-expanded={open}
+        aria-label={`${open ? "Collapse" : "Expand"} ${event.kind} event ${event.summary}`}
       >
         <Caption className="mt-0.5 shrink-0 font-mono">{time}</Caption>
         <span
@@ -111,12 +113,19 @@ export function EventExplorer({ events, onClose }: EventExplorerProps) {
   const summary = useMemo(() => getTransportSummary(filtered), [filtered]);
 
   return (
-    <div className="flex shrink-0 flex-col border-t bg-background" style={{ height: 340 }}>
+    <div className="flex max-h-[45dvh] min-h-52 shrink-0 resize-y flex-col overflow-hidden border-t bg-background" style={{ height: 340 }}>
       <div className="flex items-center gap-2 border-b px-3 py-2">
         <ActivityIcon className="size-4 text-muted-foreground" />
         <Small className="text-foreground/80">Event Explorer</Small>
         <div className="ml-auto flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="size-6" onClick={onClose}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            onClick={onClose}
+            aria-label="Close event explorer"
+            title="Close event explorer"
+          >
             <XIcon className="size-3.5" />
           </Button>
         </div>

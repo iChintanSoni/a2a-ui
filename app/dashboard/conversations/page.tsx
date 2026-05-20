@@ -37,6 +37,7 @@ import {
   type ArtifactItem,
   type Chat,
 } from "@/lib/features/chats/chatsSlice";
+import { buildChatTraceJson, buildChatTraceMarkdown } from "@/lib/utils/chatExport";
 
 type ArchiveFilter = "active" | "archived" | "all";
 type SortMode = "recent" | "title" | "agent";
@@ -77,22 +78,29 @@ function chatSearchText(chat: Chat) {
     .toLowerCase();
 }
 
-function exportMarkdown(chats: Chat[]) {
-  const lines: string[] = [];
-  for (const chat of chats) {
-    lines.push(`# ${chat.title}`, `Agent: ${chat.agentName}`, "");
-    for (const item of chat.items) {
-      if (item.kind === "user-message") lines.push(`**You:** ${partsToPlainText(item.parts)}`, "");
-      if (item.kind === "artifact" || item.kind === "agent-message") {
-        const text = textOf(item);
-        if (text) lines.push(`**Agent:** ${text}`, "");
-      }
-      if (item.kind === "task-status") lines.push(`*${item.state}*`, "");
-      if (item.kind === "tool-call") lines.push(`*Tool: ${item.toolName} - ${item.query}*`, "");
-    }
-    lines.push("");
-  }
-  downloadFile("a2a-conversations.md", lines.join("\n"), "text/markdown");
+function exportMarkdownTrace(chats: Chat[]) {
+  const generatedAt = new Date().toISOString();
+  const content = chats
+    .map((chat) => buildChatTraceMarkdown({ chat, generatedAt }))
+    .join("\n\n---\n\n");
+  downloadFile("a2a-conversations-trace.md", content, "text/markdown");
+}
+
+function exportForensicJson(chats: Chat[]) {
+  const generatedAt = new Date().toISOString();
+  downloadFile(
+    "a2a-conversations-trace.json",
+    JSON.stringify(
+      {
+        version: 1,
+        generatedAt,
+        chats: chats.map((chat) => buildChatTraceJson({ chat, generatedAt })),
+      },
+      null,
+      2,
+    ),
+    "application/json",
+  );
 }
 
 export default function ConversationsPage() {
@@ -124,6 +132,12 @@ export default function ConversationsPage() {
   }, [archiveFilter, chats, query, sort]);
 
   const selectedChats = chats.filter((chat) => selected.includes(chat.id));
+  const compareDisabledReason =
+    selectedChats.length === 2
+      ? null
+      : selectedChats.length === 0
+        ? "Select exactly two runs to compare."
+        : `Select ${selectedChats.length > 2 ? "only" : "one more"} run to compare.`;
   const toggleSelected = (chatId: string) => {
     setSelected((prev) =>
       prev.includes(chatId) ? prev.filter((id) => id !== chatId) : [...prev, chatId]
@@ -155,6 +169,7 @@ export default function ConversationsPage() {
             variant="outline"
             size="sm"
             disabled={selectedChats.length !== 2}
+            title={compareDisabledReason ?? "Compare selected runs"}
             onClick={() =>
               router.push(
                 `/dashboard/compare?left=${selectedChats[0].id}&right=${selectedChats[1].id}`,
@@ -177,18 +192,30 @@ export default function ConversationsPage() {
             }
           >
             <DownloadIcon className="size-4" />
-            Export JSON
+            Export Raw JSON
           </Button>
           <Button
             variant="outline"
             size="sm"
             disabled={selectedChats.length === 0}
-            onClick={() => exportMarkdown(selectedChats)}
+            onClick={() => exportForensicJson(selectedChats)}
           >
             <DownloadIcon className="size-4" />
-            Export Markdown
+            Export Forensic JSON
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={selectedChats.length === 0}
+            onClick={() => exportMarkdownTrace(selectedChats)}
+          >
+            <DownloadIcon className="size-4" />
+            Export Markdown Trace
           </Button>
         </div>
+        {compareDisabledReason && (
+          <Caption className="lg:w-full lg:text-right">{compareDisabledReason}</Caption>
+        )}
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-[1fr_180px_160px]">
@@ -273,12 +300,19 @@ export default function ConversationsPage() {
                     variant="outline"
                     onClick={() => {
                       const nextChatId = crypto.randomUUID();
-                      dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId }));
+                      dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId, mode: "prompt" }));
                       router.push(`/dashboard/chat/${nextChatId}`);
                     }}
+                    title={
+                      chat.items.some((item) => item.kind === "user-message")
+                        ? "Clone prompts into a fresh run"
+                        : "Start a new run from this chat context"
+                    }
                   >
                     <CopyIcon className="size-4" />
-                    <span className="truncate">Clone</span>
+                    <span className="truncate">
+                      {chat.items.some((item) => item.kind === "user-message") ? "Clone Prompt" : "New Run"}
+                    </span>
                   </Button>
                   <Button
                     className="justify-center"
@@ -294,6 +328,7 @@ export default function ConversationsPage() {
                     size="sm"
                     variant="destructive"
                     onClick={() => {
+                      if (!window.confirm(`Delete "${chat.title}"? This cannot be undone.`)) return;
                       dispatch(removeChat(chat.id));
                       setSelected((prev) => prev.filter((id) => id !== chat.id));
                     }}

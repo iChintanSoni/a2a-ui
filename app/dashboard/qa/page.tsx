@@ -69,6 +69,31 @@ function formatDuration(ms: number) {
   return `${(ms / 1000).toFixed(1)} s`;
 }
 
+function validateMetadata(value: string): string | null {
+  try {
+    parseMetadata(value);
+    return null;
+  } catch (err) {
+    return err instanceof Error ? err.message : String(err);
+  }
+}
+
+function validateRegex(value: string): string | null {
+  if (!value.trim()) return null;
+  try {
+    new RegExp(value.trim(), "i");
+    return null;
+  } catch (err) {
+    return err instanceof Error ? err.message : String(err);
+  }
+}
+
+function validateJsonPath(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.startsWith("$") ? null : "JSON path must start with $.";
+}
+
 export default function QaPage() {
   const dispatch = useAppDispatch();
   const agents = useAppSelector((state) => state.agents.agents);
@@ -91,10 +116,29 @@ export default function QaPage() {
     () => suites.filter((suite) => !selectedAgent || suite.agentUrl === selectedAgent.url),
     [selectedAgent, suites],
   );
+  const promptStarters = useMemo(
+    () =>
+      (selectedAgent?.card.skills ?? []).flatMap((skill) =>
+        (skill.examples ?? []).map((example, index) => ({
+          id: `${skill.id}-${index}`,
+          label: skill.name,
+          text: example,
+        })),
+      ),
+    [selectedAgent?.card.skills],
+  );
+  const metadataError = useMemo(() => validateMetadata(metadata), [metadata]);
+  const regexError = useMemo(() => validateRegex(regexPattern), [regexPattern]);
+  const jsonPathError = useMemo(() => validateJsonPath(jsonPath), [jsonPath]);
+  const canSaveSuite = !metadataError && !regexError && !jsonPathError;
 
   const saveSuite = () => {
     if (!selectedAgent) return;
     setFormError(null);
+    if (!canSaveSuite) {
+      setFormError("Resolve the highlighted validation errors before saving.");
+      return;
+    }
     let parsedMetadata: Record<string, string>;
     try {
       parsedMetadata = parseMetadata(metadata);
@@ -172,7 +216,7 @@ export default function QaPage() {
           <Muted>Add an agent before creating QA suites.</Muted>
         </div>
       ) : (
-        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,380px)_minmax(0,1fr)]">
+        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
           <div className="flex min-w-0 flex-col gap-4 rounded-md border p-4">
             <div className="flex items-center gap-2">
               <ClipboardCheckIcon />
@@ -212,6 +256,22 @@ export default function QaPage() {
                 onChange={(event) => setPrompt(event.target.value)}
                 className="min-h-24"
               />
+              {promptStarters.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {promptStarters.slice(0, 4).map((starter) => (
+                    <Button
+                      key={starter.id}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPrompt(starter.text)}
+                      title={starter.text}
+                    >
+                      {starter.label}
+                    </Button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
@@ -255,12 +315,19 @@ export default function QaPage() {
                 value={metadata}
                 onChange={(event) => setMetadata(event.target.value)}
                 className="min-h-20 font-mono text-xs"
+                aria-invalid={metadataError ? "true" : "false"}
               />
+              {metadataError && <Caption className="text-destructive">{metadataError}</Caption>}
             </div>
 
             <div className="space-y-2">
               <Label>Regex assertion</Label>
-              <Input value={regexPattern} onChange={(event) => setRegexPattern(event.target.value)} />
+              <Input
+                value={regexPattern}
+                onChange={(event) => setRegexPattern(event.target.value)}
+                aria-invalid={regexError ? "true" : "false"}
+              />
+              {regexError && <Caption className="text-destructive">{regexError}</Caption>}
             </div>
 
             <div className="space-y-2">
@@ -269,13 +336,15 @@ export default function QaPage() {
                 placeholder="$.status"
                 value={jsonPath}
                 onChange={(event) => setJsonPath(event.target.value)}
+                aria-invalid={jsonPathError ? "true" : "false"}
               />
+              {jsonPathError && <Caption className="text-destructive">{jsonPathError}</Caption>}
             </div>
 
             {formError && <Caption className="text-destructive">{formError}</Caption>}
 
             <div className="flex flex-wrap gap-2">
-              <Button onClick={saveSuite}>
+              <Button onClick={saveSuite} disabled={!canSaveSuite}>
                 <PlusIcon className="size-4" />
                 Save suite
               </Button>
@@ -294,7 +363,14 @@ export default function QaPage() {
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Small>Saved suites</Small>
-                <Button variant="outline" size="sm" onClick={() => dispatch(clearQaRunHistory(undefined))}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (!window.confirm("Clear all QA run history? Saved suites will remain.")) return;
+                    dispatch(clearQaRunHistory(undefined));
+                  }}
+                >
                   Clear history
                 </Button>
               </div>
@@ -351,7 +427,10 @@ export default function QaPage() {
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => dispatch(removeQaSuite(suite.id))}
+                            onClick={() => {
+                              if (!window.confirm(`Remove "${suite.name}"? Run history will remain.`)) return;
+                              dispatch(removeQaSuite(suite.id));
+                            }}
                             aria-label={`Remove ${suite.name}`}
                           >
                             <Trash2Icon className="size-4" />

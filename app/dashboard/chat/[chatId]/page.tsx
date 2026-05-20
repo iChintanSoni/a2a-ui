@@ -3,8 +3,6 @@
 import { use, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Part } from "@a2a-js/sdk";
-import { partsToPlainText } from "@/lib/a2a/parts";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useChatSession } from "@/hooks/use-chat-session";
 import { ChatMessages } from "@/components/chat/ChatMessages";
@@ -31,15 +29,19 @@ import {
 import { cn } from "@/lib/utils";
 import { Caption, Small, Muted } from "@/components/typography";
 import { useToast } from "@/lib/toast";
-import { cloneChat } from "@/lib/features/chats/chatsSlice";
+import { addChat, cloneChat } from "@/lib/features/chats/chatsSlice";
 import type {
   Chat,
   ArtifactItem,
-  AgentMessageItem,
   UserMessageItem,
 } from "@/lib/features/chats/chatsSlice";
 import { checkCompliance } from "@/lib/utils/compliance";
 import { buildProtocolReport, protocolReportFilename } from "@/lib/utils/protocolReport";
+import {
+  buildChatTraceJson,
+  buildChatTraceMarkdown,
+  chatTraceFilename,
+} from "@/lib/utils/chatExport";
 import {
   markPromptPresetUsed,
   savePromptPreset,
@@ -69,50 +71,6 @@ function exportAsJson(chat: Chat) {
     `${chat.title.replace(/[^a-z0-9]/gi, "_")}.json`,
     JSON.stringify(chat, null, 2),
     "application/json"
-  );
-}
-
-function exportAsMarkdown(chat: Chat) {
-  const lines: string[] = [
-    `# ${chat.title}`,
-    `*Agent: ${chat.agentName}*`,
-    "",
-  ];
-
-  const textOf = (item: ArtifactItem | AgentMessageItem) =>
-    item.parts
-      .filter((p): p is Extract<Part, { kind: "text" }> => p.kind === "text")
-      .map((p) => p.text)
-      .join("");
-
-  for (const item of chat.items) {
-    switch (item.kind) {
-      case "user-message":
-        lines.push(`**You:** ${partsToPlainText(item.parts)}`, "");
-        break;
-      case "artifact": {
-        const text = textOf(item);
-        if (text) lines.push(`**Agent:** ${text}`, "");
-        break;
-      }
-      case "agent-message": {
-        const text = textOf(item);
-        if (text) lines.push(`**Agent:** ${text}`, "");
-        break;
-      }
-      case "task-status":
-        lines.push(`*[${item.state}]*`, "");
-        break;
-      case "tool-call":
-        lines.push(`*Tool: ${item.toolName} — ${item.query}*`, "");
-        break;
-    }
-  }
-
-  downloadFile(
-    `${chat.title.replace(/[^a-z0-9]/gi, "_")}.md`,
-    lines.join("\n"),
-    "text/markdown"
   );
 }
 
@@ -180,6 +138,20 @@ export default function ChatPage({ params }: PageProps) {
     });
   }, [chatId, sendMessage, toast]);
 
+  const skillPromptStarters = useMemo(
+    () =>
+      (agent?.card.skills ?? []).flatMap((skill) =>
+        (skill.examples ?? []).map((example, index) => ({
+          id: `agent-example-${skill.id}-${index}`,
+          label: example.slice(0, 40) || skill.name,
+          text: example,
+          createdAt: 0,
+          useCount: 0,
+        })),
+      ),
+    [agent?.card.skills],
+  );
+
   if (!chat) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3">
@@ -197,6 +169,20 @@ export default function ChatPage({ params }: PageProps) {
   const inputModes = agent?.card.defaultInputModes ?? [];
   const outputModes = agent?.card.defaultOutputModes ?? [];
   const compliance = agent ? checkCompliance(agent.card) : null;
+  const exportMarkdownTrace = () => {
+    downloadFile(
+      chatTraceFilename(chat, "markdown"),
+      buildChatTraceMarkdown({ chat, logs, validationWarnings }),
+      "text/markdown",
+    );
+  };
+  const exportForensicJson = () => {
+    downloadFile(
+      chatTraceFilename(chat, "json"),
+      JSON.stringify(buildChatTraceJson({ chat, logs, validationWarnings }), null, 2),
+      "application/json",
+    );
+  };
   const exportProtocolReport = () => {
     if (!agent || !compliance) return;
     const report = buildProtocolReport({
@@ -215,13 +201,23 @@ export default function ChatPage({ params }: PageProps) {
 
   const cloneRun = () => {
     const nextChatId = crypto.randomUUID();
-    dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId }));
+    dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId, mode: "prompt" }));
     router.push(`/dashboard/chat/${nextChatId}`);
   };
 
   const rerunMessage = (item: UserMessageItem) => {
     const nextChatId = crypto.randomUUID();
-    dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId }));
+    dispatch(
+      addChat({
+        id: nextChatId,
+        title: `New run · ${chat.title}`,
+        agentUrl: chat.agentUrl,
+        agentName: chat.agentName,
+        lastMessage: "",
+        timestamp: Date.now(),
+        sourceChatId: chat.id,
+      }),
+    );
     queueRerunDraft(nextChatId, {
       parts: item.parts,
       metadata: item.metadata,
@@ -254,16 +250,25 @@ export default function ChatPage({ params }: PageProps) {
         {/* Export */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8 shrink-0" title="Export chat">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 shrink-0"
+              title="Export chat"
+              aria-label="Export chat"
+            >
               <DownloadIcon className="size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => exportAsJson(chat)}>
-              Export as JSON
+            <DropdownMenuItem onClick={exportMarkdownTrace}>
+              Export Markdown Trace
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => exportAsMarkdown(chat)}>
-              Export as Markdown
+            <DropdownMenuItem onClick={exportForensicJson}>
+              Export Forensic JSON
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportAsJson(chat)}>
+              Export Raw Chat State
             </DropdownMenuItem>
             {agent && (
               <DropdownMenuItem onClick={exportProtocolReport}>
@@ -278,8 +283,13 @@ export default function ChatPage({ params }: PageProps) {
           variant="ghost"
           size="icon"
           className={cn("size-8 shrink-0", eventsOpen && "bg-muted text-foreground")}
-          onClick={() => setEventsOpen((v) => !v)}
+          onClick={() => {
+            setEventsOpen((v) => !v);
+            setDebugOpen(false);
+          }}
           title="Toggle event explorer"
+          aria-label="Toggle event explorer"
+          aria-pressed={eventsOpen}
         >
           <ActivityIcon className="size-4" />
         </Button>
@@ -289,8 +299,13 @@ export default function ChatPage({ params }: PageProps) {
           variant="ghost"
           size="icon"
           className={cn("size-8 shrink-0", debugOpen && "bg-muted text-foreground")}
-          onClick={() => setDebugOpen((v) => !v)}
+          onClick={() => {
+            setDebugOpen((v) => !v);
+            setEventsOpen(false);
+          }}
           title="Toggle debug console (⌘⇧D)"
+          aria-label="Toggle debug console"
+          aria-pressed={debugOpen}
         >
           <BugIcon className="size-4" />
         </Button>
@@ -302,10 +317,10 @@ export default function ChatPage({ params }: PageProps) {
           onClick={cloneRun}
           disabled={isStreaming}
           className="shrink-0 gap-1.5 max-sm:px-2"
-          title="Clone into a fresh run"
+          title="Clone prompts into a fresh run"
         >
           <CopyIcon className="size-3.5" />
-          <span className="hidden sm:inline">Clone Run</span>
+          <span className="hidden sm:inline">Clone Prompt</span>
         </Button>
 
         {lastUserMessage && (
@@ -316,6 +331,7 @@ export default function ChatPage({ params }: PageProps) {
             disabled={isStreaming}
             className="shrink-0 gap-1.5 max-sm:px-2"
             title="Rerun the latest prompt in a fresh run"
+            aria-label="Rerun latest prompt in a fresh run"
           >
             <RotateCcwIcon className="size-3.5" />
             <span className="hidden sm:inline">Rerun Prompt</span>
@@ -338,6 +354,7 @@ export default function ChatPage({ params }: PageProps) {
           disabled={isStreaming}
           className="shrink-0 gap-1.5 max-sm:px-2"
           title="New session (⌘⇧N)"
+          aria-label="New session"
         >
           <SquarePenIcon className="size-3.5" />
           <span className="hidden sm:inline">New Session</span>
@@ -369,7 +386,7 @@ export default function ChatPage({ params }: PageProps) {
         disabled={isStreaming}
         isInputRequired={isInputRequired}
         inputModes={inputModes}
-        promptPresets={agentWorkbench?.promptPresets ?? []}
+        promptPresets={[...skillPromptStarters, ...(agentWorkbench?.promptPresets ?? [])]}
         defaultMetadata={agentWorkbench?.defaultMetadata}
         onSavePromptPreset={(text, metadata) => {
           if (!chat) return;

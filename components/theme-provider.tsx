@@ -34,10 +34,17 @@ export function ThemeProvider({
   const [theme, setThemeState] = React.useState<Theme>(defaultTheme);
 
   React.useEffect(() => {
-    const storedTheme = window.localStorage.getItem("theme") as Theme | null;
-    const nextTheme = storedTheme ?? defaultTheme;
-    setThemeState(nextTheme);
-    applyTheme(nextTheme);
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const storedTheme = window.localStorage.getItem("theme") as Theme | null;
+      const nextTheme = storedTheme ?? defaultTheme;
+      setThemeState(nextTheme);
+      applyTheme(nextTheme);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [defaultTheme]);
 
   React.useEffect(() => {
