@@ -77,9 +77,20 @@ persistence mode.
 
 ### Prerequisites
 
-- Node.js 18 or newer
+- Node.js 20.9 or newer
 - npm
 - An A2A-compatible agent server, or the bundled demo server
+
+### Run With npx
+
+```bash
+npx a2a-ui
+npx a2a-ui --port 3100 --open
+npx a2a-ui --dev
+```
+
+The `npx` command starts the UI only. The Ollama-powered demo A2A server is
+available as a separate optional setup.
 
 ### Run The UI
 
