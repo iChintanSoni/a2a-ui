@@ -5,25 +5,9 @@ Agent2Agent (A2A) protocol servers.
 
 It gives you a browser UI for connecting to agents, inspecting agent cards,
 chatting through the A2A transport, reviewing structured execution events,
-iterating on task outputs, and running repeatable QA checks. The dashboard is
-built on reusable hooks and embeddable chat primitives, so the same client
-foundation can be used inside other apps.
-
-## Screenshots
-
-![A2A UI home screen with add-agent flow](docs/screenshots/01-home-add-agent.png)
-
-![A2A Workbench dashboard](docs/screenshots/02-workbench.png)
-
-![Agent Library with connected demo agents](docs/screenshots/03-agent-library.png)
-
-![Chat view with task artifacts and debugging context](docs/screenshots/04-chat-debug.png)
-
-![Conversations manager](docs/screenshots/05-conversations.png)
-
-![Task explorer](docs/screenshots/06-tasks.png)
-
-![QA Harness](docs/screenshots/07-qa-harness.png)
+iterating on task outputs, and running repeatable QA checks. Built with Vite,
+React, and Redux Toolkit; agent credentials and workspace data are stored locally
+in the browser via IndexedDB.
 
 ## What You Can Do
 
@@ -57,22 +41,6 @@ foundation can be used inside other apps.
 - `QA Harness` builds and executes repeatable agent test suites.
 - `Embed Demo` demonstrates the headless hooks and embeddable chat components.
 
-## Embeddable Client Primitives
-
-The dashboard uses the same primitives exposed for host applications:
-
-- `useA2AConnection`
-- `useA2ASession`
-- `useA2AMessages`
-- `useA2ADebug`
-- `A2AChat`
-- `A2AAgentCard`
-- `A2ADebugPanel`
-
-Host apps can provide an agent URL, auth configuration, custom headers, initial
-metadata, hidden context, per-message context enrichers, and the desired
-persistence mode.
-
 ## Getting Started
 
 ### Prerequisites
@@ -92,7 +60,7 @@ npx a2a-ui --dev
 The `npx` command starts the UI only. The Ollama-powered demo A2A server is
 available as a separate optional setup.
 
-### Run The UI
+### Run The UI From Source
 
 ```bash
 npm install
@@ -113,8 +81,8 @@ npm run dev
 ```
 
 The demo server listens on [http://localhost:3001](http://localhost:3001) by
-default. Configure `OLLAMA_HOST`, `OLLAMA_LLM_MODEL`, and
-`OLLAMA_IMAGE_MODEL` in `server/.env` as needed.
+default. Configure `OLLAMA_HOST`, `OLLAMA_LLM_MODEL`, and `OLLAMA_IMAGE_MODEL` in
+`server/.env` as needed.
 
 ### Run With Docker Compose
 
@@ -127,33 +95,25 @@ docker compose up --build
 - UI: [http://localhost:3000](http://localhost:3000)
 - Demo server: [http://localhost:3001](http://localhost:3001)
 
-## Typical Workflow
-
-1. Add an agent from the sidebar or import an existing workspace.
-2. Review the fetched agent card, skills, modalities, and compliance results.
-3. Start a conversation and send prompts, metadata, or attachments.
-4. Use the debug panel and event explorer to inspect protocol behavior.
-5. Review generated tasks and artifacts from the task explorer.
-6. Clone or rerun conversations while iterating on agent behavior.
-7. Compare two runs when validating regressions.
-8. Save important checks in the QA harness and rerun them against the agent.
-
 ## Configuration Notes
 
 - Agent credentials and workspace data are stored locally in the browser.
 - Workspace import and export are JSON-based.
 - Debug exports mask sensitive headers where possible.
 - File attachment options are filtered against an agent's declared input modes.
-- The same-origin proxy route helps browser clients reach agents that would
-  otherwise fail cross-origin requests.
+- The same-origin `/api/proxy` route helps browser clients reach agents that
+  would otherwise fail cross-origin requests. It runs inside the Vite dev server
+  and inside the production host server (`host/serve.mjs`).
+- Public env vars are prefixed with `VITE_` (e.g. `VITE_DEMO_AGENT_URL`).
 
 ## Development
 
 ### Scripts
 
-- `npm run dev` starts the Next.js development server.
-- `npm run build` builds the production app.
-- `npm run start` starts the production server.
+- `npm run dev` starts the Vite development server (with the proxy middleware).
+- `npm run build` type-checks and builds the production bundle to `dist/`.
+- `npm run preview` serves the production build locally.
+- `npm run start` runs the production host server (`host/serve.mjs`).
 - `npm run lint` runs ESLint.
 - `npm run typecheck` runs TypeScript without emitting files.
 - `npm run format` formats the repo with Prettier.
@@ -166,31 +126,38 @@ docker compose up --build
 
 ```text
 a2a-ui/
-├── app/                    # Next.js App Router pages and API routes
-├── components/             # Dashboard, chat, and shared UI components
-├── hooks/                  # Headless A2A connection, session, message, and debug hooks
-├── lib/a2a/                # A2A message parts, modalities, A2UI, and event helpers
-├── lib/features/           # Redux slices for agents, chats, QA, and workbench state
-├── lib/utils/              # Auth, compliance, protocol reports, proxy, and workspace helpers
+├── index.html              # Vite entry HTML
+├── src/
+│   ├── main.tsx            # App bootstrap + providers + RouterProvider
+│   ├── router.tsx          # React Router route tree
+│   ├── routes/             # Pages (home, dashboard/*) and error boundary
+│   ├── components/         # Dashboard, chat, and shared UI components
+│   ├── hooks/              # Headless A2A connection, session, message, debug hooks
+│   ├── providers/          # StoreProvider (Redux + IndexedDB hydration/persistence)
+│   ├── lib/a2a/            # A2A message parts, modalities, A2UI, event helpers
+│   ├── lib/features/       # Redux slices for agents, chats, QA, and workbench state
+│   └── lib/utils/          # Auth, compliance, protocol reports, proxy, workspace helpers
+├── host/                   # Production host server + shared /api/proxy logic
+├── bin/                    # npx CLI entry point
 ├── server/                 # Bundled demo A2A server
-├── tests/                  # Vitest unit and integration tests
-└── e2e/                    # Playwright smoke tests
+└── src/tests/              # Vitest unit and integration tests
 ```
 
 ### Tech Stack
 
-- Next.js 16 App Router
-- React 19
+- Vite + React 19
 - TypeScript
-- Tailwind CSS 4
+- React Router v7
+- Tailwind CSS v4
 - shadcn/ui and Radix UI
 - Redux Toolkit and React Redux
 - IndexedDB via `idb`
 - `@a2a-js/sdk`
+- Hono (production host server)
 - Vitest, Testing Library, and Playwright
 
 ## Useful References
 
 - [A2A Protocol Specification](https://a2a-protocol.org/latest/specification/)
 - [JSON-RPC 2.0 Specification](https://www.jsonrpc.org/specification)
-- [Next.js Documentation](https://nextjs.org/docs)
+- [Vite Documentation](https://vite.dev)

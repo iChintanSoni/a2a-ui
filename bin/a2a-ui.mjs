@@ -91,7 +91,7 @@ export function parseArgs(args) {
       throw new Error(
         `Unknown argument${unknown.length > 1 ? "s" : ""}: ${unknown.join(
           " ",
-        )}. Extra Next.js arguments are only supported with --dev.`,
+        )}. Extra Vite arguments are only supported with --dev.`,
       );
     }
 
@@ -117,7 +117,7 @@ Options:
       --hostname <hostname>  Hostname to bind
       --host <hostname>      Alias for --hostname
       --open                 Open the UI in the default browser
-      --dev                  Run Next.js development mode
+      --dev                  Run the Vite development server
   -v, --version              Print the package version
   -h, --help                 Show this help
 
@@ -197,8 +197,8 @@ function scheduleOpen(options) {
   timer.unref();
 }
 
-function resolveNextBin() {
-  return require.resolve("next/dist/bin/next");
+function resolveViteBin() {
+  return require.resolve("vite/bin/vite.js");
 }
 
 function spawnServer(command, args, env) {
@@ -232,25 +232,23 @@ function spawnServer(command, args, env) {
 }
 
 function runDev(options) {
-  const env = {
-    ...process.env,
-    NEXT_TELEMETRY_DISABLED: "1",
-  };
-  const args = ["dev", "--port", options.port];
+  const env = { ...process.env };
+  const args = ["--port", options.port];
 
   if (options.hostname) {
-    args.push("--hostname", options.hostname);
+    args.push("--host", options.hostname);
   }
 
   args.push(...options.passthrough);
   scheduleOpen(options);
-  spawnServer(process.execPath, [resolveNextBin(), ...args], env);
+  spawnServer(process.execPath, [resolveViteBin(), ...args], env);
 }
 
 function runProduction(options) {
-  const standaloneServer = join(packageRoot, ".next", "standalone", "server.js");
+  const serveScript = join(packageRoot, "host", "serve.mjs");
+  const indexHtml = join(packageRoot, "dist", "index.html");
 
-  if (!existsSync(standaloneServer)) {
+  if (!existsSync(indexHtml)) {
     throw new Error(
       "Missing production build. Reinstall a published package or run `a2a-ui --dev` from source.",
     );
@@ -259,7 +257,6 @@ function runProduction(options) {
   const env = {
     ...process.env,
     NODE_ENV: "production",
-    NEXT_TELEMETRY_DISABLED: "1",
     PORT: options.port,
   };
 
@@ -268,7 +265,7 @@ function runProduction(options) {
   }
 
   scheduleOpen(options);
-  spawnServer(process.execPath, [standaloneServer], env);
+  spawnServer(process.execPath, [serveScript], env);
 }
 
 export function main(argv = process.argv.slice(2)) {
