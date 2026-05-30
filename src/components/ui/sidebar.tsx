@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Slot } from "radix-ui";
 
+import { Slot } from "@/components/ui/primitives/slot";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -177,7 +177,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className="text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -232,7 +232,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="bg-sidebar group-data-[variant=floating]:ring-sidebar-border flex size-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:shadow-sm group-data-[variant=floating]:ring-1"
+          className="glass-bar group-data-[variant=floating]:ring-sidebar-border flex size-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:shadow-sm group-data-[variant=floating]:ring-1"
         >
           {children}
         </div>
@@ -375,7 +375,7 @@ function SidebarGroupLabel({
   asChild = false,
   ...props
 }: React.ComponentProps<"div"> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot.Root : "div";
+  const Comp = asChild ? Slot : "div";
 
   return (
     <Comp
@@ -395,7 +395,7 @@ function SidebarGroupAction({
   asChild = false,
   ...props
 }: React.ComponentProps<"button"> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot.Root : "button";
+  const Comp = asChild ? Slot : "button";
 
   return (
     <Comp
@@ -478,7 +478,7 @@ function SidebarMenuButton({
   isActive?: boolean;
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
-  const Comp = asChild ? Slot.Root : "button";
+  const Comp = asChild ? Slot : "button";
   const { isMobile, state } = useSidebar();
 
   const button = (
@@ -486,7 +486,7 @@ function SidebarMenuButton({
       data-slot="sidebar-menu-button"
       data-sidebar="menu-button"
       data-size={size}
-      data-active={isActive}
+      data-active={isActive ? "" : undefined}
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
       {...props}
     />
@@ -524,7 +524,7 @@ function SidebarMenuAction({
   asChild?: boolean;
   showOnHover?: boolean;
 }) {
-  const Comp = asChild ? Slot.Root : "button";
+  const Comp = asChild ? Slot : "button";
 
   return (
     <Comp
@@ -624,14 +624,14 @@ function SidebarMenuSubButton({
   size?: "sm" | "md";
   isActive?: boolean;
 }) {
-  const Comp = asChild ? Slot.Root : "a";
+  const Comp = asChild ? Slot : "a";
 
   return (
     <Comp
       data-slot="sidebar-menu-sub-button"
       data-sidebar="menu-sub-button"
       data-size={size}
-      data-active={isActive}
+      data-active={isActive ? "" : undefined}
       className={cn(
         "text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground [&>svg]:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-hidden group-data-[collapsible=icon]:hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[size=md]:text-sm data-[size=sm]:text-xs rtl:translate-x-px [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
         className,

@@ -20,10 +20,8 @@ export default function HomePage() {
   }
 
   return (
-    <main className="bg-background relative flex min-h-dvh flex-col items-center justify-center overflow-hidden p-4 sm:p-6">
-      <div className="via-background absolute inset-0 z-0 bg-linear-to-br from-indigo-500/5 to-cyan-500/5" />
-
-      <div className="bg-card/50 z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col items-center overflow-y-auto rounded-3xl border p-5 text-center shadow-2xl backdrop-blur-xl sm:p-10">
+    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden p-4 sm:p-6">
+      <div className="glass-panel z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col items-center overflow-y-auto rounded-3xl p-5 text-center sm:p-10">
         <div className="flex justify-center">
           <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-20 items-center justify-center rounded-3xl shadow-lg">
             <BotIcon className="size-10" />
@@ -38,7 +36,7 @@ export default function HomePage() {
           </Lead>
         </div>
 
-        <div className="mt-8 flex w-full max-w-lg flex-col items-center gap-6 rounded-2xl border bg-black/5 p-5 shadow-inner sm:p-8 md:mt-12 dark:bg-white/5">
+        <div className="glass-inset mt-8 flex w-full max-w-lg flex-col items-center gap-6 rounded-2xl p-5 sm:p-8 md:mt-12">
           <div className="flex flex-col gap-2 text-center">
             <H2>Connect an Agent</H2>
             <Muted>

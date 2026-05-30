@@ -8,8 +8,8 @@ export default function DashboardLayout() {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="h-dvh overflow-hidden">
-        <header className="bg-background sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
+      <SidebarInset className="h-dvh overflow-hidden bg-transparent">
+        <header className="glass-bar sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b px-3 sm:px-4">
           <SidebarTrigger className="-ms-1" />
           <Separator
             orientation="vertical"

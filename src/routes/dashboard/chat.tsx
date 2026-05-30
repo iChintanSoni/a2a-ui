@@ -234,7 +234,7 @@ export default function ChatPage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex flex-wrap items-start gap-2 border-b px-3 py-3 sm:items-center sm:px-4">
+      <div className="glass-bar flex flex-wrap items-start gap-2 border-b px-3 py-3 sm:items-center sm:px-4">
         <div className="flex min-w-0 flex-1 flex-col">
           <Small className="truncate leading-tight">{chat.title}</Small>
           <Caption className="truncate">{chat.agentName}</Caption>

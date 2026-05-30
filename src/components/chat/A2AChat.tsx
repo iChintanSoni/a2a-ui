@@ -82,14 +82,14 @@ export function A2AChat({
 
   if (!chat) {
     return (
-      <div className="flex min-h-80 items-center justify-center rounded-xl border bg-card p-6">
+      <div className="glass flex min-h-80 items-center justify-center rounded-xl p-6">
         <Muted>Preparing chat session...</Muted>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-card">
+    <div className="glass flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
       <div className="flex flex-wrap items-start gap-2 border-b px-3 py-3 sm:items-center sm:px-4">
         <div className="min-w-0 flex-1">
           <Small className="truncate">{title ?? chat.title}</Small>
