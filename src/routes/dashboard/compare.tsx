@@ -4,12 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageTitle, Muted, Caption, Small } from "@/components/typography";
 import { useAppSelector } from "@/lib/hooks";
 import { compareRuns } from "@/lib/features/chats/compareRuns";
-
-function formatDuration(durationMs: number | null) {
-  if (durationMs == null) return "n/a";
-  if (durationMs < 1000) return `${durationMs} ms`;
-  return `${(durationMs / 1000).toFixed(1)} s`;
-}
+import { formatDuration } from "@/lib/utils/format";
 
 function DeltaBadge({ value }: { value: number | null }) {
   if (value == null) return <Badge variant="outline">Timing unavailable</Badge>;

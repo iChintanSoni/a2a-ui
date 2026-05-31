@@ -3,7 +3,7 @@ import { ActivityIcon, BugIcon, SquarePenIcon } from "lucide-react";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { SessionInfoBar } from "@/components/chat/SessionInfoBar";
-import { A2ADebugPanel } from "@/components/chat/A2ADebugPanel";
+import { DebugPanel } from "@/components/chat/DebugPanel";
 import { EventExplorer } from "@/components/chat/EventExplorer";
 import { Button } from "@/components/ui/button";
 import { Muted, Small } from "@/components/typography";
@@ -171,7 +171,7 @@ export function A2AChat({
       )}
 
       {effectiveDebugOpen && (
-        <A2ADebugPanel debug={debug} onClose={() => setDebugOpen(false)} />
+        <DebugPanel logs={debug.logs} onClear={debug.clearLogs} onClose={() => setDebugOpen(false)} />
       )}
     </div>
   );

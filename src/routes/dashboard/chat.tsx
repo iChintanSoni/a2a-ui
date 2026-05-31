@@ -34,6 +34,7 @@ import type {
 } from "@/lib/features/chats/chatsSlice";
 import { checkCompliance } from "@/lib/utils/compliance";
 import { buildProtocolReport, protocolReportFilename } from "@/lib/utils/protocolReport";
+import { downloadFile } from "@/lib/utils/download";
 import {
   buildChatTraceJson,
   buildChatTraceMarkdown,
@@ -48,16 +49,6 @@ import { consumeRerunDraft, queueRerunDraft } from "@/lib/features/chats/rerunDr
 import { buildArtifactRevisionMessage } from "@/lib/features/chats/artifactRevision";
 
 // ─── Export helpers ───────────────────────────────────────────────────────────
-
-function downloadFile(name: string, content: string, type: string) {
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
 function exportAsJson(chat: Chat) {
   downloadFile(

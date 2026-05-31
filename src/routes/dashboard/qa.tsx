@@ -29,6 +29,8 @@ import {
 } from "@/lib/features/qa/qaSlice";
 import { executeQaSuite } from "@/lib/features/qa/runner";
 import type { QaOutputMode, QaSuite, QaTestCase } from "@/lib/features/qa/types";
+import { downloadJson } from "@/lib/utils/download";
+import { formatDuration } from "@/lib/utils/format";
 
 const TASK_STATES = [
   "submitted",
@@ -48,23 +50,6 @@ function parseMetadata(value: string): Record<string, string> {
   return Object.fromEntries(
     Object.entries(parsed).map(([key, entry]) => [key, String(entry)]),
   );
-}
-
-function downloadJson(filename: string, data: unknown) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
-function formatDuration(ms: number) {
-  if (ms < 1000) return `${ms} ms`;
-  return `${(ms / 1000).toFixed(1)} s`;
 }
 
 function validateMetadata(value: string): string | null {
