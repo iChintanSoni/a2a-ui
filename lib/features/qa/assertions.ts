@@ -9,6 +9,8 @@ export interface QaCapturedOutput {
   text: string;
   jsonValues: unknown[];
   artifactCount: number;
+  artifactMimeTypes: string[];
+  durationMs: number;
   finalTaskState?: TaskState;
 }
 
@@ -64,6 +66,22 @@ function stringifyComparable(value: unknown): string {
   if (typeof value === "string") return value;
   return JSON.stringify(value);
 }
+
+/** Match a MIME type against a glob pattern like "image/*" or "application/json". */
+function matchesMimePattern(mime: string, pattern: string): boolean {
+  if (pattern === "*") return true;
+  const [patType, patSub] = pattern.split("/");
+  const [mimeType, mimeSub] = mime.split("/");
+  if (patType !== mimeType) return false;
+  return patSub === "*" || patSub === mimeSub;
+}
+
+const OPERATOR_LABELS: Record<string, string> = {
+  lt: "<",
+  lte: "≤",
+  gt: ">",
+  gte: "≥",
+};
 
 export function evaluateOutputMode(
   expected: QaOutputMode,
@@ -130,6 +148,43 @@ export function evaluateAssertion(
     }
   }
 
+  if (assertion.kind === "task-duration-ms") {
+    const { operator, value } = assertion;
+    const actual = output.durationMs;
+    const passed =
+      operator === "lt"
+        ? actual < value
+        : operator === "lte"
+          ? actual <= value
+          : operator === "gt"
+            ? actual > value
+            : actual >= value;
+    const opLabel = OPERATOR_LABELS[operator] ?? operator;
+    return {
+      assertionId: assertion.id,
+      label: assertion.label,
+      passed,
+      message: passed
+        ? `Duration ${actual} ms ${opLabel} ${value} ms.`
+        : `Duration ${actual} ms did not satisfy ${opLabel} ${value} ms.`,
+    };
+  }
+
+  if (assertion.kind === "artifact-mime") {
+    const matched = output.artifactMimeTypes.some((mime) =>
+      matchesMimePattern(mime, assertion.pattern),
+    );
+    return {
+      assertionId: assertion.id,
+      label: assertion.label,
+      passed: matched,
+      message: matched
+        ? `Found artifact with MIME matching "${assertion.pattern}".`
+        : `No artifact with MIME matching "${assertion.pattern}" (found: ${output.artifactMimeTypes.join(", ") || "none"}).`,
+    };
+  }
+
+  // json-path
   for (const value of output.jsonValues) {
     const actual = readPath(value, assertion.path);
     if (actual === undefined) continue;

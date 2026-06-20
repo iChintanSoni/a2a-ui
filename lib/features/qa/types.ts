@@ -16,6 +16,20 @@ export type QaAssertion =
       label: string;
       path: string;
       equals?: string;
+    }
+  | {
+      id: string;
+      kind: "task-duration-ms";
+      label: string;
+      operator: "lt" | "lte" | "gt" | "gte";
+      value: number;
+    }
+  | {
+      id: string;
+      kind: "artifact-mime";
+      label: string;
+      /** Glob-style MIME pattern, e.g. "image/*" or "application/json" */
+      pattern: string;
     };
 
 export interface QaTestCase {
@@ -27,6 +41,12 @@ export interface QaTestCase {
   expectedTaskState?: TaskState;
   expectedOutputMode: QaOutputMode;
   assertions: QaAssertion[];
+  /**
+   * Optional data table for parametrized tests. Each row is a map of variable
+   * names to values. Use {{varName}} in `prompt` and metadata values to
+   * substitute. Each row generates one sub-case at run time.
+   */
+  dataTable?: Array<Record<string, string>>;
 }
 
 export interface QaSuite {
