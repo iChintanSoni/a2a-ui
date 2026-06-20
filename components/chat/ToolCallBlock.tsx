@@ -52,8 +52,17 @@ function getToolIcon(toolName: string) {
   return <Wrench className={cls} />;
 }
 
+const isImageTool = (toolName: string) =>
+  toolName === "generate_image" || toolName.toLowerCase().includes("image");
+
+function ImageShimmer() {
+  return (
+    <div className="mt-2 h-40 w-full max-w-xs animate-pulse rounded border bg-muted" />
+  );
+}
+
 export function ToolCallBlock({ item, onInspect }: Props) {
-  const { toolName, query, resultCount, phase } = item;
+  const { toolName, query, resultCount, phase, imageUrl } = item;
 
   const { gerund, base } = getToolVerbs(toolName);
   // Past-tense label shown when done (e.g. "searched", "generated")
@@ -70,29 +79,44 @@ export function ToolCallBlock({ item, onInspect }: Props) {
     );
 
   return (
-    <div className="bg-muted/40 text-muted-foreground group relative flex w-fit max-w-full items-start gap-2 rounded-lg border px-3 py-2 text-xs sm:max-w-sm">
-      {getToolIcon(toolName)}
-      <div className="flex min-w-0 flex-col gap-1">
-        <Small className="text-foreground/70">{toolName}</Small>
-        <Caption className="break-words">
-          <span className="text-muted-foreground/60">query: </span>
-          {query}
-        </Caption>
-        <div className="flex items-center gap-1">
-          {icon}
-          {phase === "running" && <span>{gerund}…</span>}
-          {phase === "done" && <span>{doneLabel}</span>}
-          {phase === "error" && <span className="text-red-500">{base} failed</span>}
+    <div className="bg-muted/40 text-muted-foreground group relative flex w-fit max-w-full flex-col gap-0 rounded-lg border px-3 py-2 text-xs sm:max-w-sm">
+      <div className="flex items-start gap-2">
+        {getToolIcon(toolName)}
+        <div className="flex min-w-0 flex-col gap-1">
+          <Small className="text-foreground/70">{toolName}</Small>
+          <Caption className="break-words">
+            <span className="text-muted-foreground/60">query: </span>
+            {query}
+          </Caption>
+          <div className="flex items-center gap-1">
+            {icon}
+            {phase === "running" && <span>{gerund}…</span>}
+            {phase === "done" && <span>{doneLabel}</span>}
+            {phase === "error" && <span className="text-red-500">{base} failed</span>}
+          </div>
         </div>
+        {onInspect && (
+          <button
+            onClick={onInspect}
+            className="bg-background text-muted-foreground hover:text-foreground absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border font-mono text-[10px] shadow-sm group-hover:flex"
+            title="Inspect raw JSON"
+          >
+            {"{}"}
+          </button>
+        )}
       </div>
-      {onInspect && (
-        <button
-          onClick={onInspect}
-          className="bg-background text-muted-foreground hover:text-foreground absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border font-mono text-[10px] shadow-sm group-hover:flex"
-          title="Inspect raw JSON"
-        >
-          {"{}"}
-        </button>
+      {isImageTool(toolName) && (
+        <div className="mt-2">
+          {phase === "running" && <ImageShimmer />}
+          {phase === "done" && imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={imageUrl}
+              alt={query}
+              className="max-w-full rounded border sm:max-w-xs"
+            />
+          )}
+        </div>
       )}
     </div>
   );

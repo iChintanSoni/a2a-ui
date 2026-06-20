@@ -50,6 +50,7 @@ export type ToolCallItem = {
   query: string;
   resultCount?: number;
   phase: "running" | "done" | "error";
+  imageUrl?: string;
   timestamp: number;
 };
 
@@ -375,6 +376,7 @@ export const chatsSlice = createSlice({
         query: string;
         resultCount?: number;
         phase: "running" | "done" | "error";
+        imageUrl?: string;
       }>,
     ) => {
       const chat = findChat(state, action.payload.chatId);
@@ -389,6 +391,7 @@ export const chatsSlice = createSlice({
         query: action.payload.query,
         resultCount: action.payload.resultCount,
         phase: action.payload.phase,
+        imageUrl: action.payload.imageUrl,
         timestamp: Date.now(),
       };
       if (idx >= 0) {

@@ -111,6 +111,7 @@ export function helpText() {
 
 Usage:
   a2a-ui [options]
+  a2a-ui qa-run --file <suite.json> [options]
 
 Options:
   -p, --port <port>          Port to listen on (default: 3000)
@@ -121,10 +122,16 @@ Options:
   -v, --version              Print the package version
   -h, --help                 Show this help
 
+Subcommands:
+  qa-run                     Run a QA suite headlessly (exit 0=pass, 1=fail)
+                             Use \`a2a-ui qa-run --help\` for details.
+
 Examples:
   npx a2a-ui
   npx a2a-ui --port 3100 --open
   npx a2a-ui --dev
+  npx a2a-ui qa-run --file my-suite.json
+  npx a2a-ui qa-run --file my-suite.json --agent-url http://localhost:3001 --output results.json
 `;
 }
 
@@ -271,7 +278,14 @@ function runProduction(options) {
   spawnServer(process.execPath, [standaloneServer], env);
 }
 
-export function main(argv = process.argv.slice(2)) {
+export async function main(argv = process.argv.slice(2)) {
+  // Delegate subcommands before standard arg parsing.
+  if (argv[0] === "qa-run") {
+    const { main: qaRunMain } = await import("./qa-run.mjs");
+    await qaRunMain(argv.slice(1));
+    return;
+  }
+
   let options;
 
   try {
