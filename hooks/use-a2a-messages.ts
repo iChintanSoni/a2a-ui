@@ -396,6 +396,7 @@ export function useA2AMessages({
                   toolName: string;
                   query: string;
                   resultCount?: number;
+                  imageUrl?: string;
                 };
                 messageStore.applyToolCall({
                   chatId: session.contextId,
@@ -404,6 +405,7 @@ export function useA2AMessages({
                   query: data.query,
                   resultCount: data.resultCount,
                   phase: data.phase,
+                  imageUrl: data.imageUrl,
                 });
                 messageStore.appendExecutionEvent({
                   chatId: session.contextId,
