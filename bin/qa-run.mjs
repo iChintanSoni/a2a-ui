@@ -164,15 +164,12 @@ export async function runQaSuite(options) {
   // Dynamically import the TypeScript runner via tsx if available,
   // otherwise fall back to the pre-transpiled version in .next/server.
   let executeQaSuite;
-  let createClientFactory;
 
   try {
     // When running from source with tsx/ts-node available
     if (tsNodeAvailable) {
       const runnerMod = await import(join(packageRoot, "lib/features/qa/runner.ts"));
-      const authMod = await import(join(packageRoot, "lib/utils/auth.ts"));
       executeQaSuite = runnerMod.executeQaSuite;
-      createClientFactory = authMod.createClientFactory;
     } else {
       throw new Error("tsx not available");
     }
@@ -180,7 +177,6 @@ export async function runQaSuite(options) {
     // Fall back: use a minimal inline runner for the Node.js CLI context.
     // This avoids needing a separate build step for the CLI.
     executeQaSuite = await buildInlineRunner();
-    createClientFactory = null; // handled inside buildInlineRunner
   }
 
   const agentCard = { name: suite.agentName, url: suite.agentUrl, version: "1.0", description: "", capabilities: {}, skills: [] };

@@ -50,7 +50,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepare": "husky"
   },
   "dependencies": {
     "@a2a-js/sdk": "^0",
@@ -86,9 +87,10 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6",
-    "eslint": "^10",
+    "eslint": "^9.39.4",
     "eslint-config-next": "^16",
     "happy-dom": "^20",
+    "husky": "^9.1.7",
     "prettier": "^3",
     "prettier-plugin-tailwindcss": "^0",
     "shadcn": "^4",
