@@ -76,6 +76,7 @@ export interface A2AExternalMessageStore {
     query: string;
     resultCount?: number;
     phase: "running" | "done" | "error";
+    imageUrl?: string;
   }) => void;
   applyAgentMessage: (payload: {
     chatId: string;

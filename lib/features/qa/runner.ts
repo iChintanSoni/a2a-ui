@@ -32,6 +32,37 @@ function outputModeFromCapture(output: QaCapturedOutput) {
   return "any";
 }
 
+function mimeTypesFromParts(parts: Part[]): string[] {
+  const mimes: string[] = [];
+  for (const part of parts) {
+    if (part.kind === "file" && "file" in part) {
+      const file = (part as { kind: "file"; file: { mimeType?: string } }).file;
+      if (file.mimeType) mimes.push(file.mimeType);
+    }
+  }
+  return mimes;
+}
+
+/** Substitute {{varName}} placeholders in a string from a data-table row. */
+function applyRow(template: string, row: Record<string, string>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key: string) => row[key] ?? `{{${key}}}`);
+}
+
+/** Expand a test case with a dataTable into one case per row. */
+function expandDataTable(testCase: QaSuite["cases"][number]): QaSuite["cases"][number][] {
+  if (!testCase.dataTable || testCase.dataTable.length === 0) return [testCase];
+  return testCase.dataTable.map((row, index) => ({
+    ...testCase,
+    id: `${testCase.id}-row${index}`,
+    name: `${testCase.name} [row ${index + 1}]`,
+    prompt: applyRow(testCase.prompt, row),
+    metadata: Object.fromEntries(
+      Object.entries(testCase.metadata).map(([k, v]) => [k, applyRow(v, row)]),
+    ),
+    dataTable: undefined,
+  }));
+}
+
 async function executeQaCase(input: {
   suite: QaSuite;
   agent: Agent;
@@ -46,6 +77,7 @@ async function executeQaCase(input: {
     ...input.testCase.attachments,
   ];
   const outputParts: Part[] = [];
+  const artifactMimeTypes: string[] = [];
   let artifactCount = 0;
   let finalTaskState: TaskState | undefined;
 
@@ -71,7 +103,10 @@ async function executeQaCase(input: {
 
       if (event.kind === "artifact-update") {
         const artifactEvent = event as TaskArtifactUpdateEvent;
-        artifactCount += artifactEvent.lastChunk === false ? 0 : 1;
+        if (artifactEvent.lastChunk !== false) {
+          artifactCount += 1;
+          artifactMimeTypes.push(...mimeTypesFromParts(artifactEvent.artifact.parts));
+        }
         outputParts.push(...artifactEvent.artifact.parts);
         continue;
       }
@@ -84,10 +119,13 @@ async function executeQaCase(input: {
       }
     }
 
+    const durationMs = Date.now() - startedAt;
     const output: QaCapturedOutput = {
       text: textFromParts(outputParts),
       jsonValues: jsonValuesFromParts(outputParts),
       artifactCount,
+      artifactMimeTypes,
+      durationMs,
       finalTaskState,
     };
     const assertionResults = [
@@ -101,7 +139,7 @@ async function executeQaCase(input: {
       caseId: input.testCase.id,
       caseName: input.testCase.name,
       passed,
-      durationMs: Date.now() - startedAt,
+      durationMs,
       finalTaskState,
       outputMode: outputModeFromCapture(output),
       outputPreview: output.text.slice(0, 500),
@@ -134,8 +172,9 @@ export async function executeQaSuite({
       a2uiEnabled: agent.a2uiEnabled,
     }).createFromUrl(agent.url));
   const caseResults: QaCaseResult[] = [];
+  const expandedCases = suite.cases.flatMap(expandDataTable);
 
-  for (const testCase of suite.cases) {
+  for (const testCase of expandedCases) {
     caseResults.push(await executeQaCase({ suite, agent, client: runnerClient, testCase }));
   }
 
