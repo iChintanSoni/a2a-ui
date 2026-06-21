@@ -3,6 +3,7 @@ import type { Client } from "@a2a-js/sdk/client";
 import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
 import { getAgentCardUrlFallback, normalizeAgentUrl } from "@/lib/utils/url";
+import { getErrorMessage } from "@/lib/utils/error";
 
 export interface AgentConnectionDiagnostic {
   status: "checking" | "connected" | "error";
@@ -101,7 +102,12 @@ export async function runAgentConnectionDiagnostic({
       }
     }
 
-    const card = await client.getAgentCard();
+    const card = await Promise.race([
+      client.getAgentCard(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Agent card fetch timed out after 15s")), 15_000)
+      ),
+    ]);
     const interfaces = card.additionalInterfaces ?? [];
     const transports = Array.from(
       new Set(
@@ -141,7 +147,7 @@ export async function runAgentConnectionDiagnostic({
         proxyPath: attemptedCardUrl ? proxyPathFor(attemptedCardUrl) : undefined,
         authSummary,
         headerSummary,
-        error: err instanceof Error ? err.message : "Failed to connect. Check the URL and try again.",
+        error: getErrorMessage(err, "Failed to connect. Check the URL and try again."),
       },
     };
   }

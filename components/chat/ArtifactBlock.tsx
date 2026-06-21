@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { ArtifactItem } from "@/lib/features/chats/chatsSlice";
 import { PartRenderer } from "./PartRenderer";
 import { Caption, MicroLabel } from "@/components/typography";
@@ -18,7 +19,7 @@ interface Props {
   onSubmitRevision?: (item: ArtifactItem, revisedText: string) => Promise<void> | void;
 }
 
-export function ArtifactBlock({ item, a2uiEnabled = false, onInspect, onSubmitRevision }: Props) {
+export const ArtifactBlock = memo(function ArtifactBlock({ item, a2uiEnabled = false, onInspect, onSubmitRevision }: Props) {
   const label = item.name ?? "Artifact";
   const hasOnlyText = item.parts.every((p) => p.kind === "text");
   const [isEditing, setIsEditing] = useState(false);
@@ -142,4 +143,4 @@ export function ArtifactBlock({ item, a2uiEnabled = false, onInspect, onSubmitRe
       )}
     </div>
   );
-}
+});

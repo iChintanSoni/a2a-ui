@@ -1,8 +1,46 @@
+"use client";
+
+import { useRef, useState, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSanitize from "rehype-sanitize";
 import type { Components } from "react-markdown";
+import { CheckIcon, CopyIcon } from "lucide-react";
+
+function CodeBlock({ children }: { children: React.ReactNode }) {
+  const preRef = useRef<HTMLPreElement>(null);
+  const [copied, setCopied] = useState(false);
+
+  const copy = useCallback(async () => {
+    const text = preRef.current?.textContent ?? "";
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, []);
+
+  return (
+    <div className="group relative mb-2">
+      <pre
+        ref={preRef}
+        className="overflow-x-auto rounded-md bg-muted p-3 font-mono text-sm leading-relaxed"
+      >
+        {children}
+      </pre>
+      <button
+        onClick={copy}
+        aria-label="Copy code"
+        className="absolute right-2 top-2 hidden rounded p-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground group-hover:flex"
+      >
+        {copied ? (
+          <CheckIcon className="size-3.5 text-green-500" />
+        ) : (
+          <CopyIcon className="size-3.5" />
+        )}
+      </button>
+    </div>
+  );
+}
 
 const components: Components = {
   // Headings
@@ -61,12 +99,8 @@ const components: Components = {
     );
   },
 
-  // Code blocks
-  pre: ({ children }) => (
-    <pre className="mb-2 overflow-x-auto rounded-md bg-muted p-3 font-mono text-sm leading-relaxed">
-      {children}
-    </pre>
-  ),
+  // Code blocks — wrapped with copy button
+  pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
 
   // Blockquote
   blockquote: ({ children }) => (
@@ -101,7 +135,7 @@ const components: Components = {
     <del className="line-through text-muted-foreground">{children}</del>
   ),
 
-  // Tables (GFM)
+  // Tables (GFM) — wrapped in overflow-x-auto for narrow viewports
   table: ({ children }) => (
     <div className="mb-2 overflow-x-auto">
       <table className="w-full text-sm border-collapse">{children}</table>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { useAppDispatch } from "@/lib/hooks";
@@ -13,6 +13,7 @@ import {
   type AgentConnectionDiagnostic,
 } from "@/lib/features/agents/diagnostics";
 import { Button } from "@/components/ui/button";
+import { getErrorMessage } from "@/lib/utils/error";
 import { Badge } from "@/components/ui/badge";
 import { Muted, ErrorText, Caption, Small } from "@/components/typography";
 import {
@@ -28,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -45,36 +47,34 @@ type AddAgentProps = {
 };
 
 export function AddAgent({ className, variant = "outline", size }: AddAgentProps) {
-  const [open, setOpen] = useState(false);
-  const [url, setUrl] = useState("http://localhost:3001");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [diagnostic, setDiagnostic] = useState<AgentConnectionDiagnostic | null>(null);
-
-  // Auth state
-  const [auth, setAuth] = useState<AuthConfig>(DEFAULT_AUTH);
-
-  // Custom headers state
-  const [headers, setHeaders] = useState<CustomHeader[]>([]);
-
   const dispatch = useAppDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Pre-fill from share link: ?agentUrl=...&authType=...
+  // Lazy-initialize from share link: ?agentUrl=...&authType=...
+  const prefillUrl = searchParams.get("agentUrl");
+  const rawAuthType = searchParams.get("authType");
+  const validAuthTypes: AuthConfig["type"][] = ["none", "bearer", "api-key", "basic"];
+  const prefillAuthType = validAuthTypes.includes(rawAuthType as AuthConfig["type"])
+    ? (rawAuthType as AuthConfig["type"])
+    : null;
+
+  const [open, setOpen] = useState(() => Boolean(prefillUrl));
+  const [url, setUrl] = useState(() => prefillUrl ?? "http://localhost:3001");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [diagnostic, setDiagnostic] = useState<AgentConnectionDiagnostic | null>(null);
+  const [auth, setAuth] = useState<AuthConfig>(() =>
+    prefillAuthType ? { type: prefillAuthType } : DEFAULT_AUTH,
+  );
+  const [headers, setHeaders] = useState<CustomHeader[]>([]);
+
+  // Capture prefillUrl at mount so the effect doesn't re-run if search params change
+  const prefillUrlRef = useRef(prefillUrl);
+  // Clean URL so refreshing doesn't re-open the dialog
   useEffect(() => {
-    const agentUrl = searchParams.get("agentUrl");
-    const authType = searchParams.get("authType") as AuthConfig["type"] | null;
-    if (agentUrl) {
-      setUrl(agentUrl);
-      if (authType && ["none", "bearer", "api-key", "basic"].includes(authType)) {
-        setAuth({ type: authType });
-      }
-      setOpen(true);
-      // Clean URL so refreshing doesn't re-open the dialog
-      router.replace("/dashboard");
-    }
-  }, [searchParams, router]);
+    if (prefillUrlRef.current) router.replace("/dashboard");
+  }, [router]);
 
   const handleAuthTypeChange = (type: AuthConfig["type"]) => {
     setAuth({ type });
@@ -133,21 +133,11 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
       setOpen(false);
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to connect. Check the URL and try again."
-      );
+      const errMsg = getErrorMessage(err, "Failed to connect. Check the URL and try again.");
+      setError(errMsg);
       setDiagnostic((current) =>
         current
-          ? {
-              ...current,
-              status: "error",
-              error:
-                err instanceof Error
-                  ? err.message
-                  : "Failed to connect. Check the URL and try again.",
-            }
+          ? { ...current, status: "error", error: errMsg }
           : current,
       );
     } finally {
@@ -163,7 +153,8 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
           Add Agent
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-md">
+      <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-md">
+        <ScrollArea className="flex-1 overflow-hidden">
         <form onSubmit={handleAddAgent}>
           <DialogHeader>
             <DialogTitle>Add Agent</DialogTitle>
@@ -437,6 +428,7 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
             </Button>
           </DialogFooter>
         </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );

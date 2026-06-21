@@ -82,6 +82,8 @@ export function SessionInfoBar({
             size="icon"
             className={cn("ml-auto size-5 rounded")}
             onClick={() => setExpanded((v) => !v)}
+            aria-label={expanded ? "Collapse session info" : "Expand session info"}
+            aria-expanded={expanded}
           >
             {expanded ? (
               <ChevronUpIcon className="size-3" />

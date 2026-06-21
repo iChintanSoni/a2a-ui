@@ -15,6 +15,15 @@ import { env } from "#src/env.ts";
 const PORT = env.PORT;
 const BASE_URL = env.BASE_URL || `http://localhost:${PORT}`;
 
+function buildCorsOrigin(allowedOrigins: string | undefined): cors.CorsOptions["origin"] {
+  if (!allowedOrigins) {
+    // Default: allow only localhost origins so the dev server works out of the box
+    return [/^http:\/\/localhost(:\d+)?$/, /^http:\/\/127\.0\.0\.1(:\d+)?$/];
+  }
+  if (allowedOrigins === "*") return "*";
+  return allowedOrigins.split(",").map((o) => o.trim()).filter(Boolean);
+}
+
 const agentCard = createAgentCard(BASE_URL);
 
 const requestHandler = new DefaultRequestHandler(
@@ -24,7 +33,7 @@ const requestHandler = new DefaultRequestHandler(
 );
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: buildCorsOrigin(env.ALLOWED_ORIGINS) }));
 app.use(express.json());
 
 app.use(`/${AGENT_CARD_PATH}`, agentCardHandler({ agentCardProvider: requestHandler }));

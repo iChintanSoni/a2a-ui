@@ -14,6 +14,7 @@ import {
   parseWorkspaceImport,
 } from "@/lib/utils/workspace";
 import { useToast } from "@/lib/toast";
+import { getErrorMessage } from "@/lib/utils/error";
 
 function downloadFile(name: string, content: string, type: string) {
   const blob = new Blob([content], { type });
@@ -64,7 +65,7 @@ export function WorkspaceActions() {
       } catch (err) {
         toast({
           type: "error",
-          message: err instanceof Error ? err.message : "Could not import workspace.",
+          message: getErrorMessage(err, "Could not import workspace."),
         });
       }
     };

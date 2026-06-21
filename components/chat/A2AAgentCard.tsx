@@ -4,6 +4,7 @@ import { RefreshCwIcon } from "lucide-react";
 import { AgentCardViewer } from "@/components/agent-card-viewer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Caption, Muted, Small } from "@/components/typography";
 import type { AgentCard } from "@a2a-js/sdk";
 import { checkCompliance } from "@/lib/utils/compliance";
@@ -60,9 +61,15 @@ export function A2AAgentCard({ card, loading, error, onRefresh }: A2AAgentCardPr
 
           <AgentCardViewer card={card} />
         </div>
+      ) : loading ? (
+        <div className="mt-4 space-y-2" aria-label="Loading agent card">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
       ) : (
         <Muted className="mt-4 text-sm">
-          {loading ? "Loading agent card..." : error ?? "No agent card loaded yet."}
+          {error ?? "No agent card loaded yet."}
         </Muted>
       )}
     </div>

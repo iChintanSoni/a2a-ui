@@ -8,6 +8,7 @@ import type {
 import type { Client } from "@a2a-js/sdk/client";
 import type { Agent } from "@/lib/features/agents/agentsSlice";
 import { buildOutgoingMessage } from "@/lib/a2a/message-utils";
+import { getErrorMessage } from "@/lib/utils/error";
 import { createClientFactory } from "@/lib/utils/auth";
 import {
   evaluateExpectedTaskState,
@@ -155,7 +156,7 @@ async function executeQaCase(input: {
       outputMode: "any",
       outputPreview: "",
       assertionResults: [],
-      error: err instanceof Error ? err.message : String(err),
+      error: getErrorMessage(err),
     };
   }
 }

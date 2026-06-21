@@ -3,6 +3,8 @@ import { z } from "zod";
 const envSchema = z.object({
   PORT: z.coerce.number().default(3001),
   BASE_URL: z.string().optional(),
+  /** Comma-separated list of allowed CORS origins. Defaults to localhost only. Pass "*" to allow all origins. */
+  ALLOWED_ORIGINS: z.string().optional(),
   TAVILY_API_KEY: z.string().optional(),
   OLLAMA_HOST: z.string().default("http://localhost:11434"),
   OLLAMA_LLM_MODEL: z.string().default("qwen3.5:4b"),

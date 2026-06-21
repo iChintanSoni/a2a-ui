@@ -2,87 +2,28 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { Part, TaskState } from "@a2a-js/sdk";
 import type { ExecutionEvent } from "@/lib/a2a/execution-events";
 import { buildPartsPreview } from "@/lib/a2a/parts";
+import type {
+  Chat,
+  ChatCloneMode,
+  ChatsState,
+  UserMessageItem,
+  TaskStatusItem,
+  ArtifactItem,
+  AgentMessageItem,
+  ToolCallItem,
+} from "@/lib/features/chats/chatTypes";
 
-// ─── Chat display item types ─────────────────────────────────────────────────
-
-export type UserMessageItem = {
-  kind: "user-message";
-  id: string;
-  parts: Part[];
-  metadata?: Record<string, string>;
-  isInputResponse?: boolean; // true when this message continues an input-required task
-  timestamp: number;
-};
-
-export type TaskStatusItem = {
-  kind: "task-status";
-  id: string; // taskId
-  taskId: string;
-  state: TaskState;
-  statusMessage?: { parts: Part[] };
-  timestamp: number;
-};
-
-export type ArtifactItem = {
-  kind: "artifact";
-  id: string; // artifactId
-  taskId: string;
-  name?: string;
-  description?: string;
-  parts: Part[];
-  metadata?: Record<string, unknown>;
-  isStreaming: boolean;
-  timestamp: number;
-};
-
-export type AgentMessageItem = {
-  kind: "agent-message";
-  id: string; // messageId
-  taskId?: string;
-  parts: Part[];
-  timestamp: number;
-};
-
-export type ToolCallItem = {
-  kind: "tool-call";
-  id: string; // runId
-  toolName: string;
-  query: string;
-  resultCount?: number;
-  phase: "running" | "done" | "error";
-  imageUrl?: string;
-  timestamp: number;
-};
-
-export type ChatItem =
-  | UserMessageItem
-  | TaskStatusItem
-  | ArtifactItem
-  | AgentMessageItem
-  | ToolCallItem;
-
-// ─── Chat ────────────────────────────────────────────────────────────────────
-
-export interface Chat {
-  id: string; // contextId
-  title: string;
-  agentUrl: string;
-  agentName: string;
-  lastMessage: string;
-  timestamp: number;
-  archived?: boolean;
-  pinned?: boolean;
-  sourceChatId?: string;
-  items: ChatItem[];
-  executionEvents: ExecutionEvent[];
-}
-
-export type ChatCloneMode = "prompt" | "full";
-
-export interface ChatsState {
-  chats: Chat[];
-  activeChatId: string | null;
-}
+export type {
+  Chat,
+  ChatCloneMode,
+  ChatItem,
+  ChatsState,
+  UserMessageItem,
+  TaskStatusItem,
+  ArtifactItem,
+  AgentMessageItem,
+  ToolCallItem,
+} from "@/lib/features/chats/chatTypes";
 
 const initialState: ChatsState = {
   chats: [],
@@ -97,9 +38,6 @@ function findChat(state: ChatsState, chatId: string): Chat | undefined {
   return state.chats.find(c => c.id === chatId);
 }
 
-function cloneJson<T>(value: T): T {
-  return JSON.parse(JSON.stringify(value)) as T;
-}
 
 // ─── Slice ───────────────────────────────────────────────────────────────────
 
@@ -210,8 +148,8 @@ export const chatsSlice = createSlice({
       const mode = action.payload.mode ?? "prompt";
       const items =
         mode === "full"
-          ? cloneJson(source.items)
-          : cloneJson(source.items.filter((item) => item.kind === "user-message"));
+          ? structuredClone(source.items)
+          : structuredClone(source.items.filter((item) => item.kind === "user-message"));
       for (const item of items) {
         item.timestamp = now;
         if (item.kind === "user-message") {
@@ -239,7 +177,7 @@ export const chatsSlice = createSlice({
         pinned: false,
         sourceChatId: source.id,
         items,
-        executionEvents: mode === "full" ? cloneJson(source.executionEvents) : [],
+        executionEvents: mode === "full" ? structuredClone(source.executionEvents) : [],
       };
 
       state.chats.unshift(cloned);
@@ -326,7 +264,9 @@ export const chatsSlice = createSlice({
       );
 
       if (idx >= 0) {
-        const existing = chat.items[idx] as ArtifactItem;
+        const existingItem = chat.items[idx];
+        if (existingItem.kind !== "artifact") return;
+        const existing = existingItem;
         if (action.payload.append) {
           // Merge incoming TextParts onto the last TextPart, push others
           for (const newPart of action.payload.parts) {
