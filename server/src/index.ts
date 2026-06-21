@@ -20,8 +20,23 @@ function buildCorsOrigin(allowedOrigins: string | undefined): cors.CorsOptions["
     // Default: allow only localhost origins so the dev server works out of the box
     return [/^http:\/\/localhost(:\d+)?$/, /^http:\/\/127\.0\.0\.1(:\d+)?$/];
   }
-  if (allowedOrigins === "*") return "*";
-  return allowedOrigins.split(",").map((o) => o.trim()).filter(Boolean);
+
+  // Never allow wildcard origins from configuration.
+  const configuredOrigins = allowedOrigins
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean)
+    .filter((origin) => {
+      try {
+        const parsed = new URL(origin);
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+      } catch {
+        return false;
+      }
+    });
+
+  // If configuration is invalid (or was "*"), disable CORS rather than allowing broad access.
+  return configuredOrigins.length > 0 ? configuredOrigins : false;
 }
 
 const agentCard = createAgentCard(BASE_URL);
