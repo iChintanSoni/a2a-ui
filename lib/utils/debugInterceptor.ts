@@ -1,4 +1,6 @@
 import type { CallInterceptor, BeforeArgs, AfterArgs } from "@a2a-js/sdk/client";
+import { isRecord } from "@/lib/utils/type-guards";
+import { getErrorMessage } from "@/lib/utils/error";
 
 export type LogType = "request" | "response" | "error" | "transport" | "validation";
 
@@ -41,9 +43,6 @@ export function appendLog(prev: LogEntry[], entry: LogEntry): LogEntry[] {
   return next.length > MAX_LOGS ? next.slice(next.length - MAX_LOGS) : next;
 }
 
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return v !== null && typeof v === "object" && !Array.isArray(v);
-}
 
 function normalizeHeaders(headers: HeadersInit | undefined): Record<string, string> {
   if (!headers) return {};
@@ -151,7 +150,7 @@ export function createDebugFetch(
         type: "transport",
         method: jsonRpc.jsonRpcMethod ?? httpMethod,
         payload: {
-          error: err instanceof Error ? err.message : "Transport request failed",
+          error: getErrorMessage(err, "Transport request failed"),
         },
         transport: {
           httpMethod,

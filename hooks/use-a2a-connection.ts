@@ -5,6 +5,7 @@ import type { Client } from "@a2a-js/sdk/client";
 import type { AgentCard } from "@a2a-js/sdk";
 import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
+import { getErrorMessage } from "@/lib/utils/error";
 import { useA2ADebug } from "@/hooks/use-a2a-debug";
 
 const DEFAULT_AUTH: AuthConfig = { type: "none" };
@@ -114,9 +115,9 @@ export function useA2AConnection({
       clientRef.current = client;
       clientKeyRef.current = configKey;
 
-      const protocol =
-        (client as unknown as { transport?: { protocolName?: string } }).transport
-          ?.protocolName ?? null;
+      // The SDK client exposes transport as an internal field not typed in the public API.
+      const clientInternal = client as { transport?: { protocolName?: string } };
+      const protocol = clientInternal.transport?.protocolName ?? null;
       setTransportState({
         key: configKey,
         transportMethod: protocol,
@@ -137,7 +138,7 @@ export function useA2AConnection({
         key: configKey,
         transportMethod: null,
         status: "error",
-        error: err instanceof Error ? err.message : String(err),
+        error: getErrorMessage(err),
       });
       throw err;
     } finally {

@@ -1,160 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
-import type { Message, Part, TaskArtifactUpdateEvent, TaskStatusUpdateEvent } from "@a2a-js/sdk";
+import { useCallback, useEffect, useRef } from "react";
+import type { Message, TaskArtifactUpdateEvent, TaskStatusUpdateEvent } from "@a2a-js/sdk";
 import { getTextPartsText } from "@/lib/a2a/parts";
-import chatsReducer, {
-  addChat,
-  addUserMessage,
-  applyAgentMessage,
-  applyArtifactUpdate,
-  appendExecutionEvent,
-  applyStatusUpdate,
-  applyToolCall,
-  hydrateChats,
-  sanitizeStaleStreaming,
-  type Chat,
-  type ChatsState,
-} from "@/lib/features/chats/chatsSlice";
 import { buildOutgoingMessage, normalizeOutgoingParts } from "@/lib/a2a/message-utils";
-import type {
-  A2AContextConfig,
-  A2AExternalMessageStore,
-  OutgoingMessagePartInput,
-  A2ASessionPersistenceMode,
-} from "@/lib/a2a/types";
-import {
-  createExecutionEventFromLog,
-} from "@/lib/a2a/execution-events";
-import { detectA2UISurface } from "@/lib/a2a/a2ui";
-import { modalityFamily } from "@/lib/a2a/modalities";
+import type { A2AContextConfig, A2AExternalMessageStore, OutgoingMessagePartInput } from "@/lib/a2a/types";
+import { createExecutionEventFromLog } from "@/lib/a2a/execution-events";
 import { validateIncomingEvent, validateOutgoingMessage } from "@/lib/utils/compliance";
+import { getErrorMessage, isAbortError } from "@/lib/utils/error";
+import { isToolCallData } from "@/lib/utils/type-guards";
 import { useA2AConnection } from "@/hooks/use-a2a-connection";
 import { useA2ADebug } from "@/hooks/use-a2a-debug";
 import { useA2ASession } from "@/hooks/use-a2a-session";
-
-type ChatAction =
-  | ReturnType<typeof addChat>
-  | ReturnType<typeof addUserMessage>
-  | ReturnType<typeof applyStatusUpdate>
-  | ReturnType<typeof applyArtifactUpdate>
-  | ReturnType<typeof appendExecutionEvent>
-  | ReturnType<typeof applyToolCall>
-  | ReturnType<typeof applyAgentMessage>
-  | ReturnType<typeof sanitizeStaleStreaming>
-  | ReturnType<typeof hydrateChats>;
-
-type MemoryStoreAction =
-  | ChatAction
-  | { type: "a2a/reset"; payload: Omit<Chat, "items" | "executionEvents"> };
-
-function createChatMeta(input: {
-  contextId: string;
-  agentUrl: string;
-  agentName: string;
-}): Omit<Chat, "items" | "executionEvents"> {
-  return {
-    id: input.contextId,
-    title: `Chat with ${input.agentName}`,
-    agentUrl: input.agentUrl,
-    agentName: input.agentName,
-    lastMessage: "",
-    timestamp: Date.now(),
-  };
-}
-
-function getDataPartMimeType(part: Extract<Part, { kind: "data" }>): string | undefined {
-  const metadata = (part as { metadata?: { mimeType?: unknown } }).metadata;
-  return typeof metadata?.mimeType === "string" ? metadata.mimeType : undefined;
-}
-
-function countA2UISurfaces(parts: Part[]) {
-  return parts.reduce((count, part) => {
-    if (part.kind !== "data") return count;
-    return detectA2UISurface(part.data, getDataPartMimeType(part)) ? count + 1 : count;
-  }, 0);
-}
-
-function summarizePartModalities(parts: Part[]) {
-  return parts.reduce<Record<string, number>>((summary, part) => {
-    const family =
-      part.kind === "text"
-        ? "text"
-        : part.kind === "data"
-          ? "data"
-          : modalityFamily(part.file.mimeType ?? "application/octet-stream");
-    summary[family] = (summary[family] ?? 0) + 1;
-    return summary;
-  }, {});
-}
-
-function memoryStoreReducer(state: ChatsState, action: MemoryStoreAction): ChatsState {
-  if (action.type === "a2a/reset") {
-    return {
-      chats: [{ ...action.payload, items: [], executionEvents: [] }],
-      activeChatId: action.payload.id,
-    };
-  }
-  return chatsReducer(state, action);
-}
-
-function useMemoryMessageStore(options: {
-  contextId: string;
-  agentUrl: string;
-  agentName: string;
-  persistenceMode: Exclude<A2ASessionPersistenceMode, "external">;
-}): A2AExternalMessageStore {
-  const [state, dispatch] = useReducer(memoryStoreReducer, {
-    chats: [],
-    activeChatId: null,
-  });
-  const previousContextRef = useRef<string | null>(null);
-  const chat = state.chats.find((entry) => entry.id === options.contextId);
-
-  useEffect(() => {
-    const meta = createChatMeta({
-      contextId: options.contextId,
-      agentUrl: options.agentUrl,
-      agentName: options.agentName,
-    });
-    if (
-      options.persistenceMode === "none" &&
-      previousContextRef.current &&
-      previousContextRef.current !== options.contextId
-    ) {
-      dispatch({ type: "a2a/reset", payload: meta });
-    } else if (
-      !chat ||
-      chat.agentUrl !== meta.agentUrl ||
-      chat.agentName !== meta.agentName ||
-      chat.title !== meta.title
-    ) {
-      dispatch(addChat(meta));
-    }
-    previousContextRef.current = options.contextId;
-  }, [
-    chat,
-    options.agentName,
-    options.agentUrl,
-    options.contextId,
-    options.persistenceMode,
-  ]);
-
-  return useMemo(
-    () => ({
-      chat,
-      ensureChat: (meta) => dispatch(addChat(meta)),
-      sanitizeStaleStreaming: (contextId) => dispatch(sanitizeStaleStreaming(contextId)),
-      addUserMessage: (payload) => dispatch(addUserMessage(payload)),
-      applyStatusUpdate: (payload) => dispatch(applyStatusUpdate(payload)),
-      applyArtifactUpdate: (payload) => dispatch(applyArtifactUpdate(payload)),
-      applyToolCall: (payload) => dispatch(applyToolCall(payload)),
-      applyAgentMessage: (payload) => dispatch(applyAgentMessage(payload)),
-      appendExecutionEvent: (payload) => dispatch(appendExecutionEvent(payload)),
-    }),
-    [chat],
-  );
-}
+import {
+  createChatMeta,
+  countA2UISurfaces,
+  summarizePartModalities,
+  useMemoryMessageStore,
+} from "@/hooks/use-a2a-messages-reducer";
+import type { A2ASessionPersistenceMode } from "@/lib/a2a/types";
 
 interface UseA2AMessagesOptions {
   connection: ReturnType<typeof useA2AConnection>;
@@ -166,6 +30,7 @@ interface UseA2AMessagesOptions {
   store?: A2AExternalMessageStore;
 }
 
+/** Manages A2A message send/receive lifecycle and keeps the message store in sync. */
 export function useA2AMessages({
   connection,
   debug,
@@ -182,11 +47,10 @@ export function useA2AMessages({
     persistenceMode: persistenceMode === "external" ? "memory" : persistenceMode,
   });
   const messageStore = store ?? memoryStore;
-  const processedLogsRef = useRef(0);
-  const lastContextIdRef = useRef(session.contextId);
-
   const chat = messageStore.chat;
   const currentAgentName = agentName ?? connection.card?.name ?? chat?.agentName ?? "Agent";
+  const processedLogsRef = useRef(0);
+  const lastContextIdRef = useRef(session.contextId);
 
   useEffect(() => {
     if (chat) return;
@@ -209,11 +73,9 @@ export function useA2AMessages({
       lastContextIdRef.current = session.contextId;
       return;
     }
-
     if (processedLogsRef.current > debug.logs.length) {
       processedLogsRef.current = 0;
     }
-
     const newLogs = debug.logs.slice(processedLogsRef.current);
     for (const entry of newLogs) {
       messageStore.appendExecutionEvent({
@@ -251,10 +113,7 @@ export function useA2AMessages({
           traceId: null,
           spanId: null,
           parentSpanId: null,
-          details: {
-            state: "canceled",
-            source: "user",
-          },
+          details: { state: "canceled", source: "user" },
         },
       });
       connection.cancelTask(session.activeTaskId).catch(() => {});
@@ -273,8 +132,8 @@ export function useA2AMessages({
 
       const messageId = crypto.randomUUID();
       const text = getTextPartsText(parts);
-      const fileCount = parts.filter((part) => part.kind === "file").length;
-      const dataCount = parts.filter((part) => part.kind === "data").length;
+      const fileCount = parts.filter((p) => p.kind === "file").length;
+      const dataCount = parts.filter((p) => p.kind === "data").length;
       const modalities = summarizePartModalities(parts);
 
       messageStore.addUserMessage({
@@ -338,230 +197,25 @@ export function useA2AMessages({
           );
 
           if (event.kind === "status-update") {
-            const statusEvent = event as TaskStatusUpdateEvent;
-            session.setActiveTaskId(statusEvent.taskId);
-            messageStore.applyStatusUpdate({
-              chatId: session.contextId,
-              taskId: statusEvent.taskId,
-              state: statusEvent.status.state as
-                | "submitted"
-                | "working"
-                | "input-required"
-                | "completed"
-                | "canceled"
-                | "failed"
-                | "rejected"
-                | "auth-required"
-                | "unknown",
-              statusMessage: statusEvent.status.message
-                ? { parts: statusEvent.status.message.parts }
-                : undefined,
-            });
-            messageStore.appendExecutionEvent({
-              chatId: session.contextId,
-              event: {
-                id: crypto.randomUUID(),
-                chatId: session.contextId,
-                kind: "task-status",
-                level:
-                  statusEvent.status.state === "failed" ||
-                  statusEvent.status.state === "rejected"
-                    ? "error"
-                    : statusEvent.status.state === "input-required" ||
-                        statusEvent.status.state === "auth-required"
-                      ? "warning"
-                      : "info",
-                timestamp: Date.now(),
-                summary: `Task ${statusEvent.status.state}`,
-                taskId: statusEvent.taskId,
-                traceId: null,
-                spanId: null,
-                parentSpanId: null,
-                details: {
-                  state: statusEvent.status.state,
-                  message: statusEvent.status.message,
-                },
-              },
-            });
+            await handleStatusUpdate(event as TaskStatusUpdateEvent, session, messageStore);
             continue;
           }
 
           if (event.kind === "artifact-update") {
-            const artifactEvent = event as TaskArtifactUpdateEvent;
-            if (artifactEvent.artifact.name === "tool-call") {
-              const dataPart = artifactEvent.artifact.parts[0];
-              if (dataPart?.kind === "data") {
-                const data = dataPart.data as {
-                  phase: "running" | "done" | "error";
-                  toolName: string;
-                  query: string;
-                  resultCount?: number;
-                  imageUrl?: string;
-                };
-                messageStore.applyToolCall({
-                  chatId: session.contextId,
-                  runId: artifactEvent.artifact.artifactId,
-                  toolName: data.toolName,
-                  query: data.query,
-                  resultCount: data.resultCount,
-                  phase: data.phase,
-                  imageUrl: data.imageUrl,
-                });
-                messageStore.appendExecutionEvent({
-                  chatId: session.contextId,
-                  event: {
-                    id: crypto.randomUUID(),
-                    chatId: session.contextId,
-                    kind: "tool-call",
-                    level: data.phase === "error" ? "error" : "info",
-                    timestamp: Date.now(),
-                    summary:
-                      data.phase === "running"
-                        ? `${data.toolName} started`
-                        : data.phase === "done"
-                          ? `${data.toolName} finished`
-                          : `${data.toolName} failed`,
-                    taskId: artifactEvent.taskId,
-                    artifactId: artifactEvent.artifact.artifactId,
-                    runId: artifactEvent.artifact.artifactId,
-                    traceId: null,
-                    spanId: null,
-                    parentSpanId: null,
-                    details: {
-                      phase: data.phase,
-                      toolName: data.toolName,
-                      query: data.query,
-                      resultCount: data.resultCount,
-                    },
-                  },
-                });
-              }
-              continue;
-            }
-
-            const structuredSurfaceCount = countA2UISurfaces(artifactEvent.artifact.parts);
-            messageStore.applyArtifactUpdate({
-              chatId: session.contextId,
-              taskId: artifactEvent.taskId,
-              artifactId: artifactEvent.artifact.artifactId,
-              name: artifactEvent.artifact.name,
-              description: artifactEvent.artifact.description,
-              parts: artifactEvent.artifact.parts,
-              metadata: artifactEvent.artifact.metadata,
-              append: artifactEvent.append ?? false,
-              lastChunk: artifactEvent.lastChunk ?? false,
-            });
-            messageStore.appendExecutionEvent({
-              chatId: session.contextId,
-              event: {
-                id: crypto.randomUUID(),
-                chatId: session.contextId,
-                kind: "artifact-update",
-                level: "info",
-                timestamp: Date.now(),
-                summary: artifactEvent.lastChunk
-                  ? `${artifactEvent.artifact.name ?? "Artifact"} completed`
-                  : `${artifactEvent.artifact.name ?? "Artifact"} updated`,
-                taskId: artifactEvent.taskId,
-                artifactId: artifactEvent.artifact.artifactId,
-                traceId: null,
-                spanId: null,
-                parentSpanId: null,
-                details: {
-                  name: artifactEvent.artifact.name,
-                  description: artifactEvent.artifact.description,
-                  modalities: summarizePartModalities(artifactEvent.artifact.parts),
-                  append: artifactEvent.append ?? false,
-                  lastChunk: artifactEvent.lastChunk ?? false,
-                  metadata: artifactEvent.artifact.metadata,
-                },
-              },
-            });
-            if (structuredSurfaceCount > 0) {
-              messageStore.appendExecutionEvent({
-                chatId: session.contextId,
-                event: {
-                  id: crypto.randomUUID(),
-                  chatId: session.contextId,
-                  kind: "structured-ui",
-                  level: "info",
-                  timestamp: Date.now(),
-                  summary: `${structuredSurfaceCount} structured UI surface${structuredSurfaceCount === 1 ? "" : "s"} detected`,
-                  taskId: artifactEvent.taskId,
-                  artifactId: artifactEvent.artifact.artifactId,
-                  traceId: null,
-                  spanId: null,
-                  parentSpanId: null,
-                  details: {
-                    source: "artifact",
-                    enabled: connection.a2uiEnabled,
-                    surfaceCount: structuredSurfaceCount,
-                  },
-                },
-              });
-            }
+            await handleArtifactUpdate(event as TaskArtifactUpdateEvent, session, messageStore, connection);
             continue;
           }
 
           if (event.kind === "message") {
             const agentMessage = event as Message;
             if (agentMessage.role === "agent") {
-              const structuredSurfaceCount = countA2UISurfaces(agentMessage.parts);
-              messageStore.applyAgentMessage({
-                chatId: session.contextId,
-                messageId: agentMessage.messageId,
-                taskId: agentMessage.taskId,
-                parts: agentMessage.parts,
-              });
-              messageStore.appendExecutionEvent({
-                chatId: session.contextId,
-                event: {
-                  id: crypto.randomUUID(),
-                  chatId: session.contextId,
-                  kind: "agent-message",
-                  level: "info",
-                  timestamp: Date.now(),
-                  summary: "Agent message received",
-                  taskId: agentMessage.taskId,
-                  messageId: agentMessage.messageId,
-                  traceId: null,
-                  spanId: null,
-                  parentSpanId: null,
-                  details: {
-                    partCount: agentMessage.parts.length,
-                    modalities: summarizePartModalities(agentMessage.parts),
-                  },
-                },
-              });
-              if (structuredSurfaceCount > 0) {
-                messageStore.appendExecutionEvent({
-                  chatId: session.contextId,
-                  event: {
-                    id: crypto.randomUUID(),
-                    chatId: session.contextId,
-                    kind: "structured-ui",
-                    level: "info",
-                    timestamp: Date.now(),
-                    summary: `${structuredSurfaceCount} structured UI surface${structuredSurfaceCount === 1 ? "" : "s"} detected`,
-                    taskId: agentMessage.taskId,
-                    messageId: agentMessage.messageId,
-                    traceId: null,
-                    spanId: null,
-                    parentSpanId: null,
-                    details: {
-                      source: "message",
-                      enabled: connection.a2uiEnabled,
-                      surfaceCount: structuredSurfaceCount,
-                    },
-                  },
-                });
-              }
+              handleAgentMessage(agentMessage, session, messageStore, connection);
             }
           }
         }
       } catch (err) {
-        if (!(err instanceof Error && err.name === "AbortError")) {
-          session.setError(err instanceof Error ? err.message : String(err));
+        if (!isAbortError(err)) {
+          session.setError(getErrorMessage(err));
           connection.resetConnection();
           debug.recordError("sendMessageStream", err);
         }
@@ -579,4 +233,201 @@ export function useA2AMessages({
     sendMessage,
     cancelStream,
   };
+}
+
+// ── Event handlers ─────────────────────────────────────────────────────────
+
+async function handleStatusUpdate(
+  statusEvent: TaskStatusUpdateEvent,
+  session: ReturnType<typeof useA2ASession>,
+  messageStore: A2AExternalMessageStore,
+) {
+  session.setActiveTaskId(statusEvent.taskId);
+  messageStore.applyStatusUpdate({
+    chatId: session.contextId,
+    taskId: statusEvent.taskId,
+    state: statusEvent.status.state as
+      | "submitted" | "working" | "input-required" | "completed"
+      | "canceled" | "failed" | "rejected" | "auth-required" | "unknown",
+    statusMessage: statusEvent.status.message
+      ? { parts: statusEvent.status.message.parts }
+      : undefined,
+  });
+  messageStore.appendExecutionEvent({
+    chatId: session.contextId,
+    event: {
+      id: crypto.randomUUID(),
+      chatId: session.contextId,
+      kind: "task-status",
+      level:
+        statusEvent.status.state === "failed" || statusEvent.status.state === "rejected"
+          ? "error"
+          : statusEvent.status.state === "input-required" || statusEvent.status.state === "auth-required"
+            ? "warning"
+            : "info",
+      timestamp: Date.now(),
+      summary: `Task ${statusEvent.status.state}`,
+      taskId: statusEvent.taskId,
+      traceId: null,
+      spanId: null,
+      parentSpanId: null,
+      details: { state: statusEvent.status.state, message: statusEvent.status.message },
+    },
+  });
+}
+
+async function handleArtifactUpdate(
+  artifactEvent: TaskArtifactUpdateEvent,
+  session: ReturnType<typeof useA2ASession>,
+  messageStore: A2AExternalMessageStore,
+  connection: ReturnType<typeof useA2AConnection>,
+) {
+  if (artifactEvent.artifact.name === "tool-call") {
+    const dataPart = artifactEvent.artifact.parts[0];
+    if (dataPart?.kind === "data" && isToolCallData(dataPart.data)) {
+      const data = dataPart.data;
+      messageStore.applyToolCall({
+        chatId: session.contextId,
+        runId: artifactEvent.artifact.artifactId,
+        toolName: data.toolName,
+        query: data.query,
+        resultCount: data.resultCount,
+        phase: data.phase,
+        imageUrl: data.imageUrl,
+      });
+      messageStore.appendExecutionEvent({
+        chatId: session.contextId,
+        event: {
+          id: crypto.randomUUID(),
+          chatId: session.contextId,
+          kind: "tool-call",
+          level: data.phase === "error" ? "error" : "info",
+          timestamp: Date.now(),
+          summary:
+            data.phase === "running"
+              ? `${data.toolName} started`
+              : data.phase === "done"
+                ? `${data.toolName} finished`
+                : `${data.toolName} failed`,
+          taskId: artifactEvent.taskId,
+          artifactId: artifactEvent.artifact.artifactId,
+          runId: artifactEvent.artifact.artifactId,
+          traceId: null,
+          spanId: null,
+          parentSpanId: null,
+          details: { phase: data.phase, toolName: data.toolName, query: data.query, resultCount: data.resultCount },
+        },
+      });
+    }
+    return;
+  }
+
+  const structuredSurfaceCount = countA2UISurfaces(artifactEvent.artifact.parts);
+  messageStore.applyArtifactUpdate({
+    chatId: session.contextId,
+    taskId: artifactEvent.taskId,
+    artifactId: artifactEvent.artifact.artifactId,
+    name: artifactEvent.artifact.name,
+    description: artifactEvent.artifact.description,
+    parts: artifactEvent.artifact.parts,
+    metadata: artifactEvent.artifact.metadata,
+    append: artifactEvent.append ?? false,
+    lastChunk: artifactEvent.lastChunk ?? false,
+  });
+  messageStore.appendExecutionEvent({
+    chatId: session.contextId,
+    event: {
+      id: crypto.randomUUID(),
+      chatId: session.contextId,
+      kind: "artifact-update",
+      level: "info",
+      timestamp: Date.now(),
+      summary: artifactEvent.lastChunk
+        ? `${artifactEvent.artifact.name ?? "Artifact"} completed`
+        : `${artifactEvent.artifact.name ?? "Artifact"} updated`,
+      taskId: artifactEvent.taskId,
+      artifactId: artifactEvent.artifact.artifactId,
+      traceId: null,
+      spanId: null,
+      parentSpanId: null,
+      details: {
+        name: artifactEvent.artifact.name,
+        description: artifactEvent.artifact.description,
+        modalities: summarizePartModalities(artifactEvent.artifact.parts),
+        append: artifactEvent.append ?? false,
+        lastChunk: artifactEvent.lastChunk ?? false,
+        metadata: artifactEvent.artifact.metadata,
+      },
+    },
+  });
+  if (structuredSurfaceCount > 0) {
+    messageStore.appendExecutionEvent({
+      chatId: session.contextId,
+      event: {
+        id: crypto.randomUUID(),
+        chatId: session.contextId,
+        kind: "structured-ui",
+        level: "info",
+        timestamp: Date.now(),
+        summary: `${structuredSurfaceCount} structured UI surface${structuredSurfaceCount === 1 ? "" : "s"} detected`,
+        taskId: artifactEvent.taskId,
+        artifactId: artifactEvent.artifact.artifactId,
+        traceId: null,
+        spanId: null,
+        parentSpanId: null,
+        details: { source: "artifact", enabled: connection.a2uiEnabled, surfaceCount: structuredSurfaceCount },
+      },
+    });
+  }
+}
+
+function handleAgentMessage(
+  agentMessage: Message,
+  session: ReturnType<typeof useA2ASession>,
+  messageStore: A2AExternalMessageStore,
+  connection: ReturnType<typeof useA2AConnection>,
+) {
+  const structuredSurfaceCount = countA2UISurfaces(agentMessage.parts);
+  messageStore.applyAgentMessage({
+    chatId: session.contextId,
+    messageId: agentMessage.messageId,
+    taskId: agentMessage.taskId,
+    parts: agentMessage.parts,
+  });
+  messageStore.appendExecutionEvent({
+    chatId: session.contextId,
+    event: {
+      id: crypto.randomUUID(),
+      chatId: session.contextId,
+      kind: "agent-message",
+      level: "info",
+      timestamp: Date.now(),
+      summary: "Agent message received",
+      taskId: agentMessage.taskId,
+      messageId: agentMessage.messageId,
+      traceId: null,
+      spanId: null,
+      parentSpanId: null,
+      details: { partCount: agentMessage.parts.length, modalities: summarizePartModalities(agentMessage.parts) },
+    },
+  });
+  if (structuredSurfaceCount > 0) {
+    messageStore.appendExecutionEvent({
+      chatId: session.contextId,
+      event: {
+        id: crypto.randomUUID(),
+        chatId: session.contextId,
+        kind: "structured-ui",
+        level: "info",
+        timestamp: Date.now(),
+        summary: `${structuredSurfaceCount} structured UI surface${structuredSurfaceCount === 1 ? "" : "s"} detected`,
+        taskId: agentMessage.taskId,
+        messageId: agentMessage.messageId,
+        traceId: null,
+        spanId: null,
+        parentSpanId: null,
+        details: { source: "message", enabled: connection.a2uiEnabled, surfaceCount: structuredSurfaceCount },
+      },
+    });
+  }
 }

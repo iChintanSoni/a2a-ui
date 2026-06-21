@@ -82,12 +82,19 @@ async function proxyRequest(request: NextRequest) {
       ? undefined
       : await request.arrayBuffer();
 
-  const upstream = await fetch(targetUrl, {
-    method: request.method,
-    headers,
-    body,
-    redirect: "follow",
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(targetUrl, {
+      method: request.method,
+      headers,
+      body,
+      redirect: "follow",
+      signal: AbortSignal.timeout(30_000),
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Upstream connection failed";
+    return Response.json({ error: message }, { status: 502 });
+  }
 
   return new Response(upstream.body, {
     status: upstream.status,

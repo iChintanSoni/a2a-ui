@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { useRef, useState, useCallback, useEffect } from "react";
 import hljs from "highlight.js/lib/core";
 import json from "highlight.js/lib/languages/json";
@@ -131,6 +132,16 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
   const [height, setHeight] = useState(DEFAULT_HEIGHT);
   const dragStartRef = useRef<{ y: number; h: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const dragListenersRef = useRef<{ move: (e: MouseEvent) => void; up: () => void } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (dragListenersRef.current) {
+        document.removeEventListener("mousemove", dragListenersRef.current.move);
+        document.removeEventListener("mouseup", dragListenersRef.current.up);
+      }
+    };
+  }, []);
 
   const filtered =
     filter === "all" ? logs : logs.filter((l) => l.type === filter);
@@ -162,8 +173,10 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
         dragStartRef.current = null;
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
+        dragListenersRef.current = null;
       };
 
+      dragListenersRef.current = { move: onMouseMove, up: onMouseUp };
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
@@ -172,8 +185,8 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
 
   return (
     <div
-      className="flex max-h-[45dvh] min-h-40 shrink-0 flex-col border-t bg-background"
-      style={{ height }}
+      className="flex max-h-[45dvh] min-h-40 shrink-0 flex-col border-t bg-background h-(--panel-h)"
+      style={{ "--panel-h": `${height}px` } as CSSProperties}
     >
       {/* Drag handle */}
       <div

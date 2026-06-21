@@ -1,5 +1,6 @@
 import type { AgentCard } from "@a2a-js/sdk";
 import { normalizeMode } from "@/lib/utils/modes";
+import { isRecord } from "@/lib/utils/type-guards";
 
 export type ComplianceSeverity = "error" | "warning" | "info";
 
@@ -18,16 +19,13 @@ export interface ComplianceResult {
   warningCount: number;
 }
 
-function isNonEmptyString(v: unknown): boolean {
+/** True when v is a string with at least one non-whitespace character. */
+function isFilledString(v: unknown): v is string {
   return typeof v === "string" && v.trim().length > 0;
 }
 
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return v !== null && typeof v === "object" && !Array.isArray(v);
-}
-
 function isStringArray(v: unknown): v is string[] {
-  return Array.isArray(v) && v.every(isNonEmptyString);
+  return Array.isArray(v) && v.every(isFilledString);
 }
 
 function toArray(v: unknown): unknown[] {
@@ -35,7 +33,7 @@ function toArray(v: unknown): unknown[] {
 }
 
 function hasValidUrl(v: unknown): boolean {
-  if (!isNonEmptyString(v)) return false;
+  if (!isFilledString(v)) return false;
   try {
     new URL(String(v));
     return true;
@@ -69,27 +67,27 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
   ) => checks.push({ id, label, pass, message: pass ? passMsg : failMsg, severity });
 
   // Required string fields
-  check("name", "name is present", isNonEmptyString(raw.name), "Missing or empty 'name'");
+  check("name", "name is present", isFilledString(raw.name), "Missing or empty 'name'");
   check(
     "description",
     "description is present",
-    isNonEmptyString(raw.description),
+    isFilledString(raw.description),
     "Missing or empty 'description'"
   );
   check(
     "version",
     "version is present",
-    isNonEmptyString(raw.version),
+    isFilledString(raw.version),
     "Missing or empty 'version'"
   );
   check(
     "protocolVersion",
     "protocolVersion is present",
-    isNonEmptyString(raw.protocolVersion),
+    isFilledString(raw.protocolVersion),
     "Missing or empty 'protocolVersion'"
   );
 
-  const protocolVersion = isNonEmptyString(raw.protocolVersion)
+  const protocolVersion = isFilledString(raw.protocolVersion)
     ? String(raw.protocolVersion)
     : "";
   const protocolMajor = Number(protocolVersion.split(".")[0]);
@@ -102,7 +100,7 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
   );
 
   // URL — required and must be a valid URL
-  const hasUrl = isNonEmptyString(raw.url);
+  const hasUrl = isFilledString(raw.url);
   let validUrl = false;
   if (hasUrl) {
     try {
@@ -130,7 +128,7 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     "Missing required 'capabilities' object"
   );
 
-  const preferredTransport = isNonEmptyString(raw.preferredTransport)
+  const preferredTransport = isFilledString(raw.preferredTransport)
     ? String(raw.preferredTransport).toUpperCase()
     : "JSONRPC";
   check(
@@ -146,7 +144,7 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     if (!isRecord(entry)) return [`additionalInterfaces[${index}] is not an object`];
 
     const problems: string[] = [];
-    const transport = isNonEmptyString(entry.transport)
+    const transport = isFilledString(entry.transport)
       ? String(entry.transport).toUpperCase()
       : "";
     if (!hasValidUrl(entry.url)) problems.push("url must be an absolute URL");
@@ -185,8 +183,9 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
   );
 
   // skills array — required and non-empty
-  const hasSkills = Array.isArray(raw.skills);
-  const nonEmptySkills = hasSkills && (raw.skills as unknown[]).length > 0;
+  const skillsArr = Array.isArray(raw.skills) ? (raw.skills as unknown[]) : undefined;
+  const hasSkills = skillsArr !== undefined;
+  const nonEmptySkills = hasSkills && skillsArr!.length > 0;
   check(
     "skills-present",
     "skills array is present",
@@ -198,7 +197,7 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     "skills array is non-empty",
     nonEmptySkills,
     "'skills' array must not be empty",
-    `${(raw.skills as unknown[] | undefined)?.length ?? 0} skill(s) declared`
+    `${skillsArr?.length ?? 0} skill(s) declared`
   );
 
   // defaultInputModes — required, non-empty
@@ -225,12 +224,12 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
 
   // Each skill must have required fields
   if (nonEmptySkills) {
-    const skills = raw.skills as Array<Record<string, unknown>>;
+    const skills = skillsArr as Array<Record<string, unknown>>;
     const skillsValid = skills.every(
       (s) =>
-        isNonEmptyString(s.id) &&
-        isNonEmptyString(s.name) &&
-        isNonEmptyString(s.description)
+        isFilledString(s.id) &&
+        isFilledString(s.name) &&
+        isFilledString(s.description)
     );
     check(
       "skills-fields",
@@ -295,7 +294,7 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
 
   const securitySchemesValid =
     securitySchemes == null ||
-    Object.values(securitySchemes).every((scheme) => isRecord(scheme) && isNonEmptyString(scheme.type));
+    Object.values(securitySchemes).every((scheme) => isRecord(scheme) && isFilledString(scheme.type));
   check(
     "securitySchemes",
     "securitySchemes are displayable",
@@ -330,7 +329,7 @@ function validateParts(parts: unknown, path: string): ValidationWarning[] {
   const warnings: ValidationWarning[] = [];
   parts.forEach((part, index) => {
     const partPath = `${path}[${index}]`;
-    if (!isRecord(part) || !isNonEmptyString(part.kind)) {
+    if (!isRecord(part) || !isFilledString(part.kind)) {
       warnings.push(warning("part-kind", "Part kind is valid", "Part is missing a string kind", partPath));
       return;
     }
@@ -356,10 +355,10 @@ export function validateOutgoingMessage(message: unknown): ValidationWarning[] {
   if (msg.role !== "user") {
     warnings.push(warning("message-role", "Outgoing message role", "Outgoing payload should use role 'user'", "message.role"));
   }
-  if (!isNonEmptyString(msg.messageId)) {
+  if (!isFilledString(msg.messageId)) {
     warnings.push(warning("message-id", "Outgoing message id", "Outgoing message is missing messageId", "message.messageId"));
   }
-  if (!isNonEmptyString(msg.contextId)) {
+  if (!isFilledString(msg.contextId)) {
     warnings.push(warning("context-id", "Outgoing context id", "Outgoing message is missing contextId", "message.contextId"));
   }
   warnings.push(...validateParts(msg.parts, "message.parts"));
@@ -373,14 +372,14 @@ export function validateIncomingEvent(event: unknown): ValidationWarning[] {
 
   if (event.kind === "status-update") {
     const warnings: ValidationWarning[] = [];
-    if (!isNonEmptyString(event.taskId)) {
+    if (!isFilledString(event.taskId)) {
       warnings.push(warning("task-id", "Task id", "Status update is missing taskId", "taskId"));
     }
-    if (!isNonEmptyString(event.contextId)) {
+    if (!isFilledString(event.contextId)) {
       warnings.push(warning("context-id", "Context id", "Status update is missing contextId", "contextId"));
     }
     const status = isRecord(event.status) ? event.status : undefined;
-    if (!status || !isNonEmptyString(status.state)) {
+    if (!status || !isFilledString(status.state)) {
       warnings.push(warning("status-state", "Status state", "Status update is missing status.state", "status.state"));
     }
     if (status?.message) {
@@ -391,10 +390,10 @@ export function validateIncomingEvent(event: unknown): ValidationWarning[] {
 
   if (event.kind === "artifact-update") {
     const warnings: ValidationWarning[] = [];
-    if (!isNonEmptyString(event.taskId)) {
+    if (!isFilledString(event.taskId)) {
       warnings.push(warning("task-id", "Task id", "Artifact update is missing taskId", "taskId"));
     }
-    if (!isNonEmptyString(event.contextId)) {
+    if (!isFilledString(event.contextId)) {
       warnings.push(warning("context-id", "Context id", "Artifact update is missing contextId", "contextId"));
     }
     const artifact = isRecord(event.artifact) ? event.artifact : undefined;
@@ -402,7 +401,7 @@ export function validateIncomingEvent(event: unknown): ValidationWarning[] {
       warnings.push(warning("artifact", "Artifact shape", "Artifact update is missing artifact", "artifact"));
       return warnings;
     }
-    if (!isNonEmptyString(artifact.artifactId)) {
+    if (!isFilledString(artifact.artifactId)) {
       warnings.push(warning("artifact-id", "Artifact id", "Artifact is missing artifactId", "artifact.artifactId"));
     }
     warnings.push(...validateParts(artifact.parts, "artifact.parts"));
@@ -414,7 +413,7 @@ export function validateIncomingEvent(event: unknown): ValidationWarning[] {
     if (event.role !== "agent") {
       warnings.push(warning("message-role", "Message role", "Incoming message should use role 'agent'", "role"));
     }
-    if (!isNonEmptyString(event.messageId)) {
+    if (!isFilledString(event.messageId)) {
       warnings.push(warning("message-id", "Message id", "Incoming message is missing messageId", "messageId"));
     }
     warnings.push(...validateParts(event.parts, "parts"));

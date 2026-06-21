@@ -1,2 +1,4 @@
 npm run lint
 npm run typecheck
+npm --prefix server run typecheck
+npm run test

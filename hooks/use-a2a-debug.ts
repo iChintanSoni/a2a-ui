@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { DebugInterceptor, appendLog, type LogEntry } from "@/lib/utils/debugInterceptor";
+import { getErrorMessage } from "@/lib/utils/error";
 import type { ValidationWarning } from "@/lib/utils/compliance";
 
 interface AppendLogInput extends Omit<LogEntry, "id" | "timestamp"> {
@@ -46,7 +47,7 @@ export function useA2ADebug() {
         type: "error",
         method,
         payload: {
-          message: error instanceof Error ? error.message : String(error),
+          message: getErrorMessage(error),
         },
       });
     },

@@ -48,6 +48,7 @@ import {
   setAgentDefaultMetadata,
 } from "@/lib/features/workbench/workbenchSlice";
 import { consumeRerunDraft, queueRerunDraft } from "@/lib/features/chats/rerunDraft";
+import { getErrorMessage } from "@/lib/utils/error";
 import { buildArtifactRevisionMessage } from "@/lib/features/chats/artifactRevision";
 
 interface PageProps {
@@ -100,6 +101,11 @@ export default function ChatPage({ params }: PageProps) {
     [chat],
   );
 
+  const compliance = useMemo(
+    () => (agent ? checkCompliance(agent.card) : null),
+    [agent],
+  );
+
   // Show error as an actionable toast
   useEffect(() => {
     if (!error) return;
@@ -108,7 +114,16 @@ export default function ChatPage({ params }: PageProps) {
       message: error,
       action: { label: "Open debug", onClick: () => setDebugOpen(true) },
     });
-  }, [error]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [error, toast]);
+
+  // Warn when the agent card declares an unsupported protocol version
+  useEffect(() => {
+    if (!compliance) return;
+    const versionCheck = compliance.checks.find((c) => c.id === "protocolVersion-compatible");
+    if (versionCheck && !versionCheck.pass) {
+      toast({ type: "warning", message: `Protocol version mismatch: ${versionCheck.message}` });
+    }
+  }, [compliance, toast]);
 
   // Keyboard shortcuts: Cmd/Ctrl+Shift+D → debug panel, Cmd/Ctrl+Shift+N → new session
   useEffect(() => {
@@ -133,7 +148,7 @@ export default function ChatPage({ params }: PageProps) {
     sendMessage(rerun.parts, rerun.metadata).catch((err) => {
       toast({
         type: "error",
-        message: err instanceof Error ? err.message : "Unable to rerun prompt.",
+        message: getErrorMessage(err, "Unable to rerun prompt."),
       });
     });
   }, [chatId, sendMessage, toast]);
@@ -168,7 +183,6 @@ export default function ChatPage({ params }: PageProps) {
 
   const inputModes = agent?.card.defaultInputModes ?? [];
   const outputModes = agent?.card.defaultOutputModes ?? [];
-  const compliance = agent ? checkCompliance(agent.card) : null;
   const exportMarkdownTrace = () => {
     downloadFile(
       chatTraceFilename(chat, "markdown"),

@@ -150,3 +150,23 @@
 .dark .hljs-title { color: #dcbdfb; }
 .dark .hljs-variable,
 .dark .hljs-template-variable { color: #f69d50; }
+
+/* ── Touch target sizing ───────────────────────────────────────────────────── */
+/* Enforce 44px minimum touch targets on coarse-pointer (touch) devices. */
+@media (pointer: coarse) {
+  [data-sidebar="menu-button"] {
+    min-height: 2.75rem; /* 44px */
+  }
+}
+
+/* ── Reduced motion ────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
