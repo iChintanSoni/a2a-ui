@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { current } from "immer";
 import type { Part, TaskState } from "@a2a-js/sdk";
 import type { ExecutionEvent } from "@/lib/a2a/execution-events";
 import { buildPartsPreview } from "@/lib/a2a/parts";
@@ -146,10 +147,11 @@ export const chatsSlice = createSlice({
 
       const now = Date.now();
       const mode = action.payload.mode ?? "prompt";
+      const sourceItems = current(source.items);
       const items =
         mode === "full"
-          ? structuredClone(source.items)
-          : structuredClone(source.items.filter((item) => item.kind === "user-message"));
+          ? structuredClone(sourceItems)
+          : structuredClone(sourceItems.filter((item) => item.kind === "user-message"));
       for (const item of items) {
         item.timestamp = now;
         if (item.kind === "user-message") {
@@ -177,7 +179,7 @@ export const chatsSlice = createSlice({
         pinned: false,
         sourceChatId: source.id,
         items,
-        executionEvents: mode === "full" ? structuredClone(source.executionEvents) : [],
+        executionEvents: mode === "full" ? structuredClone(current(source.executionEvents)) : [],
       };
 
       state.chats.unshift(cloned);
