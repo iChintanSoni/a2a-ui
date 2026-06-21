@@ -42,15 +42,16 @@ jobs:
         working-directory: server
         run: npm ci
 
-      - name: Bump package.json version to match tag
+      - name: Verify tag matches package version
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          npm version "${VERSION}" --no-git-tag-version
-          git add package.json package-lock.json
-          git commit -m "chore: bump version to ${VERSION} [skip ci]"
-          git push origin HEAD:main
+          VERSION="$(node -p "require('./package.json').version")"
+          TAG="${GITHUB_REF_NAME}"
+
+          if [ "${TAG}" != "v${VERSION}" ]; then
+            echo "Tag ${TAG} does not match package.json version v${VERSION}."
+            echo "Bump the version in package.json and push to main before creating the release."
+            exit 1
+          fi
 
       - name: Lint
         run: npm run lint

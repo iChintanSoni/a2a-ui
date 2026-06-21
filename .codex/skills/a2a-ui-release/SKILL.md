@@ -24,11 +24,26 @@ metadata:
   - workflow filename: `release.yml`
   - allowed action: `npm publish`
 
-## Human Release Steps
+## Release Steps
 
-1. Update version with `npm version patch`, `npm version minor`, or `npm version major`.
-2. Push the commit and tag with `git push origin main --follow-tags`.
-3. Confirm the GitHub Actions release workflow publishes npm and creates the GitHub Release.
+The release workflow verifies that `package.json` version matches the tag before publishing.
+**Always bump the version and push to main BEFORE creating the tag/release.**
+
+### When assisting the user with `/create-release`:
+
+1. Determine the new version (ask the user if not specified: patch / minor / major).
+2. Run `npm version <new-version> --no-git-tag-version` to bump `package.json` and `package-lock.json`.
+3. Commit: `git commit -am "chore: bump version to <new-version>"` and push to main: `git push origin main`.
+4. Collect PRs and compose release notes (see steps above).
+5. Create the GitHub release with `gh release create <tag> --target main ...` — this creates the tag on the version-bumped commit.
+6. The CI workflow fires, verifies the tag matches `package.json`, runs checks, and publishes to npm automatically.
+
+### Manual steps (without Claude):
+
+1. `npm version patch|minor|major` (or `npm version <x.y.z> --no-git-tag-version` for an exact version).
+2. `git push origin main`.
+3. `gh release create v<x.y.z> --target main --title "v<x.y.z>" --notes "<notes>"`.
+4. Confirm the GitHub Actions release workflow publishes npm and creates the GitHub Release.
 
 ## Validation
 
