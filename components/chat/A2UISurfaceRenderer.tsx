@@ -64,8 +64,8 @@ function renderComponent(component: A2UIComponent, index: number) {
         key={index}
         className={`list-inside text-sm leading-6 ${component.ordered ? "list-decimal" : "list-disc"}`}
       >
-        {component.items.map((item) => (
-          <li key={item}>{item}</li>
+        {component.items.map((item, itemIndex) => (
+          <li key={itemIndex}>{item}</li>
         ))}
       </List>
     );

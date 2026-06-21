@@ -1,101 +1,22 @@
 import { type AgentExecutor, type ExecutionEventBus, RequestContext } from "@a2a-js/sdk/server";
 import { type Part } from "@a2a-js/sdk";
-import { createAgent, type ReactAgent } from "langchain";
-import { MemorySaver } from "@langchain/langgraph";
-import { TavilySearch } from "@langchain/tavily";
-import { DynamicStructuredTool, type StructuredToolInterface } from "@langchain/core/tools";
+import { type ReactAgent } from "langchain";
 import { z } from "zod";
-import { ChatOllama } from "@langchain/ollama";
-import { env } from "#src/env.ts";
+import { agent } from "#src/agentTools.ts";
+import { buildMessageContent, contentToText, shouldReturnA2UIDemo, type ContentBlock } from "#src/contentBuilder.ts";
+import { publishToolCallEvent, publishA2UIDemo } from "#src/eventPublisher.ts";
 
-const model = new ChatOllama({
-  model: env.OLLAMA_LLM_MODEL,
-  baseUrl: env.OLLAMA_HOST,
-  temperature: 0.7,
-});
+// ── Leveled logger ───────────────────────────────────────────────────────────
 
-const checkpointer = new MemorySaver();
+const LOG_LEVEL = (process.env.LOG_LEVEL ?? "info").toLowerCase();
 
-const generateImageTool = new DynamicStructuredTool({
-  name: "generate_image",
-  description:
-    "Generate an image from a text prompt using AI. Use this when the user asks to create, draw, render, or generate an image.",
-  schema: z.object({
-    prompt: z.string().describe("The text description of the image to generate"),
-  }),
-  func: async ({ prompt }) => {
-    try {
-      const ollamaHost = env.OLLAMA_HOST;
-      const ollamaImageModelName = env.OLLAMA_IMAGE_MODEL;
-
-      const response = await fetch(`${ollamaHost}/api/generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: ollamaImageModelName,
-          prompt,
-          stream: false,
-        }),
-      });
-
-      if (!response.ok) {
-        const body = await response.text();
-        return JSON.stringify({ success: false, error: `Ollama image gen failed: ${body}` });
-      }
-
-      const data = (await response.json()) as { images?: string[]; response?: string };
-      let base64Image = data.images?.[0];
-      if (!base64Image && typeof data.response === "string") {
-        // Some Ollama image models return base64 in response instead of images.
-        base64Image = data.response;
-      }
-
-      if (base64Image) {
-        if (base64Image.startsWith("data:")) {
-          base64Image = base64Image.split(",")[1];
-        }
-        return JSON.stringify({ success: true, image_base64: base64Image, mimeType: "image/png" });
-      }
-
-      return JSON.stringify({ success: false, error: "No image found in Ollama response." });
-    } catch (error) {
-      return JSON.stringify({ success: false, error: String(error) });
-    }
-  },
-});
-
-const tools: StructuredToolInterface[] = [generateImageTool];
-if (env.TAVILY_API_KEY) {
-  tools.unshift(
-    new TavilySearch({
-      maxResults: 3,
-      tavilyApiKey: env.TAVILY_API_KEY,
-    }),
-  );
-} else {
-  console.warn("TAVILY_API_KEY is not set. The demo server will run without web search.");
+function log(message: string, ...args: unknown[]): void {
+  if (LOG_LEVEL !== "silent") console.log(message, ...args);
 }
 
-const SEARCH_PROMPT = env.TAVILY_API_KEY
-  ? "Use the search tool when you need up-to-date information. " +
-    "At the end of every response that references any sources, facts, or search results, " +
-    "include a '**References**' section with a numbered markdown list of links in the format: " +
-    "1. [Title](URL). Only include this section when you have actual URLs to cite. "
-  : "If the user asks for up-to-date information, say that web search is not configured. ";
-
-const SYSTEM_PROMPT =
-  "You are a helpful assistant. " +
-  SEARCH_PROMPT +
-  "When the user asks to generate or create an image, use the generate_image tool.";
-
-const agent = createAgent({
-  model,
-  systemPrompt:
-    SYSTEM_PROMPT +
-    " When the user provides an image, describe and analyse it as part of your response.",
-  checkpointer,
-  tools,
-});
+function debug(message: string, ...args: unknown[]): void {
+  if (LOG_LEVEL === "debug") console.log(message, ...args);
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -109,189 +30,22 @@ type StepUpdate = {
   }>;
 };
 
-// LangChain multimodal content block types
-type TextBlock = { type: "text"; text: string };
-type ImageBlock = { type: "image_url"; image_url: { url: string } };
-type ContentBlock = TextBlock | ImageBlock;
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+/** Max characters logged from tool output to avoid flooding the console. */
+const TOOL_LOG_PREVIEW_CHARS = 200;
 
-/**
- * Convert A2A message parts into a LangChain content value.
- * - TextPart → plain string (or TextBlock in a multi-part message)
- * - DataPart → JSON text block so structured payloads reach the model
- * - FilePart with image/* MIME → ImageBlock (data URL or URI)
- * - Other FilePart → text placeholder so the model knows a file was attached
- * Returns a plain string when there is only a single text part (widest model compatibility),
- * otherwise returns a ContentBlock array for multimodal input.
- */
-function buildMessageContent(parts: Part[]): string | ContentBlock[] {
-  const blocks: ContentBlock[] = [];
+/** Reject messages whose combined text exceeds this limit to protect the LLM from OOM. */
+const MAX_INPUT_CHARS = 32_000;
 
-  for (const part of parts) {
-    if (part.kind === "text") {
-      if (part.text) blocks.push({ type: "text", text: part.text });
-    } else if (part.kind === "data") {
-      blocks.push({
-        type: "text",
-        text: `Structured data:\n${JSON.stringify(part.data, null, 2)}`,
-      });
-    } else if (part.kind === "file") {
-      const { file } = part;
-      const mimeType = file.mimeType ?? "application/octet-stream";
-
-      if (mimeType.startsWith("image/")) {
-        const url =
-          "uri" in file ? file.uri : `data:${mimeType};base64,${"bytes" in file ? file.bytes : ""}`;
-        blocks.push({ type: "image_url", image_url: { url } });
-      } else {
-        // Non-image file — mention it as text so the model is aware
-        const name = file.name ?? "file";
-        blocks.push({
-          type: "text",
-          text: `[Attached file: ${name} (${mimeType}) — content not shown]`,
-        });
-      }
-    }
-  }
-
-  if (blocks.length === 0) return "(empty message)";
-
-  // Single text block → plain string for maximum model compatibility
-  if (blocks.length === 1 && blocks[0].type === "text") return blocks[0].text;
-
-  return blocks;
-}
-
-function contentToText(content: unknown): string {
-  if (typeof content === "string") return content;
-  if (!Array.isArray(content)) return "";
-
-  return content
-    .map((block) => {
-      if (typeof block === "string") return block;
-      if (
-        block &&
-        typeof block === "object" &&
-        "type" in block &&
-        block.type === "text" &&
-        "text" in block &&
-        typeof block.text === "string"
-      ) {
-        return block.text;
-      }
-      return "";
-    })
-    .join("");
-}
-
-function shouldReturnA2UIDemo(content: string | ContentBlock[]): boolean {
-  return contentToText(content).toLowerCase().includes("a2ui");
-}
-
-function publishA2UIDemo(eventBus: ExecutionEventBus, taskId: string, contextId: string) {
-  eventBus.publish({
-    kind: "artifact-update",
-    taskId,
-    contextId,
-    append: false,
-    lastChunk: true,
-    artifact: {
-      artifactId: crypto.randomUUID(),
-      name: "a2ui-demo",
-      description: "Read-only A2UI fixture",
-      parts: [
-        {
-          kind: "data",
-          data: {
-            a2ui: {
-              kind: "surface",
-              version: "1",
-              title: "Deployment Readiness",
-              description: "Demo structured surface emitted by the local A2A server.",
-              components: [
-                { kind: "badge", label: "Ready", tone: "success" },
-                {
-                  kind: "key-value",
-                  items: [
-                    { label: "Environment", value: "local" },
-                    { label: "Checks passed", value: 6 },
-                    { label: "Approval required", value: false },
-                  ],
-                },
-                {
-                  kind: "table",
-                  columns: [
-                    { key: "check", label: "Check" },
-                    { key: "status", label: "Status" },
-                  ],
-                  rows: [
-                    { check: "Agent card", status: "ok" },
-                    { check: "Streaming", status: "ok" },
-                    { check: "Renderer", status: "read-only" },
-                  ],
-                },
-                {
-                  kind: "markdown",
-                  markdown: "This fixture intentionally avoids executable code and only renders a constrained component subset.",
-                },
-              ],
-            },
-          },
-          metadata: { mimeType: "application/vnd.a2ui+json" },
-        },
-      ],
-      metadata: {
-        a2ui: { version: "1", mode: "read-only" },
-      },
-    },
-  });
-}
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function isAbortError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
   return error.name === "AbortError" || error.message.includes("AbortError") || error.message.includes("aborted");
 }
 
-function publishToolCallEvent(
-  eventBus: ExecutionEventBus,
-  params: {
-    taskId: string;
-    contextId: string;
-    artifactId: string;
-    phase: "running" | "done" | "error";
-    toolName: string;
-    query: string;
-    resultCount?: number;
-    error?: string;
-  },
-) {
-  eventBus.publish({
-    kind: "artifact-update",
-    taskId: params.taskId,
-    contextId: params.contextId,
-    append: false,
-    lastChunk: params.phase !== "running",
-    artifact: {
-      artifactId: params.artifactId,
-      name: "tool-call",
-      parts: [
-        {
-          kind: "data",
-          data: {
-            phase: params.phase,
-            toolName: params.toolName,
-            query: params.query,
-            ...(params.resultCount != null ? { resultCount: params.resultCount } : {}),
-            ...(params.error ? { error: params.error } : {}),
-          },
-        },
-      ],
-    },
-  });
-}
-
-// ─── Stream handler (shared between text and vision agent) ────────────────────
+// ─── Stream handler ───────────────────────────────────────────────────────────
 
 async function streamAgentResponse(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -320,66 +74,46 @@ async function streamAgentResponse(
     if (step !== "tools" && lastMsg) {
       if (lastMsg.tool_calls?.length) {
         for (const tc of lastMsg.tool_calls) {
-          const query =
-            typeof tc.args?.query === "string" ? tc.args.query : JSON.stringify(tc.args);
+          const query = typeof tc.args?.query === "string" ? tc.args.query : JSON.stringify(tc.args);
           toolQueryMap.set(tc.id, { toolName: tc.name, query });
-          console.log(`[Tool Call] ${tc.name} executing with args:`, query);
-          publishToolCallEvent(eventBus, {
-            taskId,
-            contextId,
-            artifactId: tc.id,
-            phase: "running",
-            toolName: tc.name,
-            query,
-          });
+          log(`[Tool Call] ${tc.name} executing with args:`, query);
+          publishToolCallEvent(eventBus, { taskId, contextId, artifactId: tc.id, phase: "running", toolName: tc.name, query });
         }
       } else {
         const text = contentToText(lastMsg.content);
         if (text) responseText = text;
       }
 
-      // Attempt to capture and log model token usage from metadata payload
       if (lastMsg.usage_metadata) {
         usageMetadata = lastMsg.usage_metadata;
-        console.log(`[Observatory - Token Usage]`, lastMsg.usage_metadata);
+        debug(`[Observatory - Token Usage]`, lastMsg.usage_metadata);
       }
     } else if (step === "tools") {
       for (const msg of messages) {
         if (!msg.tool_call_id) continue;
-        const { toolName: resolvedToolName, query } = toolQueryMap.get(msg.tool_call_id) ?? {
-          toolName: "unknown",
-          query: "",
-        };
+        const { toolName: resolvedToolName, query } = toolQueryMap.get(msg.tool_call_id) ?? { toolName: "unknown", query: "" };
         toolQueryMap.delete(msg.tool_call_id);
 
         const rawContent = typeof msg.content === "string" ? msg.content : "";
-        console.log(
+        debug(
           `[Tool Result] ${resolvedToolName}:`,
-          rawContent.substring(0, 200) + (rawContent.length > 200 ? "..." : "")
+          rawContent.substring(0, TOOL_LOG_PREVIEW_CHARS) + (rawContent.length > TOOL_LOG_PREVIEW_CHARS ? "..." : "")
         );
 
-        // Handle image generation tool result
         if (resolvedToolName === "generate_image") {
           let imageToolError: string | undefined;
           try {
-            const parsed = JSON.parse(rawContent) as {
-              success: boolean;
-              image_base64?: string;
-              mimeType?: string;
-              error?: string;
-            };
+            const imageResultSchema = z.object({
+              success: z.boolean(),
+              image_base64: z.string().optional(),
+              mimeType: z.string().optional(),
+              error: z.string().optional(),
+            });
+            const parsed = imageResultSchema.parse(JSON.parse(rawContent));
             if (parsed.success && parsed.image_base64) {
               const mimeType = parsed.mimeType ?? "image/png";
               const ext = mimeType.split("/")[1] ?? "png";
-              publishToolCallEvent(eventBus, {
-                taskId,
-                contextId,
-                artifactId: msg.tool_call_id,
-                phase: "done",
-                toolName: resolvedToolName,
-                query,
-                resultCount: 1,
-              });
+              publishToolCallEvent(eventBus, { taskId, contextId, artifactId: msg.tool_call_id, phase: "done", toolName: resolvedToolName, query, resultCount: 1 });
               eventBus.publish({
                 kind: "artifact-update",
                 taskId,
@@ -390,56 +124,34 @@ async function streamAgentResponse(
                   artifactId: crypto.randomUUID(),
                   name: "generated-image",
                   description: `Generated image for: ${query}`,
-                  parts: [
-                    {
-                      kind: "file",
-                      file: {
-                        name: `generated-image.${ext}`,
-                        mimeType,
-                        bytes: parsed.image_base64,
-                      },
-                    },
-                  ],
+                  parts: [{ kind: "file", file: { name: `generated-image.${ext}`, mimeType, bytes: parsed.image_base64 } }],
                 },
               });
             } else {
               imageToolError = parsed.error ?? "Image generation failed without an error message.";
             }
           } catch (error) {
-            imageToolError =
-              error instanceof Error ? `Unable to parse image tool result: ${error.message}` : String(error);
+            imageToolError = error instanceof Error ? `Unable to parse image tool result: ${error.message}` : String(error);
           }
           if (imageToolError) {
-            publishToolCallEvent(eventBus, {
-              taskId,
-              contextId,
-              artifactId: msg.tool_call_id,
-              phase: "error",
-              toolName: resolvedToolName,
-              query,
-              error: imageToolError,
-            });
+            publishToolCallEvent(eventBus, { taskId, contextId, artifactId: msg.tool_call_id, phase: "error", toolName: resolvedToolName, query, error: imageToolError });
           }
           continue;
         }
 
         let resultCount = 0;
         try {
-          const parsed = JSON.parse(rawContent) as Record<string, unknown>;
-          const results = Array.isArray(parsed) ? parsed : parsed.results;
+          const parsed: unknown = JSON.parse(rawContent);
+          const results = Array.isArray(parsed)
+            ? parsed
+            : (typeof parsed === "object" && parsed !== null && "results" in parsed)
+              ? (parsed as { results: unknown }).results
+              : undefined;
           resultCount = Array.isArray(results) ? results.length : 0;
         } catch {
-          // non-JSON content
+          // non-JSON content — resultCount stays 0
         }
-        publishToolCallEvent(eventBus, {
-          taskId,
-          contextId,
-          artifactId: msg.tool_call_id,
-          phase: "done",
-          toolName: resolvedToolName,
-          query,
-          resultCount,
-        });
+        publishToolCallEvent(eventBus, { taskId, contextId, artifactId: msg.tool_call_id, phase: "done", toolName: resolvedToolName, query, resultCount });
       }
     }
   }
@@ -457,10 +169,36 @@ export const chatAgentExecutor: AgentExecutor = {
   async execute(requestContext: RequestContext, eventBus: ExecutionEventBus) {
     const { taskId, contextId, userMessage } = requestContext;
 
-    console.log(`\n--- [Task Initiated] Context ID: ${contextId} | Task ID: ${taskId} ---`);
-    console.log(`[Input]`, JSON.stringify(userMessage.parts, null, 2));
+    log(`\n--- [Task Initiated] Context ID: ${contextId} | Task ID: ${taskId} ---`);
+    debug(`[Input]`, JSON.stringify(userMessage.parts, null, 2));
 
-    // Build multimodal content from all message parts
+    const totalInputChars = (userMessage.parts as Part[]).reduce((sum, part) => {
+      if (part.kind === "text") return sum + part.text.length;
+      if (part.kind === "data") return sum + JSON.stringify(part.data).length;
+      return sum;
+    }, 0);
+
+    if (totalInputChars > MAX_INPUT_CHARS) {
+      eventBus.publish({
+        kind: "status-update",
+        taskId,
+        contextId,
+        final: true,
+        status: {
+          state: "failed",
+          timestamp: new Date().toISOString(),
+          message: {
+            kind: "message",
+            messageId: crypto.randomUUID(),
+            role: "agent",
+            parts: [{ kind: "text", text: `Input too large (${totalInputChars.toLocaleString()} characters). Please shorten your message and try again.` }],
+          },
+        },
+      });
+      eventBus.finished();
+      return;
+    }
+
     const content = buildMessageContent(userMessage.parts as Part[]);
 
     eventBus.publish({
@@ -489,23 +227,14 @@ export const chatAgentExecutor: AgentExecutor = {
         return;
       }
 
-      const result = await streamAgentResponse(
-        agent,
-        content,
-        contextId,
-        taskId,
-        eventBus,
-        abortController.signal
-      );
+      const result = await streamAgentResponse(agent, content, contextId, taskId, eventBus, abortController.signal);
       let responseText = result.responseText;
       const { usageMetadata } = result;
 
-      if (!responseText) {
-        responseText = "The agent completed the task without returning text.";
-      }
+      if (!responseText) responseText = "The agent completed the task without returning text.";
 
-      console.log(`[Final Response]`, responseText);
-      console.log(`--- [Task Complete] Context ID: ${contextId} | Task ID: ${taskId} ---\n`);
+      debug(`[Final Response]`, responseText);
+      log(`--- [Task Complete] Context ID: ${contextId} | Task ID: ${taskId} ---\n`);
 
       eventBus.publish({
         kind: "artifact-update",
@@ -531,9 +260,10 @@ export const chatAgentExecutor: AgentExecutor = {
       });
     } catch (error) {
       if (activeCancelledTasks.has(taskId) || isAbortError(error)) {
-        console.log(`--- [Task Canceled] Context ID: ${contextId} | Task ID: ${taskId} ---\n`);
+        log(`--- [Task Canceled] Context ID: ${contextId} | Task ID: ${taskId} ---\n`);
         return;
       }
+      console.error(`[Task Failed] Context ID: ${contextId} | Task ID: ${taskId}`, error);
       eventBus.publish({
         kind: "status-update",
         taskId,
@@ -546,12 +276,7 @@ export const chatAgentExecutor: AgentExecutor = {
             kind: "message",
             messageId: crypto.randomUUID(),
             role: "agent",
-            parts: [
-              {
-                kind: "text",
-                text: `Error: ${error instanceof Error ? error.message : String(error)}`,
-              },
-            ],
+            parts: [{ kind: "text", text: "An error occurred while processing your request. Please try again." }],
           },
         },
       });
@@ -567,9 +292,7 @@ export const chatAgentExecutor: AgentExecutor = {
   async cancelTask(taskId: string, eventBus: ExecutionEventBus) {
     const controller = activeAbortControllers.get(taskId);
     activeCancelledTasks.add(taskId);
-    if (controller) {
-      controller.abort();
-    }
+    if (controller) controller.abort();
 
     eventBus.publish({
       kind: "status-update",
@@ -579,8 +302,6 @@ export const chatAgentExecutor: AgentExecutor = {
       status: { state: "canceled", timestamp: new Date().toISOString() },
     });
     eventBus.finished();
-    if (!controller) {
-      activeCancelledTasks.delete(taskId);
-    }
+    if (!controller) activeCancelledTasks.delete(taskId);
   },
 };

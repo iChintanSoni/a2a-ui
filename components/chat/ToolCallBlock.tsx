@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { ToolCallItem } from "@/lib/features/chats/chatsSlice";
 import {
   Search,
@@ -61,7 +62,7 @@ function ImageShimmer() {
   );
 }
 
-export function ToolCallBlock({ item, onInspect }: Props) {
+export const ToolCallBlock = memo(function ToolCallBlock({ item, onInspect }: Props) {
   const { toolName, query, resultCount, phase, imageUrl } = item;
 
   const { gerund, base } = getToolVerbs(toolName);
@@ -120,4 +121,4 @@ export function ToolCallBlock({ item, onInspect }: Props) {
       )}
     </div>
   );
-}
+});

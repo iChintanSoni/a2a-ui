@@ -43,8 +43,8 @@ export default function StoreProvider({ children }: { children: React.ReactNode 
             });
         }
       })
-      .catch(() => {
-        // IndexedDB unavailable — start with empty state (already the default)
+      .catch((err) => {
+        console.error("[StoreProvider] Failed to load persisted state:", err);
       })
       .finally(() => {
         // Subscribe to persist changes after hydration is done

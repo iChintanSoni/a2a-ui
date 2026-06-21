@@ -100,6 +100,14 @@ export function EventExplorer({ events, onClose }: EventExplorerProps) {
   const [taskFilter, setTaskFilter] = useState("");
   const [requestFilter, setRequestFilter] = useState("");
 
+  const hasActiveFilters = filter !== "all" || taskFilter.length > 0 || requestFilter.length > 0;
+
+  const clearFilters = () => {
+    setFilter("all");
+    setTaskFilter("");
+    setRequestFilter("");
+  };
+
   const filtered = useMemo(
     () =>
       filterExecutionEvents(events, {
@@ -113,7 +121,7 @@ export function EventExplorer({ events, onClose }: EventExplorerProps) {
   const summary = useMemo(() => getTransportSummary(filtered), [filtered]);
 
   return (
-    <div className="flex max-h-[45dvh] min-h-52 shrink-0 resize-y flex-col overflow-hidden border-t bg-background" style={{ height: 340 }}>
+    <div className="flex h-85 max-h-[45dvh] min-h-52 shrink-0 resize-y flex-col overflow-hidden border-t bg-background">
       <div className="flex items-center gap-2 border-b px-3 py-2">
         <ActivityIcon className="size-4 text-muted-foreground" />
         <Small className="text-foreground/80">Event Explorer</Small>
@@ -176,7 +184,19 @@ export function EventExplorer({ events, onClose }: EventExplorerProps) {
 
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <Caption className="p-4 text-center">No matching events yet.</Caption>
+          <div className="flex flex-col items-center gap-2 p-4 text-center">
+            <Caption>
+              {hasActiveFilters ? "No events match the current filters." : "No events yet."}
+            </Caption>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="text-xs text-primary underline hover:no-underline"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
         ) : (
           filtered.map((event) => <EventRow key={event.id} event={event} />)
         )}

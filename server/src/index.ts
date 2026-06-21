@@ -15,6 +15,30 @@ import { env } from "#src/env.ts";
 const PORT = env.PORT;
 const BASE_URL = env.BASE_URL || `http://localhost:${PORT}`;
 
+function buildCorsOrigin(allowedOrigins: string | undefined): cors.CorsOptions["origin"] {
+  if (!allowedOrigins) {
+    // Default: allow only localhost origins so the dev server works out of the box
+    return [/^http:\/\/localhost(:\d+)?$/, /^http:\/\/127\.0\.0\.1(:\d+)?$/];
+  }
+
+  // Never allow wildcard origins from configuration.
+  const configuredOrigins = allowedOrigins
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean)
+    .filter((origin) => {
+      try {
+        const parsed = new URL(origin);
+        return parsed.protocol === "http:" || parsed.protocol === "https:";
+      } catch {
+        return false;
+      }
+    });
+
+  // If configuration is invalid (or was "*"), disable CORS rather than allowing broad access.
+  return configuredOrigins.length > 0 ? configuredOrigins : false;
+}
+
 const agentCard = createAgentCard(BASE_URL);
 
 const requestHandler = new DefaultRequestHandler(
@@ -24,7 +48,7 @@ const requestHandler = new DefaultRequestHandler(
 );
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: buildCorsOrigin(env.ALLOWED_ORIGINS) }));
 app.use(express.json());
 
 app.use(`/${AGENT_CARD_PATH}`, agentCardHandler({ agentCardProvider: requestHandler }));

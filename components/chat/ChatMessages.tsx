@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ArtifactItem, Chat, UserMessageItem } from "@/lib/features/chats/chatsSlice";
 import { UserBubble, AgentBubble } from "./MessageBubble";
 import { TaskStatusRow } from "./TaskStatusRow";
@@ -6,6 +6,7 @@ import { ArtifactBlock } from "./ArtifactBlock";
 import { ToolCallBlock } from "./ToolCallBlock";
 import { JsonInspectModal } from "./JsonInspectModal";
 import { getTaskTimelineStages } from "@/lib/a2a/execution-events";
+import { getTextPartsText } from "@/lib/a2a/parts";
 
 interface Props {
   chat: Chat;
@@ -14,6 +15,9 @@ interface Props {
   onRerunMessage?: (item: UserMessageItem) => void;
   onSubmitArtifactRevision?: (item: ArtifactItem, revisedText: string) => Promise<void> | void;
 }
+
+/** Pixels from the bottom of the scroll container within which we auto-scroll to new messages. */
+const SCROLL_STICK_THRESHOLD_PX = 120;
 
 export function ChatMessages({
   chat,
@@ -27,6 +31,11 @@ export function ChatMessages({
   const shouldStickToBottomRef = useRef(true);
   const [inspectData, setInspectData] = useState<unknown>(null);
 
+  const lastAgentText = useMemo(() => {
+    const last = chat.items.findLast((i) => i.kind === "agent-message");
+    return last ? getTextPartsText(last.parts) : "";
+  }, [chat.items]);
+
   useEffect(() => {
     shouldStickToBottomRef.current = true;
   }, [chat.id]);
@@ -34,15 +43,15 @@ export function ChatMessages({
   useEffect(() => {
     if (!shouldStickToBottomRef.current) return;
     bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [chat.items.length, chat.items]);
+  }, [chat.items]);
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
     const distanceFromBottom =
       container.scrollHeight - container.scrollTop - container.clientHeight;
-    shouldStickToBottomRef.current = distanceFromBottom < 120;
-  };
+    shouldStickToBottomRef.current = distanceFromBottom < SCROLL_STICK_THRESHOLD_PX;
+  }, []);
 
   if (chat.items.length === 0) {
     return (
@@ -83,7 +92,7 @@ export function ChatMessages({
         if (item.kind === "task-status") {
           return (
             <TaskStatusRow
-              key={`${item.taskId}-${item.state}`}
+              key={`task-status-${item.taskId}`}
               item={item}
               timelineStages={getTaskTimelineStages(chat.executionEvents, item.taskId)}
               onInspect={() => setInspectData(item)}
@@ -125,6 +134,10 @@ export function ChatMessages({
         open={inspectData !== null}
         onClose={() => setInspectData(null)}
       />
+      {/* Screen-reader announcement region for new agent messages */}
+      <div aria-live="polite" aria-atomic="false" className="sr-only">
+        {lastAgentText}
+      </div>
     </div>
   );
 }

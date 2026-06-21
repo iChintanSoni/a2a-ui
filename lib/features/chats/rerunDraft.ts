@@ -5,23 +5,28 @@ export interface RerunDraft {
   metadata?: Record<string, string>;
 }
 
-function storageKey(chatId: string) {
-  return `a2a-ui:rerun:${chatId}`;
+interface PendingEntry {
+  draft: RerunDraft;
+  expiresAt: number;
 }
 
-export function queueRerunDraft(chatId: string, draft: RerunDraft) {
-  if (typeof window === "undefined") return;
-  window.sessionStorage.setItem(storageKey(chatId), JSON.stringify(draft));
+const DRAFT_TTL_MS = 5 * 60 * 1_000; // 5 minutes
+
+// Module-level map: survives SPA navigation (no page reload) without coupling to
+// sessionStorage or the persisted Redux store (where ephemeral data doesn't belong).
+const pending = new Map<string, PendingEntry>();
+
+export function queueRerunDraft(chatId: string, draft: RerunDraft): void {
+  const now = Date.now();
+  for (const [key, entry] of pending) {
+    if (entry.expiresAt < now) pending.delete(key);
+  }
+  pending.set(chatId, { draft, expiresAt: now + DRAFT_TTL_MS });
 }
 
 export function consumeRerunDraft(chatId: string): RerunDraft | null {
-  if (typeof window === "undefined") return null;
-  const raw = window.sessionStorage.getItem(storageKey(chatId));
-  if (!raw) return null;
-  window.sessionStorage.removeItem(storageKey(chatId));
-  try {
-    return JSON.parse(raw) as RerunDraft;
-  } catch {
-    return null;
-  }
+  const entry = pending.get(chatId) ?? null;
+  pending.delete(chatId);
+  if (!entry || entry.expiresAt < Date.now()) return null;
+  return entry.draft;
 }

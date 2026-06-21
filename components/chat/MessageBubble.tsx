@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { UserMessageItem, AgentMessageItem } from "@/lib/features/chats/chatsSlice";
 import { RotateCcwIcon } from "lucide-react";
 import { PartRenderer } from "./PartRenderer";
@@ -9,7 +10,7 @@ interface UserBubbleProps {
   onRerun?: () => void;
 }
 
-export function UserBubble({ item, a2uiEnabled = false, onInspect, onRerun }: UserBubbleProps) {
+export const UserBubble = memo(function UserBubble({ item, a2uiEnabled = false, onInspect, onRerun }: UserBubbleProps) {
   return (
     <div className="flex justify-end group">
       <div className="relative flex max-w-[92%] flex-col items-end gap-1.5 sm:max-w-[75%]">
@@ -35,6 +36,7 @@ export function UserBubble({ item, a2uiEnabled = false, onInspect, onRerun }: Us
             onClick={onRerun}
             className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground shadow-sm"
             title="Rerun this prompt in a fresh run"
+            aria-label="Rerun this prompt"
           >
             <RotateCcwIcon className="size-3" />
           </button>
@@ -44,6 +46,7 @@ export function UserBubble({ item, a2uiEnabled = false, onInspect, onRerun }: Us
             onClick={onInspect}
             className="absolute -top-2 -left-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
             title="Inspect raw JSON"
+            aria-label="Inspect raw JSON"
           >
             {"{}"}
           </button>
@@ -51,7 +54,7 @@ export function UserBubble({ item, a2uiEnabled = false, onInspect, onRerun }: Us
       </div>
     </div>
   );
-}
+});
 
 interface AgentBubbleProps {
   item: AgentMessageItem;
@@ -59,7 +62,7 @@ interface AgentBubbleProps {
   onInspect?: () => void;
 }
 
-export function AgentBubble({ item, a2uiEnabled = false, onInspect }: AgentBubbleProps) {
+export const AgentBubble = memo(function AgentBubble({ item, a2uiEnabled = false, onInspect }: AgentBubbleProps) {
   return (
     <div className="flex justify-start group">
       <div className="relative max-w-[92%] rounded-2xl rounded-bl-sm bg-muted px-4 py-2.5 text-sm sm:max-w-[75%]">
@@ -71,6 +74,7 @@ export function AgentBubble({ item, a2uiEnabled = false, onInspect }: AgentBubbl
             onClick={onInspect}
             className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
             title="Inspect raw JSON"
+            aria-label="Inspect raw JSON"
           >
             {"{}"}
           </button>
@@ -78,4 +82,4 @@ export function AgentBubble({ item, a2uiEnabled = false, onInspect }: AgentBubbl
       </div>
     </div>
   );
-}
+});

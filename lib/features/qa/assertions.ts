@@ -1,9 +1,22 @@
 import type { Part, TaskState } from "@a2a-js/sdk";
+import { getErrorMessage } from "@/lib/utils/error";
 import type {
   QaAssertion,
   QaAssertionResult,
   QaOutputMode,
 } from "@/lib/features/qa/types";
+
+const regexCache = new Map<string, RegExp>();
+
+function getCachedRegex(pattern: string, flags?: string): RegExp {
+  const key = `${flags ?? ""}/${pattern}`;
+  let re = regexCache.get(key);
+  if (!re) {
+    re = new RegExp(pattern, flags);
+    regexCache.set(key, re);
+  }
+  return re;
+}
 
 export interface QaCapturedOutput {
   text: string;
@@ -128,7 +141,7 @@ export function evaluateAssertion(
 ): QaAssertionResult {
   if (assertion.kind === "content-regex") {
     try {
-      const regex = new RegExp(assertion.pattern, assertion.flags);
+      const regex = getCachedRegex(assertion.pattern, assertion.flags);
       const passed = regex.test(output.text);
       return {
         assertionId: assertion.id,
@@ -143,7 +156,7 @@ export function evaluateAssertion(
         assertionId: assertion.id,
         label: assertion.label,
         passed: false,
-        message: err instanceof Error ? err.message : String(err),
+        message: getErrorMessage(err),
       };
     }
   }
