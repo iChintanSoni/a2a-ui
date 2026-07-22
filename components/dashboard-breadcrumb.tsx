@@ -67,12 +67,12 @@ export function DashboardBreadcrumb() {
     return (
       <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
         <BreadcrumbList className="min-w-0 flex-nowrap overflow-hidden">
-          <BreadcrumbItem className="shrink-0">
+          <BreadcrumbItem className="hidden shrink-0 md:inline-flex">
             <BreadcrumbLink asChild>
-              <Link href="/dashboard">Workbench</Link>
+              <Link href="/dashboard">Workspace</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          <BreadcrumbSeparator className="shrink-0" />
+          <BreadcrumbSeparator className="hidden shrink-0 md:inline-flex" />
           <BreadcrumbItem className="min-w-0">
             <BreadcrumbPage className="block truncate">{chat?.title ?? "Chat"}</BreadcrumbPage>
           </BreadcrumbItem>
@@ -86,7 +86,13 @@ export function DashboardBreadcrumb() {
   if (label) {
     return (
       <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
-        <BreadcrumbList>
+        <BreadcrumbList className="min-w-0 flex-nowrap overflow-hidden">
+          <BreadcrumbItem className="hidden shrink-0 md:inline-flex">
+            <BreadcrumbLink asChild>
+              <Link href="/dashboard">Workspace</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator className="hidden shrink-0 md:inline-flex" />
           <BreadcrumbItem>
             <BreadcrumbPage className="block truncate">{label}</BreadcrumbPage>
           </BreadcrumbItem>

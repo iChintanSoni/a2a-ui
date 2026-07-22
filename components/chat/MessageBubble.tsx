@@ -18,14 +18,14 @@ export const UserBubble = memo(function UserBubble({ item, a2uiEnabled = false, 
           part.kind === "text" ? (
             <div
               key={i}
-              className="rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground"
+              className="rounded-[13px] rounded-br-[4px] bg-foreground px-4 py-2.5 text-[13.5px] font-medium leading-relaxed text-background"
             >
               <PartRenderer part={part} a2uiEnabled={a2uiEnabled} />
             </div>
           ) : (
             <div
               key={i}
-              className="max-w-full overflow-hidden rounded-2xl border bg-background px-3 py-2 text-sm text-foreground shadow-sm"
+              className="max-w-full overflow-hidden rounded-[13px] rounded-br-[4px] border bg-background px-3 py-2 text-sm text-foreground shadow-xs"
             >
               <PartRenderer part={part} a2uiEnabled={a2uiEnabled} />
             </div>
@@ -65,7 +65,7 @@ interface AgentBubbleProps {
 export const AgentBubble = memo(function AgentBubble({ item, a2uiEnabled = false, onInspect }: AgentBubbleProps) {
   return (
     <div className="flex justify-start group">
-      <div className="relative max-w-[92%] rounded-2xl rounded-bl-sm bg-muted px-4 py-2.5 text-sm sm:max-w-[75%]">
+      <div className="relative max-w-[92%] rounded-[13px] rounded-bl-[4px] border bg-surface-2 px-4 py-2.5 text-sm sm:max-w-[75%]">
         {item.parts.map((part, i) => (
           <PartRenderer key={i} part={part} a2uiEnabled={a2uiEnabled} />
         ))}

@@ -39,10 +39,10 @@ import {
 
 type TaskFilter = "all" | TaskState;
 
-function stateBadgeVariant(state: TaskState): "default" | "secondary" | "outline" | "destructive" {
-  if (state === "completed") return "default";
+function stateBadgeVariant(state: TaskState): "brand" | "warning" | "outline" | "destructive" {
+  if (state === "completed") return "brand";
   if (state === "failed" || state === "rejected") return "destructive";
-  if (state === "working" || state === "submitted") return "secondary";
+  if (state === "input-required" || state === "auth-required") return "warning";
   return "outline";
 }
 
@@ -107,9 +107,9 @@ export default function TasksPage() {
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
-      <div>
-        <PageTitle>Tasks</PageTitle>
-        <Muted>
+      <div className="hidden sm:block">
+        <PageTitle className="text-[26px] font-bold tracking-tight">Tasks</PageTitle>
+        <Muted className="mt-2 text-sm font-medium">
           Explore task-centric runs across chats, including state, artifacts, and correlated
           warnings.
         </Muted>
@@ -122,7 +122,7 @@ export default function TasksPage() {
           onChange={(event) => setQuery(event.target.value)}
         />
         <Select value={stateFilter} onValueChange={(value) => setStateFilter(value as TaskFilter)}>
-          <SelectTrigger>
+          <SelectTrigger className="max-sm:hidden">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -144,6 +144,7 @@ export default function TasksPage() {
         <Button
           variant="outline"
           size="sm"
+          className="border-dashed border-border-strong bg-transparent"
           onClick={() =>
             dispatch(
               saveTaskFilterPreset({
@@ -157,13 +158,13 @@ export default function TasksPage() {
           Save current filter
         </Button>
         {presets.map((preset) => (
-          <div key={preset.id} className="flex items-center gap-1 rounded-full border bg-muted/30 px-2 py-1">
+          <div key={preset.id} className="flex items-center gap-1.5 rounded-full border bg-surface-2 px-3 py-1.25">
             <button
               onClick={() => {
                 setQuery(preset.query);
                 setStateFilter(preset.state);
               }}
-              className="text-xs text-muted-foreground transition-colors hover:text-foreground"
+              className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {preset.label}
             </button>
@@ -179,20 +180,25 @@ export default function TasksPage() {
       </div>
 
       {filteredTasks.length === 0 ? (
-        <div className="rounded-md border border-dashed p-8 text-center">
+        <div className="rounded-lg border border-dashed p-8 text-center">
           <Muted>No tasks match the current filters.</Muted>
         </div>
       ) : (
         <div className="space-y-3">
           {filteredTasks.map((task) => (
-            <div key={`${task.chatId}:${task.taskId}`} className="min-w-0 rounded-md border p-4">
+            <div key={`${task.chatId}:${task.taskId}`} className="min-w-0 rounded-lg border bg-card p-5 shadow-xs">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Small className="truncate">{task.taskId}</Small>
-                    <Badge variant={stateBadgeVariant(task.state)}>{task.state}</Badge>
+                    <span className="truncate font-mono text-[13.5px] font-semibold">{task.taskId}</span>
+                    <Badge variant={stateBadgeVariant(task.state)} className="gap-1.25">
+                      {(task.state === "completed" || task.state === "input-required") && (
+                        <span className="size-1.25 rounded-full bg-current" />
+                      )}
+                      {task.state}
+                    </Badge>
                     {task.validationWarningCount > 0 && (
-                      <Badge variant="outline">
+                      <Badge variant="warning">
                         {task.validationWarningCount} warning
                         {task.validationWarningCount === 1 ? "" : "s"}
                       </Badge>
@@ -201,15 +207,15 @@ export default function TasksPage() {
                       {task.artifactCount} artifact{task.artifactCount === 1 ? "" : "s"}
                     </Badge>
                   </div>
-                  <Caption className="mt-1 block truncate">
-                    {task.agentName} · Context {task.contextId}
+                  <Caption className="mt-1.5 block truncate text-[12px] text-fg-subtle">
+                    {task.agentName} · Context <span className="font-mono">{task.contextId}</span>
                   </Caption>
-                  <Muted className="mt-2 line-clamp-2">
+                  <p className="mt-2.5 text-[13.5px] leading-relaxed text-muted-foreground line-clamp-2">
                     {task.latestStatusText || "No status detail recorded for this task yet."}
-                  </Muted>
+                  </p>
                   <TaskTimeline stages={task.timelineStages} className="mt-3" />
                   {task.artifactNames.length > 0 && (
-                    <Caption className="mt-3 block break-words">
+                    <Caption className="mt-3 block break-words font-mono text-[11.5px] text-fg-subtle">
                       Artifacts: {task.artifactNames.join(", ")}
                     </Caption>
                   )}
@@ -225,10 +231,10 @@ export default function TasksPage() {
                   </Button>
                   <Link
                     href={`/dashboard/chat/${task.chatId}`}
-                    className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand-soft-foreground transition-colors hover:opacity-80"
                   >
                     Open chat
-                    <ArrowRightIcon className="size-4" />
+                    <ArrowRightIcon className="size-3.5" />
                   </Link>
                 </div>
               </div>

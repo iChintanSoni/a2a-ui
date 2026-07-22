@@ -45,10 +45,10 @@ export function SupportAgentWidget() {
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
-      <div className="flex max-w-3xl flex-col gap-2">
-        <Caption>Phase 1 Demo</Caption>
-        <PageTitle>Embeddable A2A Chat</PageTitle>
-        <P className="text-sm text-muted-foreground">
+      <div className="hidden max-w-3xl flex-col gap-2 sm:flex">
+        <Caption className="text-[11px] font-semibold tracking-[0.06em] text-fg-subtle uppercase">Phase 1 Demo</Caption>
+        <PageTitle className="text-[26px] font-bold tracking-tight">Embeddable A2A Chat</PageTitle>
+        <P className="text-sm font-medium text-muted-foreground">
           This route uses the new headless hooks and embeddable components directly, without the
           dashboard chat route owning session orchestration.
         </P>
@@ -88,11 +88,11 @@ export function SupportAgentWidget() {
             onRefresh={cardConnection.refreshAgentCard}
           />
 
-          <div className="rounded-md border p-4">
+          <div className="rounded-lg border bg-card p-5 shadow-xs">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <Caption>Configurator</Caption>
-                <P className="text-sm font-medium">React snippet</P>
+                <Caption className="text-[11px] font-semibold tracking-[0.06em] text-fg-subtle uppercase">Configurator</Caption>
+                <P className="text-sm font-bold">React snippet</P>
               </div>
               <Button size="sm" variant="outline" onClick={copySnippet}>
                 {copied ? <CheckIcon className="size-4" /> : <CopyIcon className="size-4" />}

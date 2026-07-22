@@ -72,28 +72,28 @@ export const ToolCallBlock = memo(function ToolCallBlock({ item, onInspect }: Pr
 
   const icon =
     phase === "running" ? (
-      <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-500" />
+      <Loader2 className="h-3.5 w-3.5 animate-spin text-warning-foreground" />
     ) : phase === "done" ? (
-      <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+      <CheckCircle className="h-3.5 w-3.5 text-brand-soft-foreground" />
     ) : (
-      <XCircle className="h-3.5 w-3.5 text-red-500" />
+      <XCircle className="h-3.5 w-3.5 text-destructive" />
     );
 
   return (
-    <div className="bg-muted/40 text-muted-foreground group relative flex w-fit max-w-full flex-col gap-0 rounded-lg border px-3 py-2 text-xs sm:max-w-sm">
+    <div className="group relative flex w-fit max-w-full flex-col gap-1.5 rounded-[9px] border bg-card px-3.75 py-3.25 text-xs shadow-xs sm:max-w-sm">
       <div className="flex items-start gap-2">
         {getToolIcon(toolName)}
-        <div className="flex min-w-0 flex-col gap-1">
-          <Small className="text-foreground/70">{toolName}</Small>
-          <Caption className="break-words">
-            <span className="text-muted-foreground/60">query: </span>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <Small className="font-mono text-[12.5px] font-semibold text-foreground">{toolName}</Small>
+          <Caption className="break-words text-[12.5px]">
+            <span className="text-fg-subtle">query: </span>
             {query}
           </Caption>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-brand-soft-foreground">
             {icon}
-            {phase === "running" && <span>{gerund}…</span>}
+            {phase === "running" && <span className="text-warning-foreground">{gerund}…</span>}
             {phase === "done" && <span>{doneLabel}</span>}
-            {phase === "error" && <span className="text-red-500">{base} failed</span>}
+            {phase === "error" && <span className="text-destructive">{base} failed</span>}
           </div>
         </div>
         {onInspect && (

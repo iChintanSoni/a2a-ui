@@ -1,21 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback } from "react";
+import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { BotIcon, MessageSquareIcon, StarIcon, ListTodoIcon } from "lucide-react";
+import { BotIcon, MessageSquareIcon, StarIcon, ListTodoIcon, MessageSquarePlusIcon } from "lucide-react";
 import { AddAgent } from "@/components/add-agent";
 import { WorkspaceActions } from "@/components/workspace-actions";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Muted, P, PageTitle } from "@/components/typography";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
+import { addChat } from "@/lib/features/chats/chatsSlice";
+import type { Chat, TaskStatusItem } from "@/lib/features/chats/chatsSlice";
 
 type MetricCardProps = {
   title: string;
@@ -27,18 +24,14 @@ type MetricCardProps = {
 
 function MetricCard({ title, value, description, href, icon: Icon }: MetricCardProps) {
   const content = (
-    <Card size="sm" className="h-full transition-colors hover:bg-muted/40">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardAction>
-          <Icon />
-        </CardAction>
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-semibold tabular-nums">{value}</div>
-        <CardDescription className="mt-2">{description}</CardDescription>
-      </CardContent>
-    </Card>
+    <div className="flex h-full flex-col gap-1.5 rounded-lg border bg-card p-3.5 shadow-xs transition-colors hover:bg-muted/40 sm:gap-3.5 sm:p-5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-muted-foreground sm:text-[13px]">{title}</span>
+        <Icon className="size-3.75 text-fg-subtle sm:size-4.25" />
+      </div>
+      <div className="text-[27px] leading-tight font-bold tracking-tight tabular-nums sm:text-[31px] sm:leading-none">{value}</div>
+      <p className="hidden text-[12.5px] leading-snug text-fg-subtle sm:block">{description}</p>
+    </div>
   );
 
   if (!href) return content;
@@ -50,7 +43,19 @@ function MetricCard({ title, value, description, href, icon: Icon }: MetricCardP
   );
 }
 
+function chatStatus(chat: Chat): { label: string; dotClassName: string } {
+  const lastTaskStatus = chat.items.findLast(
+    (item): item is TaskStatusItem => item.kind === "task-status",
+  );
+  if (lastTaskStatus?.state === "input-required") {
+    return { label: "input required", dotClassName: "bg-warning-foreground" };
+  }
+  return { label: "active", dotClassName: "bg-primary" };
+}
+
 export default function DashboardPage() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
   const agents = useAppSelector((state) => state.agents.agents);
   const chats = useAppSelector((state) => state.chats.chats);
   const activeChats = chats.filter((chat) => !chat.archived);
@@ -59,23 +64,49 @@ export default function DashboardPage() {
     (count, chat) => count + chat.items.filter((item) => item.kind === "task-status").length,
     0,
   );
+  const recentChats = [...activeChats].sort((a, b) => b.timestamp - a.timestamp).slice(0, 3);
+
+  const startChat = useCallback(
+    (agentUrl: string, agentName: string) => {
+      dispatch(setActiveAgent(agentUrl));
+      const chatId = crypto.randomUUID();
+      dispatch(
+        addChat({
+          id: chatId,
+          title: `Chat with ${agentName}`,
+          agentUrl,
+          agentName,
+          lastMessage: "",
+          timestamp: Date.now(),
+        }),
+      );
+      router.push(`/dashboard/chat/${chatId}`);
+    },
+    [dispatch, router],
+  );
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:gap-8 sm:p-6 md:p-8">
-      <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
+    <div className="flex min-w-0 flex-1 flex-col gap-5 overflow-y-auto p-4 sm:gap-8 sm:p-6 md:p-8">
+      <div className="flex flex-row items-center justify-between gap-4 lg:items-center">
         <div>
-          <PageTitle>A2A Workbench</PageTitle>
-          <P className="mt-1 text-sm text-muted-foreground">
+          <PageTitle className="text-[21px] font-bold tracking-tight sm:text-[26px]">
+            <span className="sm:hidden">Workbench</span>
+            <span className="hidden sm:inline">A2A Workbench</span>
+          </PageTitle>
+          <P className="mt-2 hidden max-w-[46ch] text-sm font-medium text-muted-foreground sm:block">
             Connect agents, inspect protocol behavior, and manage saved conversations.
           </P>
         </div>
-        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-          <WorkspaceActions />
-          <AddAgent variant="default" className="max-sm:flex-1" />
+        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:w-auto">
+          <div className="hidden sm:block">
+            <WorkspaceActions />
+          </div>
+          <AddAgent label="Add" variant="default" className="sm:hidden" />
+          <AddAgent variant="default" className="hidden sm:inline-flex" />
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <MetricCard
           href="/dashboard/agents"
           icon={BotIcon}
@@ -106,30 +137,95 @@ export default function DashboardPage() {
       </div>
 
       {agents.length === 0 ? (
-        <div className="flex min-h-75 flex-col items-center justify-center rounded-md border border-dashed bg-muted/10 p-6 text-center">
+        <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed bg-muted/10 p-5 text-center sm:min-h-75 sm:p-6">
           <Muted>No agents connected yet.</Muted>
           <P className="mt-2 max-w-xl text-sm text-muted-foreground">
             Connect an A2A-compatible agent or import a workspace to start testing.
           </P>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-            <WorkspaceActions />
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:mt-6">
+            <div className="hidden sm:block">
+              <WorkspaceActions />
+            </div>
             <AddAgent variant="default" />
           </div>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          <Button className="max-sm:flex-1" asChild>
-            <Link href="/dashboard/agents">Open Agent Library</Link>
-          </Button>
-          <Button variant="outline" className="max-sm:flex-1" asChild>
-            <Link href="/dashboard/conversations">Open Conversations</Link>
-          </Button>
-          <Button variant="outline" className="max-sm:flex-1" asChild>
-            <Link href="/dashboard/tasks">Open Tasks</Link>
-          </Button>
-          <Button variant="outline" className="max-sm:flex-1" asChild>
-            <Link href="/dashboard/embed">Open Embed Demo</Link>
-          </Button>
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+          <div className="min-w-0">
+            <h2 className="mb-3.5 text-sm font-bold tracking-tight">Connected agents</h2>
+            <div className="flex flex-col gap-2.5">
+              {agents.map((agent) => {
+                const agentName = agent.displayName ?? agent.card.name;
+                return (
+                  <div
+                    key={agent.id}
+                    className="flex items-center gap-3.5 rounded-lg border bg-card p-4 shadow-xs"
+                  >
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-soft-foreground">
+                      <BotIcon className="size-4.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="truncate text-[13.5px] font-semibold">{agentName}</span>
+                        <span
+                          className={`size-1.75 shrink-0 rounded-full ${
+                            agent.status === "connected"
+                              ? "bg-primary shadow-[0_0_0_3px_var(--brand-soft)]"
+                              : agent.status === "error"
+                                ? "bg-destructive shadow-[0_0_0_3px_var(--destructive-soft)]"
+                                : "bg-muted-foreground"
+                          }`}
+                        />
+                      </div>
+                      <div className="mt-0.5 truncate font-mono text-[11.5px] text-fg-subtle">{agent.url}</div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0 max-sm:hidden"
+                      disabled={agent.status !== "connected"}
+                      onClick={() => startChat(agent.url, agentName)}
+                    >
+                      <MessageSquarePlusIcon className="size-3.5" />
+                      New Chat
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="min-w-0">
+            <h2 className="mb-3.5 text-sm font-bold tracking-tight">Recent conversations</h2>
+            {recentChats.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-6 text-center">
+                <Muted>No conversations yet.</Muted>
+              </div>
+            ) : (
+              <div className="overflow-hidden rounded-lg border bg-card shadow-xs">
+                {recentChats.map((chat, index) => {
+                  const status = chatStatus(chat);
+                  return (
+                    <Link
+                      key={chat.id}
+                      href={`/dashboard/chat/${chat.id}`}
+                      className={`flex items-center gap-2.5 px-4 py-3.5 transition-colors hover:bg-muted/40 ${
+                        index < recentChats.length - 1 ? "border-b" : ""
+                      }`}
+                    >
+                      <span className={`size-1.75 shrink-0 rounded-full ${status.dotClassName}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-[13px] font-semibold">{chat.title}</div>
+                        <div className="truncate text-[11.5px] text-fg-subtle">
+                          {chat.agentName} · {status.label === "input required" ? "input required" : `${chat.items.length} items`}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

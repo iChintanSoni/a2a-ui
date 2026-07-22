@@ -27,7 +27,7 @@ import {
   RotateCcwIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Caption, Small, Muted } from "@/components/typography";
+import { Caption, Muted } from "@/components/typography";
 import { useToast } from "@/lib/toast";
 import { addChat, cloneChat } from "@/lib/features/chats/chatsSlice";
 import type {
@@ -255,19 +255,22 @@ export default function ChatPage({ params }: PageProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex flex-wrap items-start gap-2 border-b px-3 py-3 sm:items-center sm:px-4">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Small className="truncate leading-tight">{chat.title}</Small>
-          <Caption className="truncate">{chat.agentName}</Caption>
+      <div className="hidden flex-wrap items-start gap-2 border-b px-3 py-3.5 sm:flex sm:items-center sm:px-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="flex items-center gap-2 truncate text-[17px] font-bold leading-tight tracking-tight">
+            {chat.title}
+            <span className="size-1.75 shrink-0 rounded-full bg-primary shadow-[0_0_0_3px_var(--brand-soft)]" />
+          </span>
+          <Caption className="truncate text-[12.5px] font-medium">{chat.agentName}</Caption>
         </div>
 
         {/* Export */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
-              className="size-8 shrink-0"
+              className="size-8.5 shrink-0"
               title="Export chat"
               aria-label="Export chat"
             >
@@ -294,9 +297,9 @@ export default function ChatPage({ params }: PageProps) {
 
         {/* Debug */}
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
-          className={cn("size-8 shrink-0", eventsOpen && "bg-muted text-foreground")}
+          className={cn("size-8.5 shrink-0", eventsOpen && "bg-muted text-foreground")}
           onClick={() => {
             setEventsOpen((v) => !v);
             setDebugOpen(false);
@@ -310,9 +313,9 @@ export default function ChatPage({ params }: PageProps) {
 
         {/* Debug */}
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
-          className={cn("size-8 shrink-0", debugOpen && "bg-muted text-foreground")}
+          className={cn("size-8.5 shrink-0", debugOpen && "bg-muted text-foreground")}
           onClick={() => {
             setDebugOpen((v) => !v);
             setEventsOpen(false);
@@ -323,6 +326,8 @@ export default function ChatPage({ params }: PageProps) {
         >
           <BugIcon className="size-4" />
         </Button>
+
+        <div className="mx-0.5 hidden h-5.5 w-px shrink-0 bg-border sm:block" />
 
         {/* New Session */}
         <Button

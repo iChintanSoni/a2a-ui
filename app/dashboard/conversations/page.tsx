@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PageTitle, Muted, Caption, Small } from "@/components/typography";
+import { PageTitle, Muted, Caption } from "@/components/typography";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   removeChat,
@@ -38,6 +38,7 @@ import {
   type Chat,
 } from "@/lib/features/chats/chatsSlice";
 import { buildChatTraceJson, buildChatTraceMarkdown } from "@/lib/utils/chatExport";
+import { cn } from "@/lib/utils";
 
 type ArchiveFilter = "active" | "archived" | "all";
 type SortMode = "recent" | "title" | "agent";
@@ -159,10 +160,10 @@ export default function ConversationsPage() {
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
-      <div className="flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
+      <div className="hidden flex-col items-start justify-between gap-4 sm:flex lg:flex-row lg:items-center">
         <div>
-          <PageTitle>Conversations</PageTitle>
-          <Muted>Search, rename, archive, delete, and export saved chats.</Muted>
+          <PageTitle className="text-[26px] font-bold tracking-tight">Conversations</PageTitle>
+          <Muted className="mt-2 text-sm font-medium">Search, rename, archive, delete, and export saved chats.</Muted>
         </div>
         <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
           <Button
@@ -220,36 +221,38 @@ export default function ConversationsPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-[1fr_180px_160px]">
         <Input placeholder="Search titles, agents, messages, or tool calls" value={query} onChange={(e) => setQuery(e.target.value)} />
-        <Select value={archiveFilter} onValueChange={(value) => setArchiveFilter(value as ArchiveFilter)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="archived">Archived</SelectItem>
-            <SelectItem value="all">All chats</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={sort} onValueChange={(value) => setSort(value as SortMode)}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="recent">Sort recent</SelectItem>
-            <SelectItem value="title">Sort title</SelectItem>
-            <SelectItem value="agent">Sort agent</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="hidden sm:contents">
+          <Select value={archiveFilter} onValueChange={(value) => setArchiveFilter(value as ArchiveFilter)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="archived">Archived</SelectItem>
+              <SelectItem value="all">All chats</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={sort} onValueChange={(value) => setSort(value as SortMode)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">Sort recent</SelectItem>
+              <SelectItem value="title">Sort title</SelectItem>
+              <SelectItem value="agent">Sort agent</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {filteredChats.length === 0 ? (
-        <div className="rounded-md border border-dashed p-8 text-center">
+        <div className="rounded-lg border border-dashed p-8 text-center">
           <Muted>No conversations match the current filters.</Muted>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
           {filteredChats.map((chat) => (
-            <div key={chat.id} className="min-w-0 rounded-md border p-4">
+            <div key={chat.id} className="min-w-0 rounded-lg border bg-card p-4 shadow-xs sm:p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
                   <input
-                    className="mt-1"
+                    className="mt-1.5 accent-primary max-sm:hidden"
                     type="checkbox"
                     checked={selected.includes(chat.id)}
                     onChange={() => toggleSelected(chat.id)}
@@ -262,42 +265,57 @@ export default function ConversationsPage() {
                         <Button size="sm" onClick={saveRename}>Save</Button>
                       </div>
                     ) : (
-                      <Small className="truncate">{chat.title}</Small>
+                      <span className="block truncate text-[15px] font-bold">{chat.title}</span>
                     )}
-                    <Caption className="mt-1 block truncate">
+                    <Caption className="mt-1 block truncate text-[12px] text-fg-subtle">
                       {chat.agentName} · {new Date(chat.timestamp).toLocaleString()}
                     </Caption>
-                    {chat.lastMessage && <Muted className="mt-2 line-clamp-2">{chat.lastMessage}</Muted>}
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      <Badge variant={chat.archived ? "secondary" : "default"}>
-                        {chat.archived ? "Archived" : "Active"}
+                    {chat.lastMessage && (
+                      <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground line-clamp-2">
+                        {chat.lastMessage}
+                      </p>
+                    )}
+                    <div className="mt-3 flex flex-wrap gap-1.75">
+                      <Badge variant={chat.archived ? "outline" : "brand"} className="gap-1.25">
+                        {!chat.archived && <span className="size-1.25 rounded-full bg-current" />}
+                        {chat.archived ? "archived" : "active"}
                       </Badge>
-                      {chat.pinned && <Badge variant="outline">Pinned</Badge>}
+                      {chat.pinned && <Badge variant="outline">pinned</Badge>}
                       <Badge variant="outline">{chat.items.length} item{chat.items.length === 1 ? "" : "s"}</Badge>
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                  <Button className="justify-center" size="sm" variant="outline" asChild>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Button size="sm" variant="outline" className="max-sm:flex-1 max-sm:border-primary max-sm:bg-primary max-sm:text-primary-foreground" asChild>
                     <Link href={`/dashboard/chat/${chat.id}`}>Open</Link>
                   </Button>
-                  <Button className="justify-center" size="sm" variant="outline" onClick={() => startRename(chat)}>
-                    <PencilIcon className="size-4" />
-                    Rename
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="size-8 max-sm:h-8 max-sm:flex-1 max-sm:w-auto"
+                    onClick={() => startRename(chat)}
+                    title="Rename"
+                    aria-label="Rename"
+                  >
+                    <PencilIcon className="size-3.5" />
+                    <span className="sm:hidden">Rename</span>
                   </Button>
                   <Button
-                    size="sm"
+                    size="icon"
                     variant="outline"
+                    className={cn("size-8 max-sm:hidden", chat.pinned && "border-brand-soft bg-brand-soft text-brand-soft-foreground")}
                     onClick={() =>
                       dispatch(setChatPinned({ chatId: chat.id, pinned: !chat.pinned }))
                     }
+                    title={chat.pinned ? "Unpin" : "Pin"}
+                    aria-label={chat.pinned ? "Unpin" : "Pin"}
                   >
-                    <PinIcon className="size-4" />
-                    {chat.pinned ? "Unpin" : "Pin"}
+                    <PinIcon className="size-3.5" />
                   </Button>
                   <Button
-                    size="sm"
+                    size="icon"
                     variant="outline"
+                    className="size-8 max-sm:hidden"
                     onClick={() => {
                       const nextChatId = crypto.randomUUID();
                       dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId, mode: "prompt" }));
@@ -308,33 +326,33 @@ export default function ConversationsPage() {
                         ? "Clone prompts into a fresh run"
                         : "Start a new run from this chat context"
                     }
+                    aria-label="Clone prompt"
                   >
-                    <CopyIcon className="size-4" />
-                    <span className="truncate">
-                      {chat.items.some((item) => item.kind === "user-message") ? "Clone Prompt" : "New Run"}
-                    </span>
+                    <CopyIcon className="size-3.5" />
                   </Button>
                   <Button
-                    className="justify-center"
-                    size="sm"
+                    size="icon"
                     variant="outline"
+                    className="size-8 max-sm:hidden"
                     onClick={() => dispatch(setChatArchived({ chatId: chat.id, archived: !chat.archived }))}
+                    title={chat.archived ? "Restore" : "Archive"}
+                    aria-label={chat.archived ? "Restore" : "Archive"}
                   >
-                    {chat.archived ? <ArchiveRestoreIcon className="size-4" /> : <ArchiveIcon className="size-4" />}
-                    {chat.archived ? "Restore" : "Archive"}
+                    {chat.archived ? <ArchiveRestoreIcon className="size-3.5" /> : <ArchiveIcon className="size-3.5" />}
                   </Button>
                   <Button
-                    className="justify-center"
-                    size="sm"
-                    variant="destructive"
+                    size="icon"
+                    variant="outline"
+                    className="size-8 border-destructive-soft bg-destructive-soft text-destructive hover:bg-destructive-soft/70 max-sm:hidden"
                     onClick={() => {
                       if (!window.confirm(`Delete "${chat.title}"? This cannot be undone.`)) return;
                       dispatch(removeChat(chat.id));
                       setSelected((prev) => prev.filter((id) => id !== chat.id));
                     }}
+                    title="Delete"
+                    aria-label="Delete"
                   >
-                    <Trash2Icon className="size-4" />
-                    Delete
+                    <Trash2Icon className="size-3.5" />
                   </Button>
                 </div>
               </div>

@@ -14,15 +14,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function ModeToggle() {
+export function ModeToggle({ compact = false }: { compact?: boolean }) {
   const { setTheme, theme } = useTheme();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start">
+        <Button
+          variant="ghost"
+          size={compact ? "icon-sm" : "default"}
+          className={compact ? "shrink-0 text-muted-foreground" : "w-full justify-start"}
+          aria-label="Change appearance"
+          title={compact ? "Appearance" : undefined}
+        >
           <PaletteIcon data-icon="inline-start" />
-          Appearance
+          {!compact && "Appearance"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" side="right" className="w-44">

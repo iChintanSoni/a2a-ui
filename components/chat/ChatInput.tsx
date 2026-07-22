@@ -386,8 +386,8 @@ export function ChatInput({
       <PromptPresets presets={promptPresets} disabled={disabled} onApply={applyPromptPreset} />
 
       {isInputRequired && (
-        <div className="flex items-center gap-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-3 py-1.5 text-xs text-blue-700 dark:text-blue-300">
-          <span className="size-1.5 rounded-full bg-blue-500 shrink-0" />
+        <div className="flex items-center gap-1.5 rounded-[9px] border border-warning-soft bg-warning-soft/60 px-3 py-1.5 text-xs font-medium text-warning-foreground">
+          <span className="size-1.5 rounded-full bg-warning-foreground shrink-0" />
           Responding to agent — your message will continue the current task
         </div>
       )}
@@ -432,7 +432,7 @@ export function ChatInput({
         />
       )}
 
-      <div className="flex min-h-12 min-w-0 items-end gap-1.5 rounded-xl border bg-muted/30 px-2 py-2 focus-within:ring-1 focus-within:ring-ring sm:gap-2 sm:px-3">
+      <div className="flex min-h-12 min-w-0 items-end gap-1.5 rounded-[11px] border border-border-strong bg-card px-2.5 py-2 shadow-xs focus-within:ring-1 focus-within:ring-ring sm:gap-2 sm:px-3">
         {showFilePicker && (
           <>
             <input
@@ -474,7 +474,7 @@ export function ChatInput({
           onClick={addDataPart}
           disabled={disabled}
           className={cn(
-            "flex h-8 shrink-0 items-center rounded-md border px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+            "flex h-8 shrink-0 items-center rounded-md border bg-surface-2 px-2 font-mono text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
             disabled && "opacity-50 cursor-not-allowed"
           )}
           title="Add a JSON data part"

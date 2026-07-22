@@ -47,11 +47,11 @@ export const ArtifactBlock = memo(function ArtifactBlock({ item, a2uiEnabled = f
           : FileTextIcon;
 
   return (
-    <div className="group relative my-1 min-w-0 overflow-hidden rounded-lg border bg-card text-sm">
-      <div className="flex flex-wrap items-center gap-2 border-b bg-muted/40 px-3 py-1.5">
-        <MicroLabel>{label}</MicroLabel>
+    <div className="group relative my-1 min-w-0 overflow-hidden rounded-[9px] border bg-card text-sm shadow-xs">
+      <div className="flex flex-wrap items-center gap-2.5 border-b bg-surface-2 px-3.75 py-2.75">
+        <MicroLabel className="font-mono text-[11px] font-semibold tracking-[0.03em] text-foreground">{label.toUpperCase()}</MicroLabel>
         {item.description && (
-          <Caption className="min-w-0 truncate">{item.description}</Caption>
+          <Caption className="min-w-0 truncate text-[12px] text-fg-subtle">{item.description}</Caption>
         )}
         <div className="ms-auto flex flex-wrap items-center justify-end gap-2 sm:gap-3">
           {canEdit && !item.isStreaming && (

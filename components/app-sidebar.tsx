@@ -37,7 +37,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { addChat, setActiveChat } from "@/lib/features/chats/chatsSlice";
 import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
-import { AddAgent } from "@/components/add-agent";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Caption } from "@/components/typography";
 
@@ -83,7 +82,7 @@ const toolItems = [
   },
 ];
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ className, ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useAppDispatch();
@@ -131,18 +130,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   return (
-    <Sidebar {...props}>
-      <SidebarHeader>
+    <Sidebar className={className} {...props}>
+      <SidebarHeader className="px-1.5 pb-1 pt-2.5">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg">
+            <SidebarMenuButton asChild size="lg" className="hover:bg-transparent active:bg-transparent">
               <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <BotIcon />
+                <div className="flex aspect-square size-8.5 shrink-0 items-center justify-center rounded-[9px] bg-primary text-primary-foreground shadow-xs">
+                  <BotIcon className="size-[19px]" />
                 </div>
-                <div className="grid flex-1 text-start text-sm leading-tight">
-                  <span className="truncate font-semibold">A2A UI</span>
-                  <span className="truncate text-xs text-sidebar-foreground/70">Workbench</span>
+                <div className="grid flex-1 text-start leading-tight">
+                  <span className="truncate text-[14.5px] font-bold tracking-tight">A2A UI</span>
+                  <span className="truncate text-[11.5px] font-medium text-sidebar-foreground/60">Workbench</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -150,15 +149,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="gap-4 px-1.5">
         <SidebarGroup>
-          <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10.5px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
+            Workspace
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {workspaceItems.map(item => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
+                    className="text-[13.5px] font-medium data-active:font-semibold"
                     isActive={item.exact ? pathname === item.href : pathname.startsWith(item.href)}
                   >
                     <Link href={item.href}>
@@ -167,7 +169,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </Link>
                   </SidebarMenuButton>
                   {typeof workspaceCounts[item.href] === "number" && (
-                    <SidebarMenuBadge>{workspaceCounts[item.href]}</SidebarMenuBadge>
+                    <SidebarMenuBadge className="rounded-full border border-sidebar-border bg-sidebar-accent/40 font-semibold text-sidebar-foreground/60">
+                      {workspaceCounts[item.href]}
+                    </SidebarMenuBadge>
                   )}
                 </SidebarMenuItem>
               ))}
@@ -176,12 +180,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Tools</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10.5px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
+            Tools
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {toolItems.map(item => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={pathname.startsWith(item.href)}>
+                  <SidebarMenuButton
+                    asChild
+                    className="text-[13.5px] font-medium data-active:font-semibold"
+                    isActive={pathname.startsWith(item.href)}
+                  >
                     <Link href={item.href}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -195,7 +205,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Agents */}
         <SidebarGroup>
-          <SidebarGroupLabel>Agents</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10.5px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
+            Agents
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {agents.length === 0 ? (
@@ -209,17 +221,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <SidebarMenuButton
                         asChild
                         isActive={isActive}
+                        className="text-[13px] font-medium"
                         tooltip={agent.displayName ?? agent.card.name}
                       >
                         <Link href={settingsHref}>
-                          <BotIcon />
+                          <BotIcon className="text-sidebar-foreground/50" />
                           <span className="truncate">{agent.displayName ?? agent.card.name}</span>
                           <CircleIcon
-                            className={`ms-auto size-2 shrink-0 fill-current ${
+                            className={`ms-auto size-1.75 shrink-0 fill-current ${
                               agent.status === "connected"
-                                ? "text-green-500"
+                                ? "text-primary"
                                 : agent.status === "error"
-                                  ? "text-red-500"
+                                  ? "text-destructive"
                                   : "text-muted-foreground"
                             }`}
                           />
@@ -250,7 +263,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Recent Chats */}
         <SidebarGroup>
-          <SidebarGroupLabel>Recent Chats</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10.5px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
+            Recent Chats
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {recentChats.length === 0 ? (
@@ -261,14 +276,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuButton
                       isActive={chat.id === activeChatId}
                       onClick={() => handleChatClick(chat.id)}
+                      className="h-auto items-start py-1.5"
                     >
-                      <MessageSquareIcon />
-                      <div className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm leading-tight">
+                      <MessageSquareIcon className="mt-0.5 text-sidebar-foreground/50" />
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="truncate text-[12.5px] leading-tight font-semibold">
                           {chat.title}
                           {chat.pinned ? <PinIcon className="ms-1 inline size-3" /> : null}
                         </span>
-                        <Caption className="truncate">{chat.agentName}</Caption>
+                        <Caption className="truncate text-[11px] text-sidebar-foreground/45">{chat.agentName}</Caption>
                       </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -279,9 +295,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="gap-1 px-4 py-3">
-        <ModeToggle />
-        <AddAgent className="w-full justify-start" variant="ghost" />
+      <SidebarFooter className="border-t border-sidebar-border px-3.5 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex size-7 shrink-0 items-center justify-center rounded-full border border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground/70">
+            <BotIcon className="size-3.5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[12.5px] font-semibold leading-tight">Local workspace</div>
+              <div className="truncate text-[11px] font-medium text-sidebar-foreground/45">Stored in this browser</div>
+          </div>
+          <ModeToggle compact />
+        </div>
       </SidebarFooter>
 
       <SidebarRail />

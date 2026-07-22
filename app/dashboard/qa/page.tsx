@@ -39,17 +39,17 @@ export default function QaPage() {
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
-      <div>
-        <PageTitle>QA Harness</PageTitle>
-        <Muted>Save repeatable agent checks, run suites, and export pass/fail reports.</Muted>
+      <div className="hidden sm:block">
+        <PageTitle className="text-[26px] font-bold tracking-tight">QA Harness</PageTitle>
+        <Muted className="mt-2 text-sm font-medium">Save repeatable agent checks, run suites, and export pass/fail reports.</Muted>
       </div>
 
       {agents.length === 0 ? (
-        <div className="rounded-md border border-dashed p-8 text-center">
+        <div className="rounded-lg border border-dashed p-8 text-center">
           <Muted>Add an agent before creating QA suites.</Muted>
         </div>
       ) : (
-        <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
+        <div className="grid min-w-0 items-start gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
           <SuiteBuilder
             agents={agents}
             selectedAgent={selectedAgent}

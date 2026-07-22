@@ -44,9 +44,10 @@ type AddAgentProps = {
   className?: string;
   variant?: ComponentProps<typeof Button>["variant"];
   size?: ComponentProps<typeof Button>["size"];
+  label?: string;
 };
 
-export function AddAgent({ className, variant = "outline", size }: AddAgentProps) {
+export function AddAgent({ className, variant = "outline", size, label = "Add Agent" }: AddAgentProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -150,7 +151,7 @@ export function AddAgent({ className, variant = "outline", size }: AddAgentProps
       <DialogTrigger asChild>
         <Button variant={variant} size={size} className={className}>
           <PlusIcon data-icon="inline-start" />
-          Add Agent
+          {label}
         </Button>
       </DialogTrigger>
       <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-md">

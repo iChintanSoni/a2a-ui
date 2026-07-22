@@ -41,20 +41,20 @@ export function SessionInfoBar({
   const truncated = contextId.length > 20 ? `${contextId.slice(0, 8)}…${contextId.slice(-4)}` : contextId;
 
   return (
-    <div className="border-b bg-muted/30">
+    <div className="border-b bg-surface-2">
       {/* Summary row — always visible */}
-      <div className="flex min-w-0 items-center gap-2 px-3 py-1.5 text-xs text-muted-foreground sm:px-4">
-        <MicroLabel>Session</MicroLabel>
+      <div className="flex min-w-0 items-center gap-2.5 px-3 py-2 text-xs text-muted-foreground sm:px-4">
+        <MicroLabel className="tracking-[0.08em] text-fg-subtle">Session</MicroLabel>
 
         {/* Context ID */}
         <button
           onClick={handleCopy}
           title="Copy context ID"
-          className="flex min-w-0 items-center gap-1 rounded px-1.5 py-0.5 font-mono transition-colors hover:bg-muted"
+          className="flex min-w-0 items-center gap-1 rounded px-1.5 py-0.5 font-mono text-foreground transition-colors hover:bg-muted"
         >
           <span>{truncated}</span>
           {copied ? (
-            <CheckIcon className="size-3 text-green-500" />
+            <CheckIcon className="size-3 text-primary" />
           ) : (
             <CopyIcon className="size-3" />
           )}

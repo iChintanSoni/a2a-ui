@@ -3,7 +3,7 @@
 import { DownloadIcon, PlayIcon, Trash2Icon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Caption, Muted, Small } from "@/components/typography";
+import { Caption, Muted } from "@/components/typography";
 import { downloadCsv, downloadJson, passRate } from "@/lib/features/qa/qaUtils";
 import type { QaSuite, QaSuiteRun } from "@/lib/features/qa/types";
 import { useAppDispatch } from "@/lib/hooks";
@@ -39,7 +39,7 @@ export function SavedSuites({ suites, runs, runningSuiteId, onRun }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Small>Saved suites</Small>
+        <span className="text-sm font-bold">Saved suites</span>
         <Button
           variant="outline"
           size="sm"
@@ -53,7 +53,7 @@ export function SavedSuites({ suites, runs, runningSuiteId, onRun }: Props) {
       </div>
 
       {suites.length === 0 ? (
-        <div className="rounded-md border border-dashed p-6 text-center">
+        <div className="rounded-lg border border-dashed p-6 text-center">
           <Muted>No suites saved for this agent.</Muted>
         </div>
       ) : (
@@ -62,16 +62,17 @@ export function SavedSuites({ suites, runs, runningSuiteId, onRun }: Props) {
           const rate = passRate(runs, suite.id);
           const isRunning = runningSuiteId === suite.id;
           return (
-            <div key={suite.id} className="min-w-0 rounded-md border p-4">
+            <div key={suite.id} className="min-w-0 rounded-lg border bg-card p-4.5 shadow-xs">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Small className="truncate">{suite.name}</Small>
+                    <span className="truncate text-[14px] font-bold">{suite.name}</span>
                     <Badge variant="outline">
                       {suite.cases.length} case{suite.cases.length === 1 ? "" : "s"}
                     </Badge>
                     {latestRun && (
-                      <Badge variant={latestRun.passed ? "default" : "destructive"}>
+                      <Badge variant={latestRun.passed ? "brand" : "destructive"} className="gap-1.25">
+                        {latestRun.passed && <span className="size-1.25 rounded-full bg-current" />}
                         {latestRun.passed ? "Passing" : "Failing"}
                       </Badge>
                     )}

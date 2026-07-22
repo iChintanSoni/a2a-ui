@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Caption, Muted, Small } from "@/components/typography";
+import { Caption, Small } from "@/components/typography";
 import { useAppDispatch } from "@/lib/hooks";
 import { createDemoSmokeSuite } from "@/lib/features/qa/demoSuite";
 import { saveQaSuite } from "@/lib/features/qa/qaSlice";
@@ -205,11 +205,11 @@ export function SuiteBuilder({ agents, selectedAgent, agentUrl, onAgentChange }:
   };
 
   return (
-    <div className="flex min-w-0 flex-col gap-4 rounded-md border p-4">
+    <div className="flex min-w-0 flex-col gap-4 rounded-lg border bg-card p-5 shadow-xs">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <ClipboardCheckIcon className="size-4" />
-          <Small>Suite builder</Small>
+          <ClipboardCheckIcon className="size-4 text-fg-subtle" />
+          <span className="text-sm font-bold">Suite builder</span>
         </div>
         <div className="flex items-center gap-1">
           <input ref={importFileRef} type="file" accept=".json,.csv" className="hidden" onChange={handleImportFile} />
@@ -249,7 +249,7 @@ export function SuiteBuilder({ agents, selectedAgent, agentUrl, onAgentChange }:
           <Label>Cases in suite</Label>
           <div className="flex flex-col gap-1">
             {draftCases.map((c, i) => (
-              <div key={c.id} className="flex items-center justify-between rounded bg-muted/30 px-2 py-1.5 text-sm">
+              <div key={c.id} className="flex items-center justify-between rounded-md bg-surface-2 px-2.5 py-1.75 text-sm">
                 <span className="truncate">{c.name}</span>
                 <div className="flex items-center gap-1 shrink-0 ml-2">
                   {c.dataTable && <Badge variant="outline" className="text-xs">×{c.dataTable.length}</Badge>}

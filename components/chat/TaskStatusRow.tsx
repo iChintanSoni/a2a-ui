@@ -34,18 +34,18 @@ const STATE_CONFIG: Record<
   working: {
     icon: Loader2,
     label: "Working…",
-    className: "text-amber-500",
+    className: "text-warning-foreground",
     spin: true,
   },
   "input-required": {
     icon: AlertCircle,
     label: "Input required",
-    className: "text-blue-500",
+    className: "text-warning-foreground",
   },
   completed: {
     icon: CheckCircle2,
     label: "Completed",
-    className: "text-green-500",
+    className: "text-brand-soft-foreground",
   },
   canceled: {
     icon: Ban,
@@ -65,7 +65,7 @@ const STATE_CONFIG: Record<
   "auth-required": {
     icon: ShieldAlert,
     label: "Auth required",
-    className: "text-amber-500",
+    className: "text-warning-foreground",
   },
   unknown: {
     icon: HelpCircle,
@@ -81,19 +81,19 @@ export function TaskStatusRow({ item, timelineStages = [], onInspect, onRetry }:
   // Render a prominent callout card for input-required state
   if (item.state === "input-required") {
     return (
-      <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-950/40 group relative">
-        <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-xs font-medium mb-1">
+      <div className="group relative rounded-[9px] border border-warning-soft bg-warning-soft/60 px-4 py-3">
+        <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-warning-foreground">
           <AlertCircle className="size-3.5 shrink-0" />
           <span>Agent needs your input</span>
         </div>
         {item.statusMessage && item.statusMessage.parts.length > 0 ? (
-          <div className="text-sm text-blue-900 dark:text-blue-200">
+          <div className="text-sm text-foreground">
             {item.statusMessage.parts.map((part, i) => (
               <PartRenderer key={i} part={part} />
             ))}
           </div>
         ) : (
-          <p className="text-sm text-blue-700 dark:text-blue-300">
+          <p className="text-sm text-warning-foreground">
             Please provide additional information to continue.
           </p>
         )}
