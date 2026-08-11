@@ -90,7 +90,7 @@
     "eslint": "^9.39.4",
     "eslint-config-next": "^16",
     "happy-dom": "^20",
-    "husky": "^9.1.7",
+    "husky": "^9",
     "prettier": "^3",
     "prettier-plugin-tailwindcss": "^0",
     "shadcn": "^4",
