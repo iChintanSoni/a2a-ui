@@ -20,6 +20,9 @@
     "mime": "^4",
     "zod": "^4"
   },
+  "overrides": {
+    "uuid": "^14.0.1"
+  },
   "imports": {
     "#src/*": "./src/*"
   },
