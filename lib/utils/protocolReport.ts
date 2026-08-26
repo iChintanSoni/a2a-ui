@@ -43,9 +43,10 @@ export function buildProtocolReport(input: {
     new Set(
       [
         ...input.logs.map(
-          (log) => log.transport?.protocol ?? log.transport?.jsonRpcMethod ?? log.transport?.httpMethod,
+          log =>
+            log.transport?.protocol ?? log.transport?.jsonRpcMethod ?? log.transport?.httpMethod,
         ),
-        ...executionEvents.map((event) => {
+        ...executionEvents.map(event => {
           const transport = event.details?.transport;
           if (!transport || typeof transport !== "object") return undefined;
           const details = transport as {
@@ -60,15 +61,15 @@ export function buildProtocolReport(input: {
             undefined
           );
         }),
-      ]
-        .filter((value): value is string => typeof value === "string" && value.length > 0)
-    )
+      ].filter((value): value is string => typeof value === "string" && value.length > 0),
+    ),
   );
 
   const failedRequests = input.logs.filter(
-    (log) =>
+    log =>
       log.type === "error" ||
-      (log.transport?.status != null && (log.transport.status < 200 || log.transport.status >= 400))
+      (log.transport?.status != null &&
+        (log.transport.status < 200 || log.transport.status >= 400)),
   );
 
   return maskSecrets({

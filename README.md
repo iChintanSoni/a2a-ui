@@ -13,25 +13,27 @@ npx a2a-ui --port 3100 --open
 
 ## Documentation
 
-| Section | Description |
-|---------|-------------|
-| [Getting Started](docs/getting-started.md) | Install, run, demo server, Docker, first-run walkthrough |
-| **Dashboard features** | |
-| [Workbench](docs/features/workbench.md) | Metrics hub, workspace import/export |
-| [Agent Library](docs/features/agent-library.md) | Connect, search, filter, and manage agents |
-| [Agent Settings](docs/features/agent-settings.md) | Auth, headers, compliance, card inspection |
-| [Chat](docs/features/chat.md) | Send messages, stream artifacts, debug, export |
-| [Conversations](docs/features/conversations.md) | Search, clone, batch export, archive |
-| [Tasks](docs/features/tasks.md) | Task-centric view, state filter, artifacts, presets |
-| [QA Harness](docs/features/qa-harness.md) | Build suites, assert, parametrize, run headlessly |
-| [Compare Runs](docs/features/compare-runs.md) | Side-by-side prompt/output/artifact/timing diff |
-| **Embeddable API** | |
-| [Embedding Guide](docs/embed.md) | Step-by-step integration into your own app |
-| [Hooks Reference](docs/api/hooks.md) | `useA2AConnection`, `useA2ASession`, `useA2AMessages`, `useA2ADebug` |
-| [Components Reference](docs/api/components.md) | `A2AChat`, `A2AAgentCard`, `A2ADebugPanel`, `EventExplorer` |
-| **Internals** | |
-| [Architecture](docs/architecture.md) | Redux slices, IndexedDB, hook chain, event flow |
-| [Contributing](CONTRIBUTING.md) | Local setup, branch naming, tests, submitting a PR |
+| Section                                             | Description                                                          |
+| --------------------------------------------------- | -------------------------------------------------------------------- |
+| [Getting Started](docs/getting-started.md)          | Install, run, demo server, Docker, first-run walkthrough             |
+| **Dashboard features**                              |                                                                      |
+| [Workbench](docs/features/workbench.md)             | Metrics hub, workspace import/export                                 |
+| [Example Gallery](docs/features/example-presets.md) | Curated agent presets & importable workspace templates               |
+| [Agent Library](docs/features/agent-library.md)     | Connect, search, filter, and manage agents                           |
+| [Agent Settings](docs/features/agent-settings.md)   | Auth, headers, compliance, card inspection                           |
+| [Chat](docs/features/chat.md)                       | Send messages, stream artifacts, debug, export                       |
+| [Conversations](docs/features/conversations.md)     | Search, clone, batch export, archive                                 |
+| [Tasks](docs/features/tasks.md)                     | Task-centric view, state filter, artifacts, presets                  |
+| [QA Harness](docs/features/qa-harness.md)           | Build suites, assert, parametrize, run headlessly                    |
+| [Compare Runs](docs/features/compare-runs.md)       | Side-by-side prompt/output/artifact/timing diff                      |
+| **Embeddable API**                                  |                                                                      |
+| [Embedding Guide](docs/embed.md)                    | Step-by-step integration into your own app                           |
+| [Hooks Reference](docs/api/hooks.md)                | `useA2AConnection`, `useA2ASession`, `useA2AMessages`, `useA2ADebug` |
+| [Components Reference](docs/api/components.md)      | `A2AChat`, `A2AAgentCard`, `A2ADebugPanel`, `EventExplorer`          |
+| **Internals & Standards**                           |                                                                      |
+| [Architecture](docs/architecture.md)                | Redux slices, IndexedDB, hook chain, event flow                      |
+| [Accessibility Guide](docs/accessibility.md)        | WCAG standards, keyboard navigation, screen reader support           |
+| [Contributing](CONTRIBUTING.md)                     | Local setup, branch naming, tests, submitting a PR                   |
 
 ## Useful References
 

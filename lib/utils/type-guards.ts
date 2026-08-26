@@ -21,7 +21,10 @@ export function getString(obj: unknown, key: string): string | undefined {
 }
 
 /** Safely reads a nested property path from an unknown object. */
-export function getNestedRecord(obj: unknown, ...keys: string[]): Record<string, unknown> | undefined {
+export function getNestedRecord(
+  obj: unknown,
+  ...keys: string[]
+): Record<string, unknown> | undefined {
   let cur: unknown = obj;
   for (const key of keys) {
     if (!isRecord(cur)) return undefined;

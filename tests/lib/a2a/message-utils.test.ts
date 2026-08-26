@@ -65,8 +65,7 @@ describe("buildOutgoingMessage", () => {
 
     expect(message.parts[0]).toEqual({
       kind: "text",
-      text:
-        '<system_context hidden="true">\nThis request came from the embedded widget.\n</system_context>\n\nWhat is the status?',
+      text: '<system_context hidden="true">\nThis request came from the embedded widget.\n</system_context>\n\nWhat is the status?',
     });
   });
 

@@ -32,7 +32,7 @@ export function ChatMessages({
   const [inspectData, setInspectData] = useState<unknown>(null);
 
   const lastAgentText = useMemo(() => {
-    const last = chat.items.findLast((i) => i.kind === "agent-message");
+    const last = chat.items.findLast(i => i.kind === "agent-message");
     return last ? getTextPartsText(last.parts) : "";
   }, [chat.items]);
 
@@ -55,8 +55,9 @@ export function ChatMessages({
 
   if (chat.items.length === 0) {
     return (
-      <div className="flex min-h-0 flex-1 basis-0 items-center justify-center text-muted-foreground text-sm">
-        Send a message to start chatting with <span className="font-medium ms-1">{chat.agentName}</span>.
+      <div className="text-muted-foreground flex min-h-0 flex-1 basis-0 items-center justify-center text-sm">
+        Send a message to start chatting with{" "}
+        <span className="ms-1 font-medium">{chat.agentName}</span>.
       </div>
     );
   }

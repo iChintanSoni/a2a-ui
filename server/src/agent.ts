@@ -3,7 +3,12 @@ import { type Part } from "@a2a-js/sdk";
 import { type ReactAgent } from "langchain";
 import { z } from "zod";
 import { agent } from "#src/agentTools.ts";
-import { buildMessageContent, contentToText, shouldReturnA2UIDemo, type ContentBlock } from "#src/contentBuilder.ts";
+import {
+  buildMessageContent,
+  contentToText,
+  shouldReturnA2UIDemo,
+  type ContentBlock,
+} from "#src/contentBuilder.ts";
 import { publishToolCallEvent, publishA2UIDemo } from "#src/eventPublisher.ts";
 
 // ── Leveled logger ───────────────────────────────────────────────────────────
@@ -42,7 +47,11 @@ const MAX_INPUT_CHARS = 32_000;
 
 function isAbortError(error: unknown): boolean {
   if (!(error instanceof Error)) return false;
-  return error.name === "AbortError" || error.message.includes("AbortError") || error.message.includes("aborted");
+  return (
+    error.name === "AbortError" ||
+    error.message.includes("AbortError") ||
+    error.message.includes("aborted")
+  );
 }
 
 // ─── Stream handler ───────────────────────────────────────────────────────────
@@ -54,7 +63,7 @@ async function streamAgentResponse(
   contextId: string,
   taskId: string,
   eventBus: ExecutionEventBus,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) {
   const stream = await agentInstance.stream(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -74,10 +83,18 @@ async function streamAgentResponse(
     if (step !== "tools" && lastMsg) {
       if (lastMsg.tool_calls?.length) {
         for (const tc of lastMsg.tool_calls) {
-          const query = typeof tc.args?.query === "string" ? tc.args.query : JSON.stringify(tc.args);
+          const query =
+            typeof tc.args?.query === "string" ? tc.args.query : JSON.stringify(tc.args);
           toolQueryMap.set(tc.id, { toolName: tc.name, query });
           log(`[Tool Call] ${tc.name} executing with args:`, query);
-          publishToolCallEvent(eventBus, { taskId, contextId, artifactId: tc.id, phase: "running", toolName: tc.name, query });
+          publishToolCallEvent(eventBus, {
+            taskId,
+            contextId,
+            artifactId: tc.id,
+            phase: "running",
+            toolName: tc.name,
+            query,
+          });
         }
       } else {
         const text = contentToText(lastMsg.content);
@@ -91,13 +108,17 @@ async function streamAgentResponse(
     } else if (step === "tools") {
       for (const msg of messages) {
         if (!msg.tool_call_id) continue;
-        const { toolName: resolvedToolName, query } = toolQueryMap.get(msg.tool_call_id) ?? { toolName: "unknown", query: "" };
+        const { toolName: resolvedToolName, query } = toolQueryMap.get(msg.tool_call_id) ?? {
+          toolName: "unknown",
+          query: "",
+        };
         toolQueryMap.delete(msg.tool_call_id);
 
         const rawContent = typeof msg.content === "string" ? msg.content : "";
         debug(
           `[Tool Result] ${resolvedToolName}:`,
-          rawContent.substring(0, TOOL_LOG_PREVIEW_CHARS) + (rawContent.length > TOOL_LOG_PREVIEW_CHARS ? "..." : "")
+          rawContent.substring(0, TOOL_LOG_PREVIEW_CHARS) +
+            (rawContent.length > TOOL_LOG_PREVIEW_CHARS ? "..." : ""),
         );
 
         if (resolvedToolName === "generate_image") {
@@ -113,7 +134,15 @@ async function streamAgentResponse(
             if (parsed.success && parsed.image_base64) {
               const mimeType = parsed.mimeType ?? "image/png";
               const ext = mimeType.split("/")[1] ?? "png";
-              publishToolCallEvent(eventBus, { taskId, contextId, artifactId: msg.tool_call_id, phase: "done", toolName: resolvedToolName, query, resultCount: 1 });
+              publishToolCallEvent(eventBus, {
+                taskId,
+                contextId,
+                artifactId: msg.tool_call_id,
+                phase: "done",
+                toolName: resolvedToolName,
+                query,
+                resultCount: 1,
+              });
               eventBus.publish({
                 kind: "artifact-update",
                 taskId,
@@ -124,17 +153,37 @@ async function streamAgentResponse(
                   artifactId: crypto.randomUUID(),
                   name: "generated-image",
                   description: `Generated image for: ${query}`,
-                  parts: [{ kind: "file", file: { name: `generated-image.${ext}`, mimeType, bytes: parsed.image_base64 } }],
+                  parts: [
+                    {
+                      kind: "file",
+                      file: {
+                        name: `generated-image.${ext}`,
+                        mimeType,
+                        bytes: parsed.image_base64,
+                      },
+                    },
+                  ],
                 },
               });
             } else {
               imageToolError = parsed.error ?? "Image generation failed without an error message.";
             }
           } catch (error) {
-            imageToolError = error instanceof Error ? `Unable to parse image tool result: ${error.message}` : String(error);
+            imageToolError =
+              error instanceof Error
+                ? `Unable to parse image tool result: ${error.message}`
+                : String(error);
           }
           if (imageToolError) {
-            publishToolCallEvent(eventBus, { taskId, contextId, artifactId: msg.tool_call_id, phase: "error", toolName: resolvedToolName, query, error: imageToolError });
+            publishToolCallEvent(eventBus, {
+              taskId,
+              contextId,
+              artifactId: msg.tool_call_id,
+              phase: "error",
+              toolName: resolvedToolName,
+              query,
+              error: imageToolError,
+            });
           }
           continue;
         }
@@ -144,14 +193,22 @@ async function streamAgentResponse(
           const parsed: unknown = JSON.parse(rawContent);
           const results = Array.isArray(parsed)
             ? parsed
-            : (typeof parsed === "object" && parsed !== null && "results" in parsed)
+            : typeof parsed === "object" && parsed !== null && "results" in parsed
               ? (parsed as { results: unknown }).results
               : undefined;
           resultCount = Array.isArray(results) ? results.length : 0;
         } catch {
           // non-JSON content — resultCount stays 0
         }
-        publishToolCallEvent(eventBus, { taskId, contextId, artifactId: msg.tool_call_id, phase: "done", toolName: resolvedToolName, query, resultCount });
+        publishToolCallEvent(eventBus, {
+          taskId,
+          contextId,
+          artifactId: msg.tool_call_id,
+          phase: "done",
+          toolName: resolvedToolName,
+          query,
+          resultCount,
+        });
       }
     }
   }
@@ -191,7 +248,12 @@ export const chatAgentExecutor: AgentExecutor = {
             kind: "message",
             messageId: crypto.randomUUID(),
             role: "agent",
-            parts: [{ kind: "text", text: `Input too large (${totalInputChars.toLocaleString()} characters). Please shorten your message and try again.` }],
+            parts: [
+              {
+                kind: "text",
+                text: `Input too large (${totalInputChars.toLocaleString()} characters). Please shorten your message and try again.`,
+              },
+            ],
           },
         },
       });
@@ -227,7 +289,14 @@ export const chatAgentExecutor: AgentExecutor = {
         return;
       }
 
-      const result = await streamAgentResponse(agent, content, contextId, taskId, eventBus, abortController.signal);
+      const result = await streamAgentResponse(
+        agent,
+        content,
+        contextId,
+        taskId,
+        eventBus,
+        abortController.signal,
+      );
       let responseText = result.responseText;
       const { usageMetadata } = result;
 
@@ -276,7 +345,12 @@ export const chatAgentExecutor: AgentExecutor = {
             kind: "message",
             messageId: crypto.randomUUID(),
             role: "agent",
-            parts: [{ kind: "text", text: "An error occurred while processing your request. Please try again." }],
+            parts: [
+              {
+                kind: "text",
+                text: "An error occurred while processing your request. Please try again.",
+              },
+            ],
           },
         },
       });

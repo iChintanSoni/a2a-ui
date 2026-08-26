@@ -10,12 +10,12 @@ interface Props {
 
 export function JsonInspectModal({ data, open, onClose }: Props) {
   return (
-    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+    <Dialog open={open} onOpenChange={v => !v && onClose()}>
+      <DialogContent className="flex max-h-[80vh] max-w-2xl flex-col">
         <DialogHeader>
           <DialogTitle className="text-sm font-medium">Raw JSON</DialogTitle>
         </DialogHeader>
-        <pre className="overflow-auto flex-1 rounded bg-muted p-3 text-xs font-mono">
+        <pre className="bg-muted flex-1 overflow-auto rounded p-3 font-mono text-xs">
           {JSON.stringify(data, null, 2)}
         </pre>
       </DialogContent>

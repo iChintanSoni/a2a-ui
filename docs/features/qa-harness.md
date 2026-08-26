@@ -9,12 +9,12 @@ on demand or headlessly in CI, and track pass rates over time.
 
 ## Concepts
 
-| Term | Meaning |
-|------|---------|
-| **Suite** | A named collection of test cases for one agent |
-| **Case** | A single test: one prompt + expected state/output + assertions |
-| **Run** | One execution of a suite; produces a pass/fail result per case |
-| **Assertion** | A condition checked against the agent's response |
+| Term          | Meaning                                                        |
+| ------------- | -------------------------------------------------------------- |
+| **Suite**     | A named collection of test cases for one agent                 |
+| **Case**      | A single test: one prompt + expected state/output + assertions |
+| **Run**       | One execution of a suite; produces a pass/fail result per case |
+| **Assertion** | A condition checked against the agent's response               |
 
 ---
 
@@ -32,15 +32,15 @@ The left panel builds a suite step by step.
 
 Fill in one case at a time:
 
-| Field | Description |
-|-------|-------------|
-| **Case name** | Identifies the case in run results |
-| **Prompt** | The text sent to the agent |
-| **Expected task state** | The final state the task must reach (e.g. `completed`) |
-| **Output mode** | The kind of output expected: `any`, `text`, `json`, `artifact` |
-| **Metadata JSON** | A JSON object sent as `message.metadata` |
-| **Assertions** | One or more checks (see below) |
-| **Data table** | Optional parametrize table (see [Parametrized Tests](#parametrized-tests)) |
+| Field                   | Description                                                                |
+| ----------------------- | -------------------------------------------------------------------------- |
+| **Case name**           | Identifies the case in run results                                         |
+| **Prompt**              | The text sent to the agent                                                 |
+| **Expected task state** | The final state the task must reach (e.g. `completed`)                     |
+| **Output mode**         | The kind of output expected: `any`, `text`, `json`, `artifact`             |
+| **Metadata JSON**       | A JSON object sent as `message.metadata`                                   |
+| **Assertions**          | One or more checks (see below)                                             |
+| **Data table**          | Optional parametrize table (see [Parametrized Tests](#parametrized-tests)) |
 
 Click **Add case** to append the current case to the pending list without
 saving the suite yet. The pending cases are shown above the editor so you can
@@ -57,10 +57,10 @@ current case editor's contents).
 
 Tests the agent's text output against a regular expression.
 
-| Field | Example |
-|-------|---------|
-| Pattern | `ready\|ok` |
-| Flags | `i` (case-insensitive, default) |
+| Field   | Example                         |
+| ------- | ------------------------------- |
+| Pattern | `ready\|ok`                     |
+| Flags   | `i` (case-insensitive, default) |
 
 Matches against the concatenated text of all text parts in the response,
 status message, and artifacts.
@@ -70,10 +70,10 @@ status message, and artifacts.
 Tests that a value exists (or equals a specific value) in the agent's JSON
 output.
 
-| Field | Example |
-|-------|---------|
-| Path | `$.status` |
-| Equals (optional) | `ok` |
+| Field             | Example    |
+| ----------------- | ---------- |
+| Path              | `$.status` |
+| Equals (optional) | `ok`       |
 
 If **Equals** is omitted, the assertion passes as long as the path exists.
 Supports dot-notation: `$.data.items.0.name`.
@@ -82,10 +82,10 @@ Supports dot-notation: `$.data.items.0.name`.
 
 Asserts on the wall-clock time from message send to task completion.
 
-| Field | Options |
-|-------|---------|
+| Field    | Options                                  |
+| -------- | ---------------------------------------- |
 | Operator | `<` (lt), `≤` (lte), `>` (gt), `≥` (gte) |
-| Value | Duration in milliseconds |
+| Value    | Duration in milliseconds                 |
 
 Example: assert the task completes in under 5 seconds → operator `<`, value `5000`.
 
@@ -96,11 +96,11 @@ Use this to enforce SLA checks in CI.
 Asserts that at least one artifact in the response has a MIME type matching
 a glob pattern.
 
-| Pattern | Matches |
-|---------|---------|
-| `image/*` | Any image (PNG, JPEG, WebP, …) |
-| `application/json` | Exactly `application/json` |
-| `*` | Any MIME type (any artifact present) |
+| Pattern            | Matches                              |
+| ------------------ | ------------------------------------ |
+| `image/*`          | Any image (PNG, JPEG, WebP, …)       |
+| `application/json` | Exactly `application/json`           |
+| `*`                | Any MIME type (any artifact present) |
 
 ---
 
@@ -127,6 +127,7 @@ Translate the word "{{word}}" from {{language}} to English.
 ```
 
 At run time, this expands into three sub-cases:
+
 - `Translate the word "bonjour" from French to English.`
 - `Translate the word "hola" from Spanish to English.`
 - `Translate the word "hallo" from German to English.`
@@ -169,10 +170,7 @@ editor:
         "value": 10000
       }
     ],
-    "dataTable": [
-      { "env": "staging" },
-      { "env": "production" }
-    ]
+    "dataTable": [{ "env": "staging" }, { "env": "production" }]
   }
 ]
 ```
@@ -181,15 +179,15 @@ editor:
 
 Each row becomes one case. Supported columns:
 
-| Column | Description |
-|--------|-------------|
-| `name` | Case name |
-| `prompt` | Prompt text |
-| `expectedTaskState` | e.g. `completed` |
+| Column               | Description                          |
+| -------------------- | ------------------------------------ |
+| `name`               | Case name                            |
+| `prompt`             | Prompt text                          |
+| `expectedTaskState`  | e.g. `completed`                     |
 | `expectedOutputMode` | `any`, `text`, `json`, or `artifact` |
-| `regexPattern` | Creates a `content-regex` assertion |
-| `jsonPath` | Creates a `json-path` assertion |
-| `metadata` | JSON string (parsed to object) |
+| `regexPattern`       | Creates a `content-regex` assertion  |
+| `jsonPath`           | Creates a `json-path` assertion      |
+| `metadata`           | JSON string (parsed to object)       |
 
 **Example CSV:**
 
@@ -237,10 +235,10 @@ as `passing runs / total runs × 100` across all stored history for that suite.
 
 Each suite has two export buttons:
 
-| Button | Output |
-|--------|--------|
-| **JSON** | `{ suite, runs }` — the full suite definition plus all run history |
-| **CSV** | Flat file with one row per assertion per case per run — useful for spreadsheet analysis or CI reporting |
+| Button   | Output                                                                                                  |
+| -------- | ------------------------------------------------------------------------------------------------------- |
+| **JSON** | `{ suite, runs }` — the full suite definition plus all run history                                      |
+| **CSV**  | Flat file with one row per assertion per case per run — useful for spreadsheet analysis or CI reporting |
 
 **CSV columns:** `run_id`, `started_at`, `passed`, `duration_ms`, `case_name`, `case_passed`, `assertion_label`, `assertion_passed`, `assertion_message`
 
@@ -259,14 +257,14 @@ are printed to stdout.
 
 ### All flags
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-f`, `--file <path>` | — | Path to suite JSON (**required**) |
-| `--agent-url <url>` | From suite | Override the agent URL |
-| `-o`, `--output <path>` | stdout | Write results to a file |
-| `--format json\|junit` | `json` | Output format |
-| `--timeout <ms>` | `60000` | Per-case timeout |
-| `-h`, `--help` | — | Show help |
+| Flag                    | Default    | Description                       |
+| ----------------------- | ---------- | --------------------------------- |
+| `-f`, `--file <path>`   | —          | Path to suite JSON (**required**) |
+| `--agent-url <url>`     | From suite | Override the agent URL            |
+| `-o`, `--output <path>` | stdout     | Write results to a file           |
+| `--format json\|junit`  | `json`     | Output format                     |
+| `--timeout <ms>`        | `60000`    | Per-case timeout                  |
+| `-h`, `--help`          | —          | Show help                         |
 
 ### GitHub Actions example
 

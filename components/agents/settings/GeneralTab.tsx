@@ -39,7 +39,7 @@ export function GeneralTab({
             id="display-name"
             placeholder={agentCard.name}
             value={displayName}
-            onChange={(e) => onDisplayNameChange(e.target.value)}
+            onChange={e => onDisplayNameChange(e.target.value)}
           />
         </Field>
         <Field>
@@ -48,7 +48,7 @@ export function GeneralTab({
             id="agent-tags"
             placeholder="local, demo, research"
             value={tagText}
-            onChange={(e) => onTagTextChange(e.target.value)}
+            onChange={e => onTagTextChange(e.target.value)}
           />
           <Caption>Separate tags with commas.</Caption>
         </Field>
@@ -59,7 +59,7 @@ export function GeneralTab({
               type="checkbox"
               className="mt-0.5 size-4"
               checked={a2uiEnabled}
-              onChange={(e) => onA2UIEnabledChange(e.target.checked)}
+              onChange={e => onA2UIEnabledChange(e.target.checked)}
             />
             <div className="space-y-1">
               <Label htmlFor="a2ui-enabled">Enable A2UI read-only surfaces</Label>

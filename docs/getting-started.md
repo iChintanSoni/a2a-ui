@@ -29,14 +29,14 @@ The dashboard opens at `http://localhost:3000` (or the port you chose).
 
 ### All CLI flags
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `-p`, `--port <port>` | `3000` | Port to listen on |
-| `--hostname <host>` / `--host <host>` | `localhost` | Hostname to bind |
-| `--open` | — | Open the browser after start |
-| `--dev` | — | Run Next.js dev server (source mode) |
-| `-v`, `--version` | — | Print the installed version |
-| `-h`, `--help` | — | Show help |
+| Flag                                  | Default     | Description                          |
+| ------------------------------------- | ----------- | ------------------------------------ |
+| `-p`, `--port <port>`                 | `3000`      | Port to listen on                    |
+| `--hostname <host>` / `--host <host>` | `localhost` | Hostname to bind                     |
+| `--open`                              | —           | Open the browser after start         |
+| `--dev`                               | —           | Run Next.js dev server (source mode) |
+| `-v`, `--version`                     | —           | Print the installed version          |
+| `-h`, `--help`                        | —           | Show help                            |
 
 ---
 
@@ -71,11 +71,11 @@ The demo server listens on `http://localhost:3001`. Add it in the dashboard as `
 
 Key environment variables in `server/.env`:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `OLLAMA_HOST` | `http://localhost:11434` | Ollama API base URL |
-| `OLLAMA_LLM_MODEL` | `llama3.2` | Chat/reasoning model |
-| `OLLAMA_IMAGE_MODEL` | `llava` | Vision model for image inputs |
+| Variable             | Default                  | Description                   |
+| -------------------- | ------------------------ | ----------------------------- |
+| `OLLAMA_HOST`        | `http://localhost:11434` | Ollama API base URL           |
+| `OLLAMA_LLM_MODEL`   | `llama3.2`               | Chat/reasoning model          |
+| `OLLAMA_IMAGE_MODEL` | `llava`                  | Vision model for image inputs |
 
 ---
 
@@ -89,9 +89,9 @@ cp server/.env.example server/.env
 docker compose up --build
 ```
 
-| Service | URL |
-|---------|-----|
-| Dashboard | `http://localhost:3000` |
+| Service     | URL                     |
+| ----------- | ----------------------- |
+| Dashboard   | `http://localhost:3000` |
 | Demo server | `http://localhost:3001` |
 
 ---

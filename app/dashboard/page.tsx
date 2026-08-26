@@ -4,9 +4,17 @@ import Link from "next/link";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { BotIcon, MessageSquareIcon, StarIcon, ListTodoIcon, MessageSquarePlusIcon } from "lucide-react";
+import {
+  BotIcon,
+  MessageSquareIcon,
+  StarIcon,
+  ListTodoIcon,
+  MessageSquarePlusIcon,
+  SparklesIcon,
+} from "lucide-react";
 import { AddAgent } from "@/components/add-agent";
 import { WorkspaceActions } from "@/components/workspace-actions";
+import { PresetGalleryModal } from "@/components/preset-gallery-modal";
 import { Button } from "@/components/ui/button";
 import { Muted, P, PageTitle } from "@/components/typography";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -24,13 +32,15 @@ type MetricCardProps = {
 
 function MetricCard({ title, value, description, href, icon: Icon }: MetricCardProps) {
   const content = (
-    <div className="flex h-full flex-col gap-1.5 rounded-lg border bg-card p-3.5 shadow-xs transition-colors hover:bg-muted/40 sm:gap-3.5 sm:p-5">
+    <div className="bg-card hover:bg-muted/40 flex h-full flex-col gap-1.5 rounded-lg border p-3.5 shadow-xs transition-colors sm:gap-3.5 sm:p-5">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-muted-foreground sm:text-[13px]">{title}</span>
-        <Icon className="size-3.75 text-fg-subtle sm:size-4.25" />
+        <span className="text-muted-foreground text-xs font-semibold sm:text-[13px]">{title}</span>
+        <Icon className="text-fg-subtle size-3.75 sm:size-4.25" />
       </div>
-      <div className="text-[27px] leading-tight font-bold tracking-tight tabular-nums sm:text-[31px] sm:leading-none">{value}</div>
-      <p className="hidden text-[12.5px] leading-snug text-fg-subtle sm:block">{description}</p>
+      <div className="text-[27px] leading-tight font-bold tracking-tight tabular-nums sm:text-[31px] sm:leading-none">
+        {value}
+      </div>
+      <p className="text-fg-subtle hidden text-[12.5px] leading-snug sm:block">{description}</p>
     </div>
   );
 
@@ -56,12 +66,12 @@ function chatStatus(chat: Chat): { label: string; dotClassName: string } {
 export default function DashboardPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const agents = useAppSelector((state) => state.agents.agents);
-  const chats = useAppSelector((state) => state.chats.chats);
-  const activeChats = chats.filter((chat) => !chat.archived);
-  const favoriteAgents = agents.filter((agent) => agent.favorite);
+  const agents = useAppSelector(state => state.agents.agents);
+  const chats = useAppSelector(state => state.chats.chats);
+  const activeChats = chats.filter(chat => !chat.archived);
+  const favoriteAgents = agents.filter(agent => agent.favorite);
   const taskCount = chats.reduce(
-    (count, chat) => count + chat.items.filter((item) => item.kind === "task-status").length,
+    (count, chat) => count + chat.items.filter(item => item.kind === "task-status").length,
     0,
   );
   const recentChats = [...activeChats].sort((a, b) => b.timestamp - a.timestamp).slice(0, 3);
@@ -93,7 +103,7 @@ export default function DashboardPage() {
             <span className="sm:hidden">Workbench</span>
             <span className="hidden sm:inline">A2A Workbench</span>
           </PageTitle>
-          <P className="mt-2 hidden max-w-[46ch] text-sm font-medium text-muted-foreground sm:block">
+          <P className="text-muted-foreground mt-2 hidden max-w-[46ch] text-sm font-medium sm:block">
             Connect agents, inspect protocol behavior, and manage saved conversations.
           </P>
         </div>
@@ -137,16 +147,25 @@ export default function DashboardPage() {
       </div>
 
       {agents.length === 0 ? (
-        <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed bg-muted/10 p-5 text-center sm:min-h-75 sm:p-6">
+        <div className="bg-muted/10 flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed p-5 text-center sm:min-h-75 sm:p-6">
           <Muted>No agents connected yet.</Muted>
-          <P className="mt-2 max-w-xl text-sm text-muted-foreground">
-            Connect an A2A-compatible agent or import a workspace to start testing.
+          <P className="text-muted-foreground mt-2 max-w-xl text-sm">
+            Explore curated example agents, connect an A2A-compatible agent, or import a workspace
+            to start testing.
           </P>
           <div className="mt-5 flex flex-wrap items-center justify-center gap-2 sm:mt-6">
+            <PresetGalleryModal
+              trigger={
+                <Button variant="default" className="gap-1.5">
+                  <SparklesIcon className="size-4" />
+                  Explore Example Gallery
+                </Button>
+              }
+            />
             <div className="hidden sm:block">
               <WorkspaceActions />
             </div>
-            <AddAgent variant="default" />
+            <AddAgent variant="outline" />
           </div>
         </div>
       ) : (
@@ -154,14 +173,14 @@ export default function DashboardPage() {
           <div className="min-w-0">
             <h2 className="mb-3.5 text-sm font-bold tracking-tight">Connected agents</h2>
             <div className="flex flex-col gap-2.5">
-              {agents.map((agent) => {
+              {agents.map(agent => {
                 const agentName = agent.displayName ?? agent.card.name;
                 return (
                   <div
                     key={agent.id}
-                    className="flex items-center gap-3.5 rounded-lg border bg-card p-4 shadow-xs"
+                    className="bg-card flex items-center gap-3.5 rounded-lg border p-4 shadow-xs"
                   >
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-soft text-brand-soft-foreground">
+                    <div className="bg-brand-soft text-brand-soft-foreground flex size-9 shrink-0 items-center justify-center rounded-lg">
                       <BotIcon className="size-4.5" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -177,7 +196,9 @@ export default function DashboardPage() {
                           }`}
                         />
                       </div>
-                      <div className="mt-0.5 truncate font-mono text-[11.5px] text-fg-subtle">{agent.url}</div>
+                      <div className="text-fg-subtle mt-0.5 truncate font-mono text-[11.5px]">
+                        {agent.url}
+                      </div>
                     </div>
                     <Button
                       size="sm"
@@ -202,22 +223,25 @@ export default function DashboardPage() {
                 <Muted>No conversations yet.</Muted>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-lg border bg-card shadow-xs">
+              <div className="bg-card overflow-hidden rounded-lg border shadow-xs">
                 {recentChats.map((chat, index) => {
                   const status = chatStatus(chat);
                   return (
                     <Link
                       key={chat.id}
                       href={`/dashboard/chat/${chat.id}`}
-                      className={`flex items-center gap-2.5 px-4 py-3.5 transition-colors hover:bg-muted/40 ${
+                      className={`hover:bg-muted/40 flex items-center gap-2.5 px-4 py-3.5 transition-colors ${
                         index < recentChats.length - 1 ? "border-b" : ""
                       }`}
                     >
                       <span className={`size-1.75 shrink-0 rounded-full ${status.dotClassName}`} />
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-[13px] font-semibold">{chat.title}</div>
-                        <div className="truncate text-[11.5px] text-fg-subtle">
-                          {chat.agentName} · {status.label === "input required" ? "input required" : `${chat.items.length} items`}
+                        <div className="text-fg-subtle truncate text-[11.5px]">
+                          {chat.agentName} ·{" "}
+                          {status.label === "input required"
+                            ? "input required"
+                            : `${chat.items.length} items`}
                         </div>
                       </div>
                     </Link>

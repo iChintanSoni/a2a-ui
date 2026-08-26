@@ -33,9 +33,7 @@ const initialState: WorkbenchState = {
   agentSettings: {},
 };
 
-function normalizeMetadata(
-  metadata: Record<string, string> | undefined,
-): Record<string, string> {
+function normalizeMetadata(metadata: Record<string, string> | undefined): Record<string, string> {
   if (!metadata) return {};
   return Object.fromEntries(
     Object.entries(metadata)
@@ -93,7 +91,7 @@ export const workbenchSlice = createSlice({
         createdAt: Date.now(),
       };
 
-      const index = state.taskFilterPresets.findIndex((entry) => entry.id === preset.id);
+      const index = state.taskFilterPresets.findIndex(entry => entry.id === preset.id);
       if (index >= 0) {
         state.taskFilterPresets[index] = preset;
       } else {
@@ -103,7 +101,7 @@ export const workbenchSlice = createSlice({
 
     removeTaskFilterPreset: (state, action: PayloadAction<string>) => {
       state.taskFilterPresets = state.taskFilterPresets.filter(
-        (preset) => preset.id !== action.payload,
+        preset => preset.id !== action.payload,
       );
     },
 
@@ -127,7 +125,7 @@ export const workbenchSlice = createSlice({
         useCount: 0,
       };
 
-      const index = settings.promptPresets.findIndex((entry) => entry.id === preset.id);
+      const index = settings.promptPresets.findIndex(entry => entry.id === preset.id);
       if (index >= 0) {
         settings.promptPresets[index] = {
           ...settings.promptPresets[index],
@@ -138,13 +136,10 @@ export const workbenchSlice = createSlice({
       }
     },
 
-    removePromptPreset: (
-      state,
-      action: PayloadAction<{ agentUrl: string; presetId: string }>,
-    ) => {
+    removePromptPreset: (state, action: PayloadAction<{ agentUrl: string; presetId: string }>) => {
       const settings = getAgentSettings(state, action.payload.agentUrl);
       settings.promptPresets = settings.promptPresets.filter(
-        (preset) => preset.id !== action.payload.presetId,
+        preset => preset.id !== action.payload.presetId,
       );
     },
 
@@ -153,9 +148,7 @@ export const workbenchSlice = createSlice({
       action: PayloadAction<{ agentUrl: string; presetId: string }>,
     ) => {
       const settings = getAgentSettings(state, action.payload.agentUrl);
-      const preset = settings.promptPresets.find(
-        (entry) => entry.id === action.payload.presetId,
-      );
+      const preset = settings.promptPresets.find(entry => entry.id === action.payload.presetId);
       if (!preset) return;
       preset.useCount += 1;
     },

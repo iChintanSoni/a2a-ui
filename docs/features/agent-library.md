@@ -12,12 +12,12 @@ auth, and start conversations.
 
 Click **Add Agent** (top-right or Workbench home). Fill in:
 
-| Field | Required | Notes |
-|-------|----------|-------|
-| **Agent URL** | Yes | HTTP or HTTPS URL of the A2A server |
-| **Auth** | No | See [Authentication](#authentication) below |
-| **Custom headers** | No | Key-value pairs sent with every request |
-| **Display name** | No | Overrides the name from the agent card |
+| Field              | Required | Notes                                       |
+| ------------------ | -------- | ------------------------------------------- |
+| **Agent URL**      | Yes      | HTTP or HTTPS URL of the A2A server         |
+| **Auth**           | No       | See [Authentication](#authentication) below |
+| **Custom headers** | No       | Key-value pairs sent with every request     |
+| **Display name**   | No       | Overrides the name from the agent card      |
 
 Click **Connect**. The dashboard calls the agent's card endpoint, validates
 the response, and adds the agent to the library.
@@ -28,11 +28,11 @@ the response, and adds the agent to the library.
 
 Each agent card shows a coloured dot:
 
-| Colour | Meaning |
-|--------|---------|
+| Colour   | Meaning                                     |
+| -------- | ------------------------------------------- |
 | 🟢 Green | Connected — agent card fetched successfully |
-| 🔴 Red | Error — last connection attempt failed |
-| ⚪ Grey | Idle — not yet contacted since last load |
+| 🔴 Red   | Error — last connection attempt failed      |
+| ⚪ Grey  | Idle — not yet contacted since last load    |
 
 The transport method (REST or JSON-RPC) is shown when connected.
 
@@ -42,12 +42,12 @@ The transport method (REST or JSON-RPC) is shown when connected.
 
 A2A UI supports four auth types, all stored locally in the browser:
 
-| Type | When to use |
-|------|------------|
-| **None** | Public agents or local dev without auth |
-| **Bearer token** | Agents that accept `Authorization: Bearer <token>` |
-| **API key** | Agents that use a custom header like `X-API-Key` |
-| **Basic** | Username + password sent as `Authorization: Basic …` |
+| Type             | When to use                                          |
+| ---------------- | ---------------------------------------------------- |
+| **None**         | Public agents or local dev without auth              |
+| **Bearer token** | Agents that accept `Authorization: Bearer <token>`   |
+| **API key**      | Agents that use a custom header like `X-API-Key`     |
+| **Basic**        | Username + password sent as `Authorization: Basic …` |
 
 Auth credentials are included in every request to the agent. They are
 included in workspace exports — handle exports accordingly.
@@ -76,11 +76,11 @@ The search bar filters agents by name, URL, and tags.
 
 The compliance badge summarises protocol validation results:
 
-| Badge | Meaning |
-|-------|---------|
-| ✅ Pass | All required fields present and valid |
+| Badge      | Meaning                                             |
+| ---------- | --------------------------------------------------- |
+| ✅ Pass    | All required fields present and valid               |
 | ⚠️ Warning | Non-critical issues (missing optional fields, etc.) |
-| ❌ Fail | Required fields missing or invalid |
+| ❌ Fail    | Required fields missing or invalid                  |
 
 Click on an agent's compliance badge to see the full report, or go to
 [Agent Settings → Compliance](agent-settings.md#compliance-report).

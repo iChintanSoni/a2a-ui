@@ -67,7 +67,9 @@ export interface ChatTraceTask {
   firstSeenAt: number;
   firstSeenAtIso: string;
   latestState?: string;
-  timeline: Array<Omit<TaskTimelineStage, "timestamp"> & { timestamp: number; timestampIso: string }>;
+  timeline: Array<
+    Omit<TaskTimelineStage, "timestamp"> & { timestamp: number; timestampIso: string }
+  >;
   states: Array<{
     state: string;
     timestamp: number;
@@ -170,9 +172,7 @@ function capValue(value: unknown, depth = 0): unknown {
   if (depth >= MAX_OBJECT_DEPTH) return "[truncated: max object depth]";
 
   if (Array.isArray(value)) {
-    const visible = value
-      .slice(0, MAX_ARRAY_ITEMS)
-      .map((entry) => capValue(entry, depth + 1));
+    const visible = value.slice(0, MAX_ARRAY_ITEMS).map(entry => capValue(entry, depth + 1));
     if (value.length > MAX_ARRAY_ITEMS) {
       visible.push({
         __truncated: true,
@@ -236,21 +236,19 @@ function partsToExportText(parts: Part[]): string {
   return truncateString(
     parts
       .map(partToText)
-      .filter((value) => value.trim().length > 0)
+      .filter(value => value.trim().length > 0)
       .join("\n\n"),
   );
 }
 
 function sanitizeParts(parts: Part[]): unknown[] {
-  return parts.map((part) => sanitizeForExport(part));
+  return parts.map(part => sanitizeForExport(part));
 }
 
 function summarizePartModalities(parts: Part[]): Record<string, number> {
   return parts.reduce<Record<string, number>>((summary, part) => {
     const key =
-      part.kind === "file"
-        ? `file:${part.file.mimeType ?? "application/octet-stream"}`
-        : part.kind;
+      part.kind === "file" ? `file:${part.file.mimeType ?? "application/octet-stream"}` : part.kind;
     summary[key] = (summary[key] ?? 0) + 1;
     return summary;
   }, {});
@@ -345,9 +343,7 @@ function buildTranscriptEntry(item: ChatItem, index: number): ChatTraceTranscrip
 
 function eventMergeKey(event: ExecutionEvent): string {
   const method =
-    isRecord(event.details) && typeof event.details.method === "string"
-      ? event.details.method
-      : "";
+    isRecord(event.details) && typeof event.details.method === "string" ? event.details.method : "";
   const transport = isRecord(event.details) ? event.details.transport : undefined;
   const status =
     isRecord(transport) && typeof transport.status === "number" ? String(transport.status) : "";
@@ -364,7 +360,9 @@ function eventMergeKey(event: ExecutionEvent): string {
   ].join("|");
 }
 
-export function collectChatTraceEvents(input: Pick<ChatTraceInput, "chat" | "logs">): ExecutionEvent[] {
+export function collectChatTraceEvents(
+  input: Pick<ChatTraceInput, "chat" | "logs">,
+): ExecutionEvent[] {
   const events = [...input.chat.executionEvents];
   const seen = new Set(events.map(eventMergeKey));
 
@@ -392,18 +390,18 @@ function taskIdForItem(item: ChatItem): string | undefined {
 }
 
 function buildTaskTrace(chat: Chat, events: ExecutionEvent[], taskId: string): ChatTraceTask {
-  const taskItems = chat.items.filter((item) => taskIdForItem(item) === taskId);
-  const taskEvents = events.filter((event) => event.taskId === taskId);
+  const taskItems = chat.items.filter(item => taskIdForItem(item) === taskId);
+  const taskEvents = events.filter(event => event.taskId === taskId);
   const firstSeenAt = Math.min(
     ...[
-      ...taskItems.map((item) => item.timestamp),
-      ...taskEvents.map((event) => event.timestamp),
-    ].filter((timestamp) => Number.isFinite(timestamp)),
+      ...taskItems.map(item => item.timestamp),
+      ...taskEvents.map(event => event.timestamp),
+    ].filter(timestamp => Number.isFinite(timestamp)),
   );
 
   const eventStates = taskEvents
-    .filter((event) => event.kind === "task-status")
-    .map((event) => {
+    .filter(event => event.kind === "task-status")
+    .map(event => {
       const state = isRecord(event.details) ? event.details.state : undefined;
       const message = isRecord(event.details) ? event.details.message : undefined;
       return typeof state === "string"
@@ -419,7 +417,7 @@ function buildTaskTrace(chat: Chat, events: ExecutionEvent[], taskId: string): C
 
   const itemStates = taskItems
     .filter((item): item is TaskStatusItem => item.kind === "task-status")
-    .map((item) => ({
+    .map(item => ({
       state: item.state,
       timestamp: item.timestamp,
       timestampIso: timestampIso(item.timestamp),
@@ -429,12 +427,14 @@ function buildTaskTrace(chat: Chat, events: ExecutionEvent[], taskId: string): C
   const states = [...eventStates, ...itemStates].sort((a, b) => a.timestamp - b.timestamp);
   const latestState = states.at(-1)?.state;
   const artifacts = taskItems.filter((item): item is ArtifactItem => item.kind === "artifact");
-  const messages = taskItems.filter((item): item is AgentMessageItem => item.kind === "agent-message");
+  const messages = taskItems.filter(
+    (item): item is AgentMessageItem => item.kind === "agent-message",
+  );
   const toolRunIds = Array.from(
     new Set(
       taskEvents
-        .filter((event) => event.kind === "tool-call" && event.runId)
-        .map((event) => event.runId as string),
+        .filter(event => event.kind === "tool-call" && event.runId)
+        .map(event => event.runId as string),
     ),
   );
 
@@ -443,15 +443,15 @@ function buildTaskTrace(chat: Chat, events: ExecutionEvent[], taskId: string): C
     firstSeenAt: Number.isFinite(firstSeenAt) ? firstSeenAt : 0,
     firstSeenAtIso: timestampIso(Number.isFinite(firstSeenAt) ? firstSeenAt : undefined),
     latestState,
-    timeline: getTaskTimelineStages(events, taskId).map((stage) => ({
+    timeline: getTaskTimelineStages(events, taskId).map(stage => ({
       ...stage,
       timestampIso: timestampIso(stage.timestamp),
     })),
     states,
-    artifactIds: artifacts.map((item) => item.id),
-    messageIds: messages.map((item) => item.id),
+    artifactIds: artifacts.map(item => item.id),
+    messageIds: messages.map(item => item.id),
     toolRunIds,
-    eventIds: taskEvents.map((event) => event.id),
+    eventIds: taskEvents.map(event => event.id),
   };
 }
 
@@ -470,9 +470,7 @@ function collectTaskIds(chat: Chat, events: ExecutionEvent[]): string[] {
     add(event.taskId, event.timestamp);
   }
 
-  return [...firstSeen.entries()]
-    .sort((a, b) => a[1] - b[1])
-    .map(([taskId]) => taskId);
+  return [...firstSeen.entries()].sort((a, b) => a[1] - b[1]).map(([taskId]) => taskId);
 }
 
 function buildArtifactTrace(item: ArtifactItem): ChatTraceArtifact {
@@ -505,12 +503,12 @@ function collectTransportsDetected(logs: LogEntry[], events: ExecutionEvent[]): 
   return Array.from(
     new Set(
       [
-        ...logs.flatMap((log) => [
+        ...logs.flatMap(log => [
           log.transport?.protocol,
           log.transport?.jsonRpcMethod,
           log.transport?.httpMethod,
         ]),
-        ...events.flatMap((event) => [
+        ...events.flatMap(event => [
           transportValue(event, "protocol"),
           transportValue(event, "jsonRpcMethod"),
           transportValue(event, "httpMethod"),
@@ -534,18 +532,18 @@ export function buildChatTraceJson(input: ChatTraceInput): ChatTraceExport {
   const transportSummary = getTransportSummary(events);
   const taskIds = collectTaskIds(input.chat, events);
   const items = input.chat.items;
-  const validationEventCount = events.filter((event) => event.kind === "validation").length;
+  const validationEventCount = events.filter(event => event.kind === "validation").length;
   const protocol =
     logs.length > 0 || validationWarnings.length > 0
       ? {
           transportsDetected: collectTransportsDetected(logs, events),
           debugLogCount: logs.length,
-          debugLogs: logs.map((log) => sanitizeForExport(log)),
-          failedRequests: logs.filter(isFailedLog).map((log) => sanitizeForExport(log)),
+          debugLogs: logs.map(log => sanitizeForExport(log)),
+          failedRequests: logs.filter(isFailedLog).map(log => sanitizeForExport(log)),
           failedEvents: events
-            .filter((event) => event.kind === "transport" && event.level === "error")
+            .filter(event => event.kind === "transport" && event.level === "error")
             .map(buildTraceEvent),
-          validationWarnings: validationWarnings.map((warning) => sanitizeForExport(warning)),
+          validationWarnings: validationWarnings.map(warning => sanitizeForExport(warning)),
         }
       : undefined;
 
@@ -567,9 +565,14 @@ export function buildChatTraceJson(input: ChatTraceInput): ChatTraceExport {
       executionEventCount: input.chat.executionEvents.length,
     },
     summary: {
-      userMessageCount: items.filter((item): item is UserMessageItem => item.kind === "user-message").length,
-      agentMessageCount: items.filter((item): item is AgentMessageItem => item.kind === "agent-message").length,
-      taskStatusCount: items.filter((item): item is TaskStatusItem => item.kind === "task-status").length,
+      userMessageCount: items.filter(
+        (item): item is UserMessageItem => item.kind === "user-message",
+      ).length,
+      agentMessageCount: items.filter(
+        (item): item is AgentMessageItem => item.kind === "agent-message",
+      ).length,
+      taskStatusCount: items.filter((item): item is TaskStatusItem => item.kind === "task-status")
+        .length,
       artifactCount: items.filter((item): item is ArtifactItem => item.kind === "artifact").length,
       toolCallCount: items.filter((item): item is ToolCallItem => item.kind === "tool-call").length,
       taskCount: taskIds.length,
@@ -579,13 +582,13 @@ export function buildChatTraceJson(input: ChatTraceInput): ChatTraceExport {
       averageTransportDurationMs: transportSummary.avgDurationMs,
       validationWarningCount: Math.max(validationWarnings.length, validationEventCount),
       debugLogCount: logs.length,
-      warningEventCount: events.filter((event) => event.level === "warning").length,
-      errorEventCount: events.filter((event) => event.level === "error").length,
+      warningEventCount: events.filter(event => event.level === "warning").length,
+      errorEventCount: events.filter(event => event.level === "error").length,
       traceUnavailable: events.length === 0,
       includesLiveDebugLogs: logs.length > 0,
     },
     transcript: items.map(buildTranscriptEntry),
-    tasks: taskIds.map((taskId) => buildTaskTrace(input.chat, events, taskId)),
+    tasks: taskIds.map(taskId => buildTaskTrace(input.chat, events, taskId)),
     artifacts: items
       .filter((item): item is ArtifactItem => item.kind === "artifact")
       .map(buildArtifactTrace),
@@ -629,7 +632,8 @@ function formatTranscriptEntry(entry: ChatTraceTranscriptEntry, lines: string[])
   lines.push("");
   if (entry.role === "user") lines.push("**You:**");
   if (entry.role === "agent") lines.push("**Agent:**");
-  if (entry.text) lines.push(fencedBlock(truncateString(entry.text, MAX_MARKDOWN_BLOCK_LENGTH), "text"), "");
+  if (entry.text)
+    lines.push(fencedBlock(truncateString(entry.text, MAX_MARKDOWN_BLOCK_LENGTH), "text"), "");
   if (entry.statusMessage) {
     lines.push("Status message:", fencedBlock(entry.statusMessage, "text"), "");
   }
@@ -678,7 +682,7 @@ function formatTasks(trace: ChatTraceExport, lines: string[]) {
 }
 
 function formatTransport(trace: ChatTraceExport, lines: string[]) {
-  const transportEvents = trace.events.filter((event) => event.kind === "transport");
+  const transportEvents = trace.events.filter(event => event.kind === "transport");
   lines.push("## Transport And Requests", "");
   lines.push(`- Transport events: ${trace.summary.transportEventCount}`);
   lines.push(`- Transport errors: ${trace.summary.transportErrorCount}`);
@@ -708,7 +712,7 @@ function formatTransport(trace: ChatTraceExport, lines: string[]) {
 }
 
 function formatValidation(trace: ChatTraceExport, lines: string[]) {
-  const validationEvents = trace.events.filter((event) => event.kind === "validation");
+  const validationEvents = trace.events.filter(event => event.kind === "validation");
   lines.push("## Validation Warnings", "");
   if (!trace.protocol?.validationWarnings.length && validationEvents.length === 0) {
     lines.push("No validation warnings were recorded.", "");
@@ -790,7 +794,7 @@ export function buildChatTraceMarkdown(input: ChatTraceInput): string {
   if (trace.transcript.length === 0) {
     lines.push("No visible chat items were recorded.", "");
   } else {
-    trace.transcript.forEach((entry) => formatTranscriptEntry(entry, lines));
+    trace.transcript.forEach(entry => formatTranscriptEntry(entry, lines));
   }
 
   formatTasks(trace, lines);
@@ -806,9 +810,17 @@ export function buildChatTraceMarkdown(input: ChatTraceInput): string {
       lines.push(`- Time: ${artifact.timestampIso}`);
       lines.push(`- Parts: ${artifact.partCount}`);
       lines.push(`- Streaming: ${artifact.isStreaming ? "yes" : "no"}`);
-      lines.push(`- Modalities: ${Object.entries(artifact.modalities).map(([key, count]) => `${key}=${count}`).join(", ")}`);
+      lines.push(
+        `- Modalities: ${Object.entries(artifact.modalities)
+          .map(([key, count]) => `${key}=${count}`)
+          .join(", ")}`,
+      );
       if (artifact.text) {
-        lines.push("", fencedBlock(truncateString(artifact.text, MAX_MARKDOWN_BLOCK_LENGTH), "text"), "");
+        lines.push(
+          "",
+          fencedBlock(truncateString(artifact.text, MAX_MARKDOWN_BLOCK_LENGTH), "text"),
+          "",
+        );
       }
       formatOptionalJson("Metadata", artifact.metadata, lines);
     }
@@ -818,11 +830,19 @@ export function buildChatTraceMarkdown(input: ChatTraceInput): string {
   formatValidation(trace, lines);
   formatEvents(trace, lines);
 
-  return lines.join("\n").replace(/\n{4,}/g, "\n\n\n").trimEnd() + "\n";
+  return (
+    lines
+      .join("\n")
+      .replace(/\n{4,}/g, "\n\n\n")
+      .trimEnd() + "\n"
+  );
 }
 
 function safeFilenameSegment(value: string): string {
-  const normalized = value.trim().replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "");
+  const normalized = value
+    .trim()
+    .replace(/[^a-z0-9]+/gi, "_")
+    .replace(/^_+|_+$/g, "");
   return normalized || "chat";
 }
 

@@ -45,31 +45,31 @@ In the dashboard, add `http://localhost:3001` as an agent.
 
 ## Available Scripts
 
-| Script | What it does |
-|--------|-------------|
-| `npm run dev` | Start Next.js dev server |
-| `npm run build` | Production build (standalone output) |
-| `npm run start` | Start the production server |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | TypeScript without emitting |
-| `npm run format` | Prettier (writes files) |
-| `npm test` | Vitest unit and integration tests |
-| `npm run test:watch` | Vitest in watch mode |
-| `npm run test:coverage` | Tests with coverage report |
-| `npm run test:e2e` | Playwright smoke tests (requires built app) |
+| Script                  | What it does                                |
+| ----------------------- | ------------------------------------------- |
+| `npm run dev`           | Start Next.js dev server                    |
+| `npm run build`         | Production build (standalone output)        |
+| `npm run start`         | Start the production server                 |
+| `npm run lint`          | ESLint                                      |
+| `npm run typecheck`     | TypeScript without emitting                 |
+| `npm run format`        | Prettier (writes files)                     |
+| `npm test`              | Vitest unit and integration tests           |
+| `npm run test:watch`    | Vitest in watch mode                        |
+| `npm run test:coverage` | Tests with coverage report                  |
+| `npm run test:e2e`      | Playwright smoke tests (requires built app) |
 
 ---
 
 ## Branch Naming
 
-| Prefix | When to use |
-|--------|------------|
-| `feat/` | New feature or capability |
-| `fix/` | Bug fix |
-| `docs/` | Documentation-only change |
+| Prefix      | When to use                               |
+| ----------- | ----------------------------------------- |
+| `feat/`     | New feature or capability                 |
+| `fix/`      | Bug fix                                   |
+| `docs/`     | Documentation-only change                 |
 | `refactor/` | Code improvement without behaviour change |
-| `test/` | Adding or fixing tests |
-| `chore/` | Dependency updates, tooling, CI |
+| `test/`     | Adding or fixing tests                    |
+| `chore/`    | Dependency updates, tooling, CI           |
 
 Examples: `feat/batch-evaluation`, `fix/qa-csv-export`, `docs/hooks-reference`
 
@@ -77,21 +77,24 @@ Examples: `feat/batch-evaluation`, `fix/qa-csv-export`, `docs/hooks-reference`
 
 ## Where to Find Things
 
-| You want to change… | Look in… |
-|---------------------|---------|
-| A dashboard page | `app/dashboard/<name>/page.tsx` |
-| A UI component | `components/` |
-| A headless hook | `hooks/` |
-| A Redux slice | `lib/features/<name>/` |
-| A2A protocol helpers | `lib/a2a/` |
-| Auth / compliance / export utils | `lib/utils/` |
-| IndexedDB persistence | `lib/persistence.ts` |
-| The Redux store factory | `lib/store.ts` |
-| The CLI entrypoint | `bin/a2a-ui.mjs` |
-| The headless QA runner | `bin/qa-run.mjs` |
-| Unit tests | `tests/` |
-| E2E smoke tests | `e2e/` |
-| Demo A2A server | `server/` |
+| You want to change…              | Look in…                           |
+| -------------------------------- | ---------------------------------- |
+| A dashboard page                 | `app/dashboard/<name>/page.tsx`    |
+| A UI component                   | `components/`                      |
+| Curated agent presets            | `lib/presets/`                     |
+| A headless hook                  | `hooks/`                           |
+| A Redux slice                    | `lib/features/<name>/`             |
+| A2A protocol helpers             | `lib/a2a/`                         |
+| Auth / compliance / export utils | `lib/utils/`                       |
+| IndexedDB persistence            | `lib/persistence.ts`               |
+| The Redux store factory          | `lib/store.ts`                     |
+| The CLI entrypoint               | `bin/a2a-ui.mjs`                   |
+| The headless QA runner           | `bin/qa-run.mjs`                   |
+| Accessibility standards          | `docs/accessibility.md`            |
+| Preset gallery guide             | `docs/features/example-presets.md` |
+| Unit tests                       | `tests/`                           |
+| E2E smoke tests                  | `e2e/`                             |
+| Demo A2A server                  | `server/`                          |
 
 ---
 
@@ -104,7 +107,7 @@ npm test
 ```
 
 Tests live in `tests/` and mirror the `lib/` structure. New logic in
-`lib/features/`, `lib/utils/`, or `lib/a2a/` should have a corresponding test
+`lib/features/`, `lib/presets/`, `lib/utils/`, or `lib/a2a/` should have a corresponding test
 file.
 
 Run a specific test file:
@@ -140,9 +143,10 @@ Before opening a PR:
 - [ ] `npm run lint` passes
 - [ ] `npm run typecheck` passes
 - [ ] `npm test` passes
+- [ ] New UI elements satisfy keyboard and screen-reader accessibility ([Accessibility Guide](docs/accessibility.md))
 - [ ] New logic has tests in `tests/`
 - [ ] New UI pages are reachable from the sidebar
-- [ ] The PR description explains *what* changed and *why*
+- [ ] The PR description explains _what_ changed and _why_
 
 The CI pipeline (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests,
 e2e tests, and a build check on every PR.
@@ -154,7 +158,7 @@ e2e tests, and a build check on every PR.
 - **TypeScript strict mode** is enabled — no implicit `any`.
 - **Prettier** for formatting — run `npm run format` before committing.
 - **No comments explaining what** the code does — code should be
-  self-explanatory. Comments should explain *why* something is done a certain
+  self-explanatory. Comments should explain _why_ something is done a certain
   way, especially when it's non-obvious.
 - **No new abstractions** unless the pattern repeats at least three times.
 - **Prefer editing existing files** to creating new ones.

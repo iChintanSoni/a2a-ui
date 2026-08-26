@@ -70,17 +70,12 @@ async function proxyRequest(request: NextRequest) {
   }
 
   if (targetUrl.protocol !== "http:" && targetUrl.protocol !== "https:") {
-    return Response.json(
-      { error: "Only http and https URLs are supported." },
-      { status: 400 }
-    );
+    return Response.json({ error: "Only http and https URLs are supported." }, { status: 400 });
   }
 
   const headers = filterHeaders(request.headers);
   const body =
-    request.method === "GET" || request.method === "HEAD"
-      ? undefined
-      : await request.arrayBuffer();
+    request.method === "GET" || request.method === "HEAD" ? undefined : await request.arrayBuffer();
 
   let upstream: Response;
   try {

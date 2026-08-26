@@ -1,0 +1,101 @@
+name: Bug Report
+description: File a bug report or unexpected behavior in a2a-ui
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please check existing issues first to see if this has already been reported.
+        For general questions or discussions, please consult the [Documentation](https://github.com/iChintanSoni/a2a-ui#readme) or [Contributing Guide](https://github.com/iChintanSoni/a2a-ui/blob/main/CONTRIBUTING.md).
+
+  - type: dropdown
+    id: affected-area
+    attributes:
+      label: Affected Area
+      description: Which part of a2a-ui is affected?
+      options:
+        - Workbench / Dashboard
+        - Agent Library & Settings
+        - Chat & Streaming Execution
+        - Debug Panel & Event Explorer
+        - QA Harness & Test Suites
+        - Compare Runs
+        - Embed Mode
+        - A2UI Surfaces
+        - CLI / Headless QA Runner
+        - Persistence & Storage (IndexedDB)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description & Reproduction Steps
+      description: Describe what happened and the steps to reproduce the issue.
+      placeholder: |
+        1. Connect agent at http://localhost:3001
+        2. Open chat session
+        3. Send prompt '...'
+        4. See error in debug console
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: The agent response should stream incrementally and display the final status.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: The connection timed out with code 504.
+    validations:
+      required: true
+
+  - type: textarea
+    id: server-details
+    attributes:
+      label: A2A Server Details
+      description: Endpoint, transport (JSON-RPC, HTTP+JSON, SSE), A2A SDK version, or local demo server details if applicable.
+      placeholder: |
+        - Server URL / Type: Local demo server (server/src/index.ts)
+        - Transport: JSON-RPC (HTTP POST /a2a/jsonrpc)
+        - A2A SDK / Protocol Version: 0.3.0
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Info
+      description: Browser, operating system, and Node.js version.
+      placeholder: |
+        - OS: macOS 15.0 / Ubuntu 24.04 / Windows 11
+        - Browser: Chrome 132 / Firefox 134 / Safari 18
+        - Node.js version: 20.12.0
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs-screenshots
+    attributes:
+      label: Logs, Traces, or Screenshots
+      description: Paste any console errors, network inspect payloads, or drag screenshots here.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: pr-willingness
+    attributes:
+      label: Pull Request
+      options:
+        - label: I am willing to submit a pull request for this issue
+          required: false

@@ -12,7 +12,7 @@ describe("qa assertions", () => {
     const parts = [
       { kind: "text" as const, text: "hello" },
       { kind: "data" as const, data: { status: "ok" } },
-      { kind: "text" as const, text: "{\"ready\":true}" },
+      { kind: "text" as const, text: '{"ready":true}' },
     ];
 
     expect(textFromParts(parts)).toContain("hello");
@@ -63,15 +63,34 @@ describe("qa assertions", () => {
       },
     );
 
-    expect(results.every((result) => result.passed)).toBe(true);
+    expect(results.every(result => result.passed)).toBe(true);
   });
 
   it("evaluates task-duration-ms assertions", () => {
-    const output = { text: "", jsonValues: [], artifactCount: 0, artifactMimeTypes: [], durationMs: 800, finalTaskState: "completed" as const };
+    const output = {
+      text: "",
+      jsonValues: [],
+      artifactCount: 0,
+      artifactMimeTypes: [],
+      durationMs: 800,
+      finalTaskState: "completed" as const,
+    };
     const results = evaluateQaAssertions(
       [
-        { id: "d1", kind: "task-duration-ms", label: "Under 1s", operator: "lt" as const, value: 1000 },
-        { id: "d2", kind: "task-duration-ms", label: "Over 2s", operator: "gt" as const, value: 2000 },
+        {
+          id: "d1",
+          kind: "task-duration-ms",
+          label: "Under 1s",
+          operator: "lt" as const,
+          value: 1000,
+        },
+        {
+          id: "d2",
+          kind: "task-duration-ms",
+          label: "Over 2s",
+          operator: "gt" as const,
+          value: 2000,
+        },
       ],
       output,
     );
@@ -80,7 +99,14 @@ describe("qa assertions", () => {
   });
 
   it("evaluates artifact-mime assertions", () => {
-    const output = { text: "", jsonValues: [], artifactCount: 1, artifactMimeTypes: ["image/png"], durationMs: 100, finalTaskState: "completed" as const };
+    const output = {
+      text: "",
+      jsonValues: [],
+      artifactCount: 1,
+      artifactMimeTypes: ["image/png"],
+      durationMs: 100,
+      finalTaskState: "completed" as const,
+    };
     const results = evaluateQaAssertions(
       [
         { id: "m1", kind: "artifact-mime", label: "Any image", pattern: "image/*" },

@@ -21,7 +21,7 @@ export const qaSlice = createSlice({
         ...action.payload,
         updatedAt: Date.now(),
       };
-      const existing = state.suites.findIndex((entry) => entry.id === suite.id);
+      const existing = state.suites.findIndex(entry => entry.id === suite.id);
       if (existing >= 0) {
         state.suites[existing] = suite;
       } else {
@@ -29,8 +29,8 @@ export const qaSlice = createSlice({
       }
     },
     removeQaSuite: (state, action: PayloadAction<string>) => {
-      state.suites = state.suites.filter((suite) => suite.id !== action.payload);
-      state.runs = state.runs.filter((run) => run.suiteId !== action.payload);
+      state.suites = state.suites.filter(suite => suite.id !== action.payload);
+      state.runs = state.runs.filter(run => run.suiteId !== action.payload);
     },
     recordQaRun: (state, action: PayloadAction<QaSuiteRun>) => {
       state.runs.unshift(action.payload);
@@ -43,17 +43,12 @@ export const qaSlice = createSlice({
         state.runs = [];
         return;
       }
-      state.runs = state.runs.filter((run) => run.suiteId !== action.payload);
+      state.runs = state.runs.filter(run => run.suiteId !== action.payload);
     },
   },
 });
 
-export const {
-  hydrateQa,
-  saveQaSuite,
-  removeQaSuite,
-  recordQaRun,
-  clearQaRunHistory,
-} = qaSlice.actions;
+export const { hydrateQa, saveQaSuite, removeQaSuite, recordQaRun, clearQaRunHistory } =
+  qaSlice.actions;
 
 export default qaSlice.reducer;

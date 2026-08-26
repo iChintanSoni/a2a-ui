@@ -24,7 +24,7 @@ function sanitizeAuth(auth: AuthConfig): AuthConfig {
 }
 
 function sanitizeHeaders(headers: CustomHeader[]): CustomHeader[] {
-  return headers.map((header) => ({
+  return headers.map(header => ({
     key: header.key,
     value: header.value ? "" : header.value,
   }));
@@ -73,7 +73,8 @@ export function parseWorkspaceImport(value: unknown): WorkspaceExport {
 
   return {
     version: 1,
-    exportedAt: typeof workspace.exportedAt === "string" ? workspace.exportedAt : new Date().toISOString(),
+    exportedAt:
+      typeof workspace.exportedAt === "string" ? workspace.exportedAt : new Date().toISOString(),
     agents: workspace.agents,
     chats: Array.isArray(workspace.chats) ? workspace.chats : undefined,
   };

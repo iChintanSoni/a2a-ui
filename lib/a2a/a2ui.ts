@@ -83,9 +83,7 @@ function parseComponent(value: unknown): A2UIComponent | null {
     return {
       kind: "text",
       text,
-      ...(variant === "title" || variant === "caption" || variant === "body"
-        ? { variant }
-        : {}),
+      ...(variant === "title" || variant === "caption" || variant === "body" ? { variant } : {}),
     };
   }
 
@@ -110,13 +108,16 @@ function parseComponent(value: unknown): A2UIComponent | null {
   if (kind === "key-value") {
     const items = Array.isArray(value.items)
       ? value.items
-          .map((item) => {
+          .map(item => {
             if (!isRecord(item)) return null;
             const label = asString(item.label) ?? asString(item.key);
             const scalar = asScalar(item.value);
             return label && scalar !== undefined ? { label, value: scalar } : null;
           })
-          .filter((item): item is { label: string; value: string | number | boolean | null } => item != null)
+          .filter(
+            (item): item is { label: string; value: string | number | boolean | null } =>
+              item != null,
+          )
       : [];
     return items.length > 0 ? { kind: "key-value", items } : null;
   }
@@ -125,15 +126,13 @@ function parseComponent(value: unknown): A2UIComponent | null {
     const items = Array.isArray(value.items)
       ? value.items.filter((item): item is string => typeof item === "string")
       : [];
-    return items.length > 0
-      ? { kind: "list", items, ordered: asBoolean(value.ordered) }
-      : null;
+    return items.length > 0 ? { kind: "list", items, ordered: asBoolean(value.ordered) } : null;
   }
 
   if (kind === "table") {
     const columns = Array.isArray(value.columns)
       ? value.columns
-          .map((column) => {
+          .map(column => {
             if (!isRecord(column)) return null;
             const key = asString(column.key);
             const label = asString(column.label) ?? key;
@@ -142,15 +141,15 @@ function parseComponent(value: unknown): A2UIComponent | null {
           .filter((column): column is { key: string; label: string } => column != null)
       : [];
     const rows = Array.isArray(value.rows)
-      ? value.rows
-          .filter(isRecord)
-          .map((row) =>
-            Object.fromEntries(
-              Object.entries(row).filter((entry): entry is [string, string | number | boolean | null] => {
+      ? value.rows.filter(isRecord).map(row =>
+          Object.fromEntries(
+            Object.entries(row).filter(
+              (entry): entry is [string, string | number | boolean | null] => {
                 return asScalar(entry[1]) !== undefined;
-              }),
+              },
             ),
-          )
+          ),
+        )
       : [];
     return columns.length > 0 && rows.length > 0 ? { kind: "table", columns, rows } : null;
   }
@@ -161,7 +160,9 @@ function parseComponent(value: unknown): A2UIComponent | null {
 function parseSurface(value: unknown): A2UISurface | null {
   if (!isRecord(value)) return null;
   const components = Array.isArray(value.components)
-    ? value.components.map(parseComponent).filter((component): component is A2UIComponent => component != null)
+    ? value.components
+        .map(parseComponent)
+        .filter((component): component is A2UIComponent => component != null)
     : [];
   if (components.length === 0) return null;
 
@@ -189,7 +190,9 @@ export function detectA2UISurface(data: unknown, mimeType?: string): A2UIDetecti
 
   if ((data.kind === "surface" || data.type === "a2ui.surface") && Array.isArray(data.components)) {
     const surface = parseSurface(data);
-    return surface ? { surface, source: "inline", componentCount: surface.components.length } : null;
+    return surface
+      ? { surface, source: "inline", componentCount: surface.components.length }
+      : null;
   }
 
   return null;

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Chat } from "@/lib/features/chats/chatsSlice";
 import type { LogEntry } from "@/lib/utils/debugInterceptor";
-import { buildChatTraceJson, buildChatTraceMarkdown, chatTraceFilename } from "@/lib/utils/chatExport";
+import {
+  buildChatTraceJson,
+  buildChatTraceMarkdown,
+  chatTraceFilename,
+} from "@/lib/utils/chatExport";
 
 const GENERATED_AT = "2026-05-20T12:00:00.000Z";
 
@@ -202,7 +206,7 @@ describe("chat trace export", () => {
     expect(trace.summary.transportErrorCount).toBe(1);
     expect(trace.summary.includesLiveDebugLogs).toBe(true);
     expect(trace.protocol?.failedRequests).toHaveLength(1);
-    expect(trace.events.some((event) => event.requestId === "99")).toBe(true);
+    expect(trace.events.some(event => event.requestId === "99")).toBe(true);
     expect(serialized).toContain("********");
     expect(serialized).toContain("[truncated");
     expect(serialized).not.toContain("Bearer super-secret");

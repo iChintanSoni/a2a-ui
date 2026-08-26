@@ -57,9 +57,7 @@ describe("artifactRevision", () => {
     expect(revision.parts[0].kind === "text" ? revision.parts[0].text : "").toContain(
       "Use this revised markdown artifact as the latest working version",
     );
-    expect(revision.parts[0].kind === "text" ? revision.parts[0].text : "").toContain(
-      "line three",
-    );
+    expect(revision.parts[0].kind === "text" ? revision.parts[0].text : "").toContain("line three");
   });
 
   it("classifies code artifacts and preserves the kind in revision metadata", () => {

@@ -91,7 +91,7 @@ describe("buildTaskSummaries", () => {
       validationWarningCount: 1,
       latestStatusText: "Forecast ready",
     });
-    expect(summaries[0].timelineStages.map((stage) => stage.key)).toEqual([
+    expect(summaries[0].timelineStages.map(stage => stage.key)).toEqual([
       "working",
       "artifact-streamed",
     ]);

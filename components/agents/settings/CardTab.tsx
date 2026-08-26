@@ -1,4 +1,10 @@
-import { AlertTriangleIcon, CheckCircle2Icon, DownloadIcon, RefreshCwIcon, XCircleIcon } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  CheckCircle2Icon,
+  DownloadIcon,
+  RefreshCwIcon,
+  XCircleIcon,
+} from "lucide-react";
 import type { Agent } from "@/lib/features/agents/agentsSlice";
 import type { ComplianceResult } from "@/lib/utils/compliance";
 import { AgentCardViewer } from "@/components/agent-card-viewer";
@@ -31,7 +37,13 @@ export function CardTab({
   return (
     <div className="mt-6 space-y-8">
       <div className="flex flex-wrap items-center gap-3">
-        <Button variant="outline" size="sm" className="gap-2" onClick={onRefetch} disabled={refetching}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={onRefetch}
+          disabled={refetching}
+        >
           <RefreshCwIcon className={`size-4 ${refetching ? "animate-spin" : ""}`} />
           {refetching ? "Fetching…" : "Re-fetch Agent Card"}
         </Button>
@@ -39,7 +51,7 @@ export function CardTab({
           <DownloadIcon className="size-4" />
           Export Protocol Report
         </Button>
-        {refetchSuccess && <Caption className="text-green-600 inline">Card updated.</Caption>}
+        {refetchSuccess && <Caption className="inline text-green-600">Card updated.</Caption>}
         {refetchError && <ErrorText>{refetchError}</ErrorText>}
       </div>
 
@@ -75,7 +87,10 @@ export function CardTab({
             <div className="flex flex-wrap gap-1.5">
               {Object.entries(card.securitySchemes).map(([name, scheme]) => (
                 <Badge key={name} variant="secondary">
-                  {name}: {typeof scheme === "object" && scheme && "type" in scheme ? String(scheme.type) : "unknown"}
+                  {name}:{" "}
+                  {typeof scheme === "object" && scheme && "type" in scheme
+                    ? String(scheme.type)
+                    : "unknown"}
                 </Badge>
               ))}
             </div>
@@ -87,17 +102,17 @@ export function CardTab({
         <div className="space-y-3">
           <SectionTitle>Skills ({card.skills.length})</SectionTitle>
           <div className="space-y-2">
-            {card.skills.map((skill) => (
+            {card.skills.map(skill => (
               <div key={skill.id} className="rounded-md border px-3 py-2 text-sm">
                 <Small>{skill.name}</Small>
                 <Caption className="mt-0.5">{skill.description}</Caption>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {(skill.inputModes ?? card.defaultInputModes ?? []).map((mode) => (
+                  {(skill.inputModes ?? card.defaultInputModes ?? []).map(mode => (
                     <Badge key={`in-${skill.id}-${mode}`} variant="secondary">
                       In: {mode}
                     </Badge>
                   ))}
-                  {(skill.outputModes ?? card.defaultOutputModes ?? []).map((mode) => (
+                  {(skill.outputModes ?? card.defaultOutputModes ?? []).map(mode => (
                     <Badge key={`out-${skill.id}-${mode}`} variant="outline">
                       Out: {mode}
                     </Badge>
@@ -117,14 +132,14 @@ export function CardTab({
           </Caption>
         </div>
         <div className="space-y-1.5">
-          {compliance.checks.map((c) => (
+          {compliance.checks.map(c => (
             <div key={c.id} className="flex items-start gap-2 text-xs">
               {c.pass ? (
-                <CheckCircle2Icon className="size-3.5 mt-0.5 shrink-0 text-green-500" />
+                <CheckCircle2Icon className="mt-0.5 size-3.5 shrink-0 text-green-500" />
               ) : c.severity === "warning" ? (
-                <AlertTriangleIcon className="size-3.5 mt-0.5 shrink-0 text-yellow-600" />
+                <AlertTriangleIcon className="mt-0.5 size-3.5 shrink-0 text-yellow-600" />
               ) : (
-                <XCircleIcon className="size-3.5 mt-0.5 shrink-0 text-destructive" />
+                <XCircleIcon className="text-destructive mt-0.5 size-3.5 shrink-0" />
               )}
               <span
                 className={
@@ -136,9 +151,7 @@ export function CardTab({
                 }
               >
                 <Mono className="text-xs">{c.label}</Mono>
-                {!c.pass && (
-                  <span className="text-muted-foreground"> — {c.message}</span>
-                )}
+                {!c.pass && <span className="text-muted-foreground"> — {c.message}</span>}
               </span>
             </div>
           ))}

@@ -50,7 +50,7 @@ function normalizeAgentCard(card: SDKAgentCard): SDKAgentCard {
     ...card,
     defaultInputModes: defaultInputModes ?? [],
     defaultOutputModes: defaultOutputModes ?? [],
-    skills: (card.skills ?? []).map((skill) => ({
+    skills: (card.skills ?? []).map(skill => ({
       ...skill,
       inputModes: normalizeModes(skill.inputModes),
       outputModes: normalizeModes(skill.outputModes),
@@ -80,9 +80,7 @@ export const agentsSlice = createSlice({
     },
     addAgent: (state, action: PayloadAction<Agent>) => {
       const nextAgent = normalizeAgent(action.payload);
-      const existingIndex = state.agents.findIndex(
-        (a) => a.url === nextAgent.url
-      );
+      const existingIndex = state.agents.findIndex(a => a.url === nextAgent.url);
       if (existingIndex >= 0) {
         state.agents[existingIndex] = nextAgent;
       } else {
@@ -93,11 +91,11 @@ export const agentsSlice = createSlice({
       }
     },
     removeAgent: (state, action: PayloadAction<string>) => {
-      const agent = state.agents.find((a) => a.id === action.payload);
+      const agent = state.agents.find(a => a.id === action.payload);
       if (agent && state.activeAgentUrl === agent.url) {
         state.activeAgentUrl = null;
       }
-      state.agents = state.agents.filter((a) => a.id !== action.payload);
+      state.agents = state.agents.filter(a => a.id !== action.payload);
       if (!state.activeAgentUrl && state.agents.length > 0) {
         state.activeAgentUrl = state.agents[0].url;
       }
@@ -107,72 +105,60 @@ export const agentsSlice = createSlice({
     },
     updateAgentStatus: (
       state,
-      action: PayloadAction<{ url: string; status: Agent["status"]; error?: string }>
+      action: PayloadAction<{ url: string; status: Agent["status"]; error?: string }>,
     ) => {
-      const agent = state.agents.find((a) => a.url === action.payload.url);
+      const agent = state.agents.find(a => a.url === action.payload.url);
       if (agent) {
         agent.status = action.payload.status;
         agent.error = action.payload.error;
       }
     },
-    updateAgentAuth: (
-      state,
-      action: PayloadAction<{ agentId: string; auth: AuthConfig }>
-    ) => {
-      const agent = state.agents.find((a) => a.id === action.payload.agentId);
+    updateAgentAuth: (state, action: PayloadAction<{ agentId: string; auth: AuthConfig }>) => {
+      const agent = state.agents.find(a => a.id === action.payload.agentId);
       if (agent) {
         agent.auth = action.payload.auth;
       }
     },
     updateAgentHeaders: (
       state,
-      action: PayloadAction<{ agentId: string; headers: CustomHeader[] }>
+      action: PayloadAction<{ agentId: string; headers: CustomHeader[] }>,
     ) => {
-      const agent = state.agents.find((a) => a.id === action.payload.agentId);
+      const agent = state.agents.find(a => a.id === action.payload.agentId);
       if (agent) {
         agent.customHeaders = action.payload.headers;
       }
     },
     updateAgentDisplayName: (
       state,
-      action: PayloadAction<{ agentId: string; displayName: string }>
+      action: PayloadAction<{ agentId: string; displayName: string }>,
     ) => {
-      const agent = state.agents.find((a) => a.id === action.payload.agentId);
+      const agent = state.agents.find(a => a.id === action.payload.agentId);
       if (agent) {
         agent.displayName = action.payload.displayName || undefined;
       }
     },
-    updateAgentTags: (
-      state,
-      action: PayloadAction<{ agentId: string; tags: string[] }>
-    ) => {
-      const agent = state.agents.find((a) => a.id === action.payload.agentId);
+    updateAgentTags: (state, action: PayloadAction<{ agentId: string; tags: string[] }>) => {
+      const agent = state.agents.find(a => a.id === action.payload.agentId);
       if (agent) {
         agent.tags = Array.from(
-          new Set(action.payload.tags.map((tag) => tag.trim()).filter(Boolean))
+          new Set(action.payload.tags.map(tag => tag.trim()).filter(Boolean)),
         );
       }
     },
     toggleAgentFavorite: (state, action: PayloadAction<string>) => {
-      const agent = state.agents.find((a) => a.id === action.payload);
+      const agent = state.agents.find(a => a.id === action.payload);
       if (agent) {
         agent.favorite = !agent.favorite;
       }
     },
-    setAgentA2UIEnabled: (
-      state,
-      action: PayloadAction<{ agentId: string; enabled: boolean }>
-    ) => {
-      const agent = state.agents.find((a) => a.id === action.payload.agentId);
+    setAgentA2UIEnabled: (state, action: PayloadAction<{ agentId: string; enabled: boolean }>) => {
+      const agent = state.agents.find(a => a.id === action.payload.agentId);
       if (agent) {
         agent.a2uiEnabled = action.payload.enabled;
       }
     },
-    updateAgentCard: (
-      state,
-      action: PayloadAction<{ agentId: string; card: SDKAgentCard }>
-    ) => {
-      const agent = state.agents.find((a) => a.id === action.payload.agentId);
+    updateAgentCard: (state, action: PayloadAction<{ agentId: string; card: SDKAgentCard }>) => {
+      const agent = state.agents.find(a => a.id === action.payload.agentId);
       if (agent) {
         agent.card = normalizeAgentCard(action.payload.card);
         agent.status = "connected";

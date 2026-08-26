@@ -30,9 +30,9 @@ export function AuthTab({ auth, saved, onAuthChange, onSave }: Props) {
       <FieldGroup>
         <Field>
           <Label>Auth Type</Label>
-          <Select value={auth.type} onValueChange={(v) => handleTypeChange(v as AuthConfig["type"])}>
-            <SelectTrigger className="w-full">
-              <SelectValue />
+          <Select value={auth.type} onValueChange={v => handleTypeChange(v as AuthConfig["type"])}>
+            <SelectTrigger className="w-full" aria-label="Auth Type">
+              <SelectValue placeholder="Select authentication type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="none">None</SelectItem>
@@ -51,7 +51,7 @@ export function AuthTab({ auth, saved, onAuthChange, onSave }: Props) {
               type="password"
               placeholder="your-token"
               value={auth.bearerToken ?? ""}
-              onChange={(e) => onAuthChange({ ...auth, bearerToken: e.target.value })}
+              onChange={e => onAuthChange({ ...auth, bearerToken: e.target.value })}
             />
           </Field>
         )}
@@ -64,7 +64,7 @@ export function AuthTab({ auth, saved, onAuthChange, onSave }: Props) {
                 id="api-key-header"
                 placeholder="X-API-Key"
                 value={auth.apiKeyHeader ?? ""}
-                onChange={(e) => onAuthChange({ ...auth, apiKeyHeader: e.target.value })}
+                onChange={e => onAuthChange({ ...auth, apiKeyHeader: e.target.value })}
               />
             </Field>
             <Field>
@@ -74,7 +74,7 @@ export function AuthTab({ auth, saved, onAuthChange, onSave }: Props) {
                 type="password"
                 placeholder="your-api-key"
                 value={auth.apiKeyValue ?? ""}
-                onChange={(e) => onAuthChange({ ...auth, apiKeyValue: e.target.value })}
+                onChange={e => onAuthChange({ ...auth, apiKeyValue: e.target.value })}
               />
             </Field>
           </>
@@ -88,7 +88,7 @@ export function AuthTab({ auth, saved, onAuthChange, onSave }: Props) {
                 id="basic-user"
                 placeholder="username"
                 value={auth.basicUsername ?? ""}
-                onChange={(e) => onAuthChange({ ...auth, basicUsername: e.target.value })}
+                onChange={e => onAuthChange({ ...auth, basicUsername: e.target.value })}
               />
             </Field>
             <Field>
@@ -98,7 +98,7 @@ export function AuthTab({ auth, saved, onAuthChange, onSave }: Props) {
                 type="password"
                 placeholder="password"
                 value={auth.basicPassword ?? ""}
-                onChange={(e) => onAuthChange({ ...auth, basicPassword: e.target.value })}
+                onChange={e => onAuthChange({ ...auth, basicPassword: e.target.value })}
               />
             </Field>
           </>

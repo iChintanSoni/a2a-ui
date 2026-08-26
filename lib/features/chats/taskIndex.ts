@@ -1,8 +1,5 @@
 import type { Part, TaskState } from "@a2a-js/sdk";
-import {
-  getTaskTimelineStages,
-  type TaskTimelineStage,
-} from "@/lib/a2a/execution-events";
+import { getTaskTimelineStages, type TaskTimelineStage } from "@/lib/a2a/execution-events";
 import type { Chat } from "./chatsSlice";
 
 export interface TaskSummary {
@@ -24,7 +21,7 @@ export interface TaskSummary {
 function textFromParts(parts: Part[]): string {
   return parts
     .filter((part): part is Extract<Part, { kind: "text" }> => part.kind === "text")
-    .map((part) => part.text)
+    .map(part => part.text)
     .join(" ")
     .trim();
 }
@@ -41,9 +38,7 @@ export function buildTaskSummaries(chats: Chat[]): TaskSummary[] {
       if (item.kind === "task-status") {
         const key = taskKey(chat.id, item.taskId);
         const existing = tasks.get(key);
-        const latestStatusText = item.statusMessage
-          ? textFromParts(item.statusMessage.parts)
-          : "";
+        const latestStatusText = item.statusMessage ? textFromParts(item.statusMessage.parts) : "";
 
         tasks.set(key, {
           chatId: chat.id,

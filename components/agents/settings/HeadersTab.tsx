@@ -19,21 +19,22 @@ export function HeadersTab({ headers, saved, onAdd, onRemove, onUpdate, onSave }
       <Muted>Additional headers sent with every request to this agent.</Muted>
 
       <div className="flex flex-col gap-2">
-        {headers.length === 0 && (
-          <Muted className="py-2">No custom headers configured.</Muted>
-        )}
+        {headers.length === 0 && <Muted className="py-2">No custom headers configured.</Muted>}
         {headers.map((row, i) => (
-          <div key={i} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
+          <div
+            key={i}
+            className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center"
+          >
             <Input
               placeholder="Header name"
               value={row.key}
-              onChange={(e) => onUpdate(i, "key", e.target.value)}
+              onChange={e => onUpdate(i, "key", e.target.value)}
               className="flex-1"
             />
             <Input
               placeholder="Value"
               value={row.value}
-              onChange={(e) => onUpdate(i, "value", e.target.value)}
+              onChange={e => onUpdate(i, "value", e.target.value)}
               className="flex-1"
             />
             <Button

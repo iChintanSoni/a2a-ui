@@ -35,7 +35,10 @@ const generateImageTool = new DynamicStructuredTool({
       if (!response.ok) {
         const body = await response.text();
         console.error(`[generate_image] Ollama error (${response.status}): ${body}`);
-        return JSON.stringify({ success: false, error: "Image generation failed. Check server logs." });
+        return JSON.stringify({
+          success: false,
+          error: "Image generation failed. Check server logs.",
+        });
       }
 
       const data = (await response.json()) as { images?: string[]; response?: string };
@@ -53,7 +56,10 @@ const generateImageTool = new DynamicStructuredTool({
       return JSON.stringify({ success: false, error: "No image found in Ollama response." });
     } catch (error) {
       console.error("[generate_image] Unexpected error:", error);
-      return JSON.stringify({ success: false, error: "Image generation failed. Check server logs." });
+      return JSON.stringify({
+        success: false,
+        error: "Image generation failed. Check server logs.",
+      });
     }
   },
 });
@@ -79,7 +85,9 @@ const SYSTEM_PROMPT =
 
 export const agent = createAgent({
   model,
-  systemPrompt: SYSTEM_PROMPT + " When the user provides an image, describe and analyse it as part of your response.",
+  systemPrompt:
+    SYSTEM_PROMPT +
+    " When the user provides an image, describe and analyse it as part of your response.",
   checkpointer,
   tools,
 });

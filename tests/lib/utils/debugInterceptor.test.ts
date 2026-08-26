@@ -8,7 +8,7 @@ describe("debug masking", () => {
         Authorization: "Bearer secret",
         "X-Trace-Id": "trace-123",
         "X-Api-Key": "abc123",
-      })
+      }),
     ).toEqual({
       Authorization: "********",
       "X-Trace-Id": "trace-123",
@@ -24,7 +24,7 @@ describe("debug masking", () => {
           safe: "value",
         },
         password: "p",
-      })
+      }),
     ).toEqual({
       metadata: {
         accessToken: "********",

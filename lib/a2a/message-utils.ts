@@ -59,7 +59,7 @@ export async function resolveContextConfig(
 export async function encodeAttachments(files: File[]): Promise<FilePart[]> {
   return Promise.all(
     files.map(
-      (file) =>
+      file =>
         new Promise<FilePart>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => {
@@ -82,7 +82,7 @@ function injectHiddenContext(parts: Part[], hiddenSystemContext?: string): Part[
   if (!hiddenEnvelope) return parts;
 
   let injected = false;
-  const nextParts = parts.map((part) => {
+  const nextParts = parts.map(part => {
     if (injected || part.kind !== "text") return part;
     injected = true;
     return {
@@ -99,9 +99,7 @@ function isNativeFile(part: OutgoingMessagePartInput): part is File {
   return typeof File !== "undefined" && part instanceof File;
 }
 
-export async function normalizeOutgoingParts(
-  parts: OutgoingMessagePartInput[],
-): Promise<Part[]> {
+export async function normalizeOutgoingParts(parts: OutgoingMessagePartInput[]): Promise<Part[]> {
   const normalized: Part[] = [];
 
   for (const part of parts) {
@@ -117,9 +115,7 @@ export async function normalizeOutgoingParts(
   return normalized;
 }
 
-export async function buildOutgoingMessage(
-  input: BuildOutgoingMessageInput,
-): Promise<Message> {
+export async function buildOutgoingMessage(input: BuildOutgoingMessageInput): Promise<Message> {
   const text = getTextPartsText(input.parts);
   const resolvedContext = await resolveContextConfig(
     {

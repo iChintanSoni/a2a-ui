@@ -59,12 +59,12 @@ Settings), they appear as quick-insert buttons above the input field.
 
 Responses stream in real time. The chat timeline shows:
 
-| Item type | What it is |
-|-----------|-----------|
-| **Task status** | State transitions: submitted → working → completed / failed / input-required |
-| **Agent message** | A free-form message from the agent (non-task response) |
-| **Artifact** | Named output (document, image, data) produced by a task |
-| **Tool call** | A tool the agent invoked, with its query and result count |
+| Item type         | What it is                                                                   |
+| ----------------- | ---------------------------------------------------------------------------- |
+| **Task status**   | State transitions: submitted → working → completed / failed / input-required |
+| **Agent message** | A free-form message from the agent (non-task response)                       |
+| **Artifact**      | Named output (document, image, data) produced by a task                      |
+| **Tool call**     | A tool the agent invoked, with its query and result count                    |
 
 ### Artifacts
 
@@ -115,12 +115,12 @@ Each event row expands to show its full detail payload.
 
 ## Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| `Cmd/Ctrl+Shift+D` | Toggle debug panel |
+| Shortcut           | Action                               |
+| ------------------ | ------------------------------------ |
+| `Cmd/Ctrl+Shift+D` | Toggle debug panel                   |
 | `Cmd/Ctrl+Shift+N` | Start a new session (new context ID) |
-| `Enter` | Send message |
-| `Shift+Enter` | Insert newline in input |
+| `Enter`            | Send message                         |
+| `Shift+Enter`      | Insert newline in input              |
 
 ---
 
@@ -128,11 +128,11 @@ Each event row expands to show its full detail payload.
 
 Open the **Export** menu (download icon) to save the conversation:
 
-| Format | Contents |
-|--------|----------|
-| **Markdown trace** | Human-readable export: messages, task states, artifacts, timing |
-| **Forensic JSON** | Full state dump including execution events, debug logs, metadata |
-| **Protocol report** | Compliance results + HTTP logs — useful for bug reports |
+| Format              | Contents                                                         |
+| ------------------- | ---------------------------------------------------------------- |
+| **Markdown trace**  | Human-readable export: messages, task states, artifacts, timing  |
+| **Forensic JSON**   | Full state dump including execution events, debug logs, metadata |
+| **Protocol report** | Compliance results + HTTP logs — useful for bug reports          |
 
 ---
 

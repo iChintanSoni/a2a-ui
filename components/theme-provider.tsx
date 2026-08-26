@@ -27,10 +27,7 @@ function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
 }
 
-export function ThemeProvider({
-  children,
-  defaultTheme = "system",
-}: ThemeProviderProps) {
+export function ThemeProvider({ children, defaultTheme = "system" }: ThemeProviderProps) {
   const [theme, setThemeState] = React.useState<Theme>(defaultTheme);
 
   React.useEffect(() => {

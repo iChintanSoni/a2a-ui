@@ -47,7 +47,7 @@ function compatibleModes(skillModes: unknown, defaultModes: string[] | undefined
   const normalizedDefaults = new Set(defaultModes.map(normalizeMode));
   return skillModes
     .filter((m): m is string => typeof m === "string")
-    .every((m) => normalizedDefaults.has(normalizeMode(m)));
+    .every(m => normalizedDefaults.has(normalizeMode(m)));
 }
 
 const KNOWN_TRANSPORTS = new Set(["JSONRPC", "HTTP+JSON", "GRPC"]);
@@ -63,7 +63,7 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     pass: boolean,
     failMsg: string,
     passMsg = "OK",
-    severity: ComplianceSeverity = "error"
+    severity: ComplianceSeverity = "error",
   ) => checks.push({ id, label, pass, message: pass ? passMsg : failMsg, severity });
 
   // Required string fields
@@ -72,31 +72,26 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     "description",
     "description is present",
     isFilledString(raw.description),
-    "Missing or empty 'description'"
+    "Missing or empty 'description'",
   );
-  check(
-    "version",
-    "version is present",
-    isFilledString(raw.version),
-    "Missing or empty 'version'"
-  );
+  check("version", "version is present", isFilledString(raw.version), "Missing or empty 'version'");
   check(
     "protocolVersion",
     "protocolVersion is present",
     isFilledString(raw.protocolVersion),
-    "Missing or empty 'protocolVersion'"
+    "Missing or empty 'protocolVersion'",
   );
 
-  const protocolVersion = isFilledString(raw.protocolVersion)
-    ? String(raw.protocolVersion)
-    : "";
+  const protocolVersion = isFilledString(raw.protocolVersion) ? String(raw.protocolVersion) : "";
   const protocolMajor = Number(protocolVersion.split(".")[0]);
   check(
     "protocolVersion-compatible",
     "protocolVersion is compatible",
-    protocolVersion !== "" && Number.isFinite(protocolMajor) && protocolMajor === SUPPORTED_PROTOCOL_MAJOR,
+    protocolVersion !== "" &&
+      Number.isFinite(protocolMajor) &&
+      protocolMajor === SUPPORTED_PROTOCOL_MAJOR,
     `Unsupported protocolVersion '${protocolVersion || "missing"}'. This UI currently expects A2A 0.x cards.`,
-    `Compatible (${protocolVersion})`
+    `Compatible (${protocolVersion})`,
   );
 
   // URL — required and must be a valid URL
@@ -115,17 +110,16 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     "url is a valid URL",
     validUrl,
     hasUrl ? "Invalid URL format" : "Missing or empty 'url'",
-    `Valid (${raw.url})`
+    `Valid (${raw.url})`,
   );
 
   // capabilities object
-  const hasCaps =
-    raw.capabilities !== null && typeof raw.capabilities === "object";
+  const hasCaps = raw.capabilities !== null && typeof raw.capabilities === "object";
   check(
     "capabilities",
     "capabilities object is present",
     hasCaps,
-    "Missing required 'capabilities' object"
+    "Missing required 'capabilities' object",
   );
 
   const preferredTransport = isFilledString(raw.preferredTransport)
@@ -136,7 +130,7 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     "preferredTransport is supported",
     KNOWN_TRANSPORTS.has(preferredTransport),
     `Unsupported preferredTransport '${String(raw.preferredTransport)}'`,
-    `Using ${preferredTransport}`
+    `Using ${preferredTransport}`,
   );
 
   const interfaces = toArray(raw.additionalInterfaces);
@@ -144,15 +138,11 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     if (!isRecord(entry)) return [`additionalInterfaces[${index}] is not an object`];
 
     const problems: string[] = [];
-    const transport = isFilledString(entry.transport)
-      ? String(entry.transport).toUpperCase()
-      : "";
+    const transport = isFilledString(entry.transport) ? String(entry.transport).toUpperCase() : "";
     if (!hasValidUrl(entry.url)) problems.push("url must be an absolute URL");
     if (!KNOWN_TRANSPORTS.has(transport)) problems.push("transport is unsupported");
 
-    return problems.length > 0
-      ? [`additionalInterfaces[${index}]: ${problems.join(", ")}`]
-      : [];
+    return problems.length > 0 ? [`additionalInterfaces[${index}]: ${problems.join(", ")}`] : [];
   });
   const interfacesValid = invalidInterfaces.length === 0;
   check(
@@ -160,18 +150,20 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     "additionalInterfaces declare valid URL/transport pairs",
     interfacesValid,
     invalidInterfaces.join("; "),
-    interfaces.length > 0 ? `${interfaces.length} interface(s) declared` : "No additional interfaces declared",
-    "warning"
+    interfaces.length > 0
+      ? `${interfaces.length} interface(s) declared`
+      : "No additional interfaces declared",
+    "warning",
   );
 
   const preferredTransportHasInterface =
     interfaces.length === 0 ||
     !validUrl ||
     interfaces.some(
-      (entry) =>
+      entry =>
         isRecord(entry) &&
         String(entry.url) === String(raw.url) &&
-        String(entry.transport).toUpperCase() === preferredTransport
+        String(entry.transport).toUpperCase() === preferredTransport,
     );
   check(
     "preferredTransport-interface",
@@ -179,25 +171,20 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     preferredTransportHasInterface,
     "Best practice: include an additionalInterfaces entry matching the main url and preferredTransport",
     "Preferred transport is discoverable",
-    "warning"
+    "warning",
   );
 
   // skills array — required and non-empty
   const skillsArr = Array.isArray(raw.skills) ? (raw.skills as unknown[]) : undefined;
   const hasSkills = skillsArr !== undefined;
   const nonEmptySkills = hasSkills && skillsArr!.length > 0;
-  check(
-    "skills-present",
-    "skills array is present",
-    hasSkills,
-    "Missing required 'skills' field"
-  );
+  check("skills-present", "skills array is present", hasSkills, "Missing required 'skills' field");
   check(
     "skills-non-empty",
     "skills array is non-empty",
     nonEmptySkills,
     "'skills' array must not be empty",
-    `${skillsArr?.length ?? 0} skill(s) declared`
+    `${skillsArr?.length ?? 0} skill(s) declared`,
   );
 
   // defaultInputModes — required, non-empty
@@ -208,7 +195,7 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     "defaultInputModes is non-empty",
     hasInputModes,
     "Missing or empty 'defaultInputModes'",
-    `[${(inputModes ?? []).join(", ")}]`
+    `[${(inputModes ?? []).join(", ")}]`,
   );
 
   // defaultOutputModes — required, non-empty
@@ -219,55 +206,48 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     "defaultOutputModes is non-empty",
     hasOutputModes,
     "Missing or empty 'defaultOutputModes'",
-    `[${(outputModes ?? []).join(", ")}]`
+    `[${(outputModes ?? []).join(", ")}]`,
   );
 
   // Each skill must have required fields
   if (nonEmptySkills) {
     const skills = skillsArr as Array<Record<string, unknown>>;
     const skillsValid = skills.every(
-      (s) =>
-        isFilledString(s.id) &&
-        isFilledString(s.name) &&
-        isFilledString(s.description)
+      s => isFilledString(s.id) && isFilledString(s.name) && isFilledString(s.description),
     );
     check(
       "skills-fields",
       "skills have required fields (id, name, description)",
       skillsValid,
-      "One or more skills missing required fields (id, name, description)"
+      "One or more skills missing required fields (id, name, description)",
     );
 
-    const skillTagsValid = skills.every((s) => isStringArray(s.tags));
+    const skillTagsValid = skills.every(s => isStringArray(s.tags));
     check(
       "skills-tags",
       "skills declare tags arrays",
       skillTagsValid,
       "One or more skills is missing a valid tags array",
       "All skills include tags",
-      "warning"
+      "warning",
     );
 
-    const skillInputModesValid = skills.every((s) =>
-      compatibleModes(s.inputModes, inputModes)
-    );
+    const skillInputModesValid = skills.every(s => compatibleModes(s.inputModes, inputModes));
     check(
       "skills-inputModes",
       "skill inputModes inherit from defaultInputModes",
       skillInputModesValid,
       "One or more skills declares an input mode that is not included in defaultInputModes",
-      "Skill input modes are consistent"
+      "Skill input modes are consistent",
     );
 
-    const skillOutputModesValid = skills.every((s) =>
-      compatibleModes(s.outputModes, outputModes)
-    );
+    const skillOutputModesValid = skills.every(s => compatibleModes(s.outputModes, outputModes));
     check(
       "skills-outputModes",
       "skill outputModes inherit from defaultOutputModes",
       skillOutputModesValid,
       "One or more skills declares an output mode that is not included in defaultOutputModes",
-      "Skill output modes are consistent"
+      "Skill output modes are consistent",
     );
   }
 
@@ -277,9 +257,9 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     security.length === 0 ||
     (securitySchemes != null &&
       security.every(
-        (requirement) =>
+        requirement =>
           isRecord(requirement) &&
-          Object.keys(requirement).every((schemeName) => schemeName in securitySchemes)
+          Object.keys(requirement).every(schemeName => schemeName in securitySchemes),
       ));
   check(
     "security-references",
@@ -289,24 +269,26 @@ export function checkCompliance(card: AgentCard): ComplianceResult {
     security.length > 0
       ? `${security.length} security requirement set(s) declared`
       : "No security requirements declared",
-    "warning"
+    "warning",
   );
 
   const securitySchemesValid =
     securitySchemes == null ||
-    Object.values(securitySchemes).every((scheme) => isRecord(scheme) && isFilledString(scheme.type));
+    Object.values(securitySchemes).every(scheme => isRecord(scheme) && isFilledString(scheme.type));
   check(
     "securitySchemes",
     "securitySchemes are displayable",
     securitySchemesValid,
     "One or more securitySchemes entries is missing a type",
-    securitySchemes ? `${Object.keys(securitySchemes).length} scheme(s) declared` : "No security schemes declared",
-    "warning"
+    securitySchemes
+      ? `${Object.keys(securitySchemes).length} scheme(s) declared`
+      : "No security schemes declared",
+    "warning",
   );
 
-  const passCount = checks.filter((c) => c.pass).length;
-  const failCount = checks.filter((c) => !c.pass).length;
-  const warningCount = checks.filter((c) => !c.pass && c.severity === "warning").length;
+  const passCount = checks.filter(c => c.pass).length;
+  const failCount = checks.filter(c => !c.pass).length;
+  const warningCount = checks.filter(c => !c.pass && c.severity === "warning").length;
   return { checks, passCount, failCount, warningCount };
 }
 
@@ -330,17 +312,40 @@ function validateParts(parts: unknown, path: string): ValidationWarning[] {
   parts.forEach((part, index) => {
     const partPath = `${path}[${index}]`;
     if (!isRecord(part) || !isFilledString(part.kind)) {
-      warnings.push(warning("part-kind", "Part kind is valid", "Part is missing a string kind", partPath));
+      warnings.push(
+        warning("part-kind", "Part kind is valid", "Part is missing a string kind", partPath),
+      );
       return;
     }
     if (part.kind === "text" && typeof part.text !== "string") {
-      warnings.push(warning("text-part", "Text part has text", "Text parts must include a text string", partPath));
+      warnings.push(
+        warning(
+          "text-part",
+          "Text part has text",
+          "Text parts must include a text string",
+          partPath,
+        ),
+      );
     }
     if (part.kind === "file" && !isRecord(part.file)) {
-      warnings.push(warning("file-part", "File part has file data", "File parts must include a file object", partPath));
+      warnings.push(
+        warning(
+          "file-part",
+          "File part has file data",
+          "File parts must include a file object",
+          partPath,
+        ),
+      );
     }
     if (part.kind === "data" && !isRecord(part.data)) {
-      warnings.push(warning("data-part", "Data part has data", "Data parts must include a data object", partPath));
+      warnings.push(
+        warning(
+          "data-part",
+          "Data part has data",
+          "Data parts must include a data object",
+          partPath,
+        ),
+      );
     }
   });
   return warnings;
@@ -350,16 +355,44 @@ export function validateOutgoingMessage(message: unknown): ValidationWarning[] {
   const msg = isRecord(message) ? message : {};
   const warnings: ValidationWarning[] = [];
   if (msg.kind !== "message") {
-    warnings.push(warning("message-kind", "Outgoing message kind", "Outgoing payload should use kind 'message'", "message.kind"));
+    warnings.push(
+      warning(
+        "message-kind",
+        "Outgoing message kind",
+        "Outgoing payload should use kind 'message'",
+        "message.kind",
+      ),
+    );
   }
   if (msg.role !== "user") {
-    warnings.push(warning("message-role", "Outgoing message role", "Outgoing payload should use role 'user'", "message.role"));
+    warnings.push(
+      warning(
+        "message-role",
+        "Outgoing message role",
+        "Outgoing payload should use role 'user'",
+        "message.role",
+      ),
+    );
   }
   if (!isFilledString(msg.messageId)) {
-    warnings.push(warning("message-id", "Outgoing message id", "Outgoing message is missing messageId", "message.messageId"));
+    warnings.push(
+      warning(
+        "message-id",
+        "Outgoing message id",
+        "Outgoing message is missing messageId",
+        "message.messageId",
+      ),
+    );
   }
   if (!isFilledString(msg.contextId)) {
-    warnings.push(warning("context-id", "Outgoing context id", "Outgoing message is missing contextId", "message.contextId"));
+    warnings.push(
+      warning(
+        "context-id",
+        "Outgoing context id",
+        "Outgoing message is missing contextId",
+        "message.contextId",
+      ),
+    );
   }
   warnings.push(...validateParts(msg.parts, "message.parts"));
   return warnings;
@@ -376,14 +409,25 @@ export function validateIncomingEvent(event: unknown): ValidationWarning[] {
       warnings.push(warning("task-id", "Task id", "Status update is missing taskId", "taskId"));
     }
     if (!isFilledString(event.contextId)) {
-      warnings.push(warning("context-id", "Context id", "Status update is missing contextId", "contextId"));
+      warnings.push(
+        warning("context-id", "Context id", "Status update is missing contextId", "contextId"),
+      );
     }
     const status = isRecord(event.status) ? event.status : undefined;
     if (!status || !isFilledString(status.state)) {
-      warnings.push(warning("status-state", "Status state", "Status update is missing status.state", "status.state"));
+      warnings.push(
+        warning(
+          "status-state",
+          "Status state",
+          "Status update is missing status.state",
+          "status.state",
+        ),
+      );
     }
     if (status?.message) {
-      warnings.push(...validateParts((status.message as Record<string, unknown>).parts, "status.message.parts"));
+      warnings.push(
+        ...validateParts((status.message as Record<string, unknown>).parts, "status.message.parts"),
+      );
     }
     return warnings;
   }
@@ -394,15 +438,26 @@ export function validateIncomingEvent(event: unknown): ValidationWarning[] {
       warnings.push(warning("task-id", "Task id", "Artifact update is missing taskId", "taskId"));
     }
     if (!isFilledString(event.contextId)) {
-      warnings.push(warning("context-id", "Context id", "Artifact update is missing contextId", "contextId"));
+      warnings.push(
+        warning("context-id", "Context id", "Artifact update is missing contextId", "contextId"),
+      );
     }
     const artifact = isRecord(event.artifact) ? event.artifact : undefined;
     if (!artifact) {
-      warnings.push(warning("artifact", "Artifact shape", "Artifact update is missing artifact", "artifact"));
+      warnings.push(
+        warning("artifact", "Artifact shape", "Artifact update is missing artifact", "artifact"),
+      );
       return warnings;
     }
     if (!isFilledString(artifact.artifactId)) {
-      warnings.push(warning("artifact-id", "Artifact id", "Artifact is missing artifactId", "artifact.artifactId"));
+      warnings.push(
+        warning(
+          "artifact-id",
+          "Artifact id",
+          "Artifact is missing artifactId",
+          "artifact.artifactId",
+        ),
+      );
     }
     warnings.push(...validateParts(artifact.parts, "artifact.parts"));
     return warnings;
@@ -411,14 +466,25 @@ export function validateIncomingEvent(event: unknown): ValidationWarning[] {
   if (event.kind === "message") {
     const warnings: ValidationWarning[] = [];
     if (event.role !== "agent") {
-      warnings.push(warning("message-role", "Message role", "Incoming message should use role 'agent'", "role"));
+      warnings.push(
+        warning("message-role", "Message role", "Incoming message should use role 'agent'", "role"),
+      );
     }
     if (!isFilledString(event.messageId)) {
-      warnings.push(warning("message-id", "Message id", "Incoming message is missing messageId", "messageId"));
+      warnings.push(
+        warning("message-id", "Message id", "Incoming message is missing messageId", "messageId"),
+      );
     }
     warnings.push(...validateParts(event.parts, "parts"));
     return warnings;
   }
 
-  return [warning("event-kind", "Event kind", `Unknown incoming event kind '${String(event.kind)}'`, "kind")];
+  return [
+    warning(
+      "event-kind",
+      "Event kind",
+      `Unknown incoming event kind '${String(event.kind)}'`,
+      "kind",
+    ),
+  ];
 }

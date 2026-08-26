@@ -23,7 +23,7 @@ export function ModeToggle({ compact = false }: { compact?: boolean }) {
         <Button
           variant="ghost"
           size={compact ? "icon-sm" : "default"}
-          className={compact ? "shrink-0 text-muted-foreground" : "w-full justify-start"}
+          className={compact ? "text-muted-foreground shrink-0" : "w-full justify-start"}
           aria-label="Change appearance"
           title={compact ? "Appearance" : undefined}
         >

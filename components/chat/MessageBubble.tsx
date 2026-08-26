@@ -10,22 +10,27 @@ interface UserBubbleProps {
   onRerun?: () => void;
 }
 
-export const UserBubble = memo(function UserBubble({ item, a2uiEnabled = false, onInspect, onRerun }: UserBubbleProps) {
+export const UserBubble = memo(function UserBubble({
+  item,
+  a2uiEnabled = false,
+  onInspect,
+  onRerun,
+}: UserBubbleProps) {
   return (
-    <div className="flex justify-end group">
+    <div className="group flex justify-end">
       <div className="relative flex max-w-[92%] flex-col items-end gap-1.5 sm:max-w-[75%]">
         {item.parts.map((part, i) =>
           part.kind === "text" ? (
             <div
               key={i}
-              className="rounded-[13px] rounded-br-[4px] bg-foreground px-4 py-2.5 text-[13.5px] font-medium leading-relaxed text-background"
+              className="bg-foreground text-background rounded-[13px] rounded-br-[4px] px-4 py-2.5 text-[13.5px] leading-relaxed font-medium"
             >
               <PartRenderer part={part} a2uiEnabled={a2uiEnabled} />
             </div>
           ) : (
             <div
               key={i}
-              className="max-w-full overflow-hidden rounded-[13px] rounded-br-[4px] border bg-background px-3 py-2 text-sm text-foreground shadow-xs"
+              className="bg-background text-foreground max-w-full overflow-hidden rounded-[13px] rounded-br-[4px] border px-3 py-2 text-sm shadow-xs"
             >
               <PartRenderer part={part} a2uiEnabled={a2uiEnabled} />
             </div>
@@ -34,7 +39,7 @@ export const UserBubble = memo(function UserBubble({ item, a2uiEnabled = false, 
         {onRerun && (
           <button
             onClick={onRerun}
-            className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground shadow-sm"
+            className="bg-background text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border shadow-sm transition-colors group-focus-within:flex group-hover:flex focus-visible:flex focus-visible:ring-2"
             title="Rerun this prompt in a fresh run"
             aria-label="Rerun this prompt"
           >
@@ -44,7 +49,7 @@ export const UserBubble = memo(function UserBubble({ item, a2uiEnabled = false, 
         {onInspect && (
           <button
             onClick={onInspect}
-            className="absolute -top-2 -left-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
+            className="bg-background text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute -top-2 -left-2 hidden size-5 items-center justify-center rounded-full border font-mono text-[10px] shadow-sm transition-colors group-focus-within:flex group-hover:flex focus-visible:flex focus-visible:ring-2"
             title="Inspect raw JSON"
             aria-label="Inspect raw JSON"
           >
@@ -62,17 +67,21 @@ interface AgentBubbleProps {
   onInspect?: () => void;
 }
 
-export const AgentBubble = memo(function AgentBubble({ item, a2uiEnabled = false, onInspect }: AgentBubbleProps) {
+export const AgentBubble = memo(function AgentBubble({
+  item,
+  a2uiEnabled = false,
+  onInspect,
+}: AgentBubbleProps) {
   return (
-    <div className="flex justify-start group">
-      <div className="relative max-w-[92%] rounded-[13px] rounded-bl-[4px] border bg-surface-2 px-4 py-2.5 text-sm sm:max-w-[75%]">
+    <div className="group flex justify-start">
+      <div className="bg-surface-2 relative max-w-[92%] rounded-[13px] rounded-bl-[4px] border px-4 py-2.5 text-sm sm:max-w-[75%]">
         {item.parts.map((part, i) => (
           <PartRenderer key={i} part={part} a2uiEnabled={a2uiEnabled} />
         ))}
         {onInspect && (
           <button
             onClick={onInspect}
-            className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
+            className="bg-background text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border font-mono text-[10px] shadow-sm transition-colors group-focus-within:flex group-hover:flex focus-visible:flex focus-visible:ring-2"
             title="Inspect raw JSON"
             aria-label="Inspect raw JSON"
           >

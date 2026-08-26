@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  A2UI_MIME_TYPE,
-  detectA2UISurface,
-} from "@/lib/a2a/a2ui";
+import { A2UI_MIME_TYPE, detectA2UISurface } from "@/lib/a2a/a2ui";
 
 describe("a2ui detection", () => {
   it("detects wrapped A2UI surfaces", () => {

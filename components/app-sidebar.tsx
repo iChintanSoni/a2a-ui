@@ -131,17 +131,23 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
 
   return (
     <Sidebar className={className} {...props}>
-      <SidebarHeader className="px-1.5 pb-1 pt-2.5">
+      <SidebarHeader className="px-1.5 pt-2.5 pb-1">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild size="lg" className="hover:bg-transparent active:bg-transparent">
+            <SidebarMenuButton
+              asChild
+              size="lg"
+              className="hover:bg-transparent active:bg-transparent"
+            >
               <Link href="/dashboard">
-                <div className="flex aspect-square size-8.5 shrink-0 items-center justify-center rounded-[9px] bg-primary text-primary-foreground shadow-xs">
+                <div className="bg-primary text-primary-foreground flex aspect-square size-8.5 shrink-0 items-center justify-center rounded-[9px] shadow-xs">
                   <BotIcon className="size-[19px]" />
                 </div>
                 <div className="grid flex-1 text-start leading-tight">
                   <span className="truncate text-[14.5px] font-bold tracking-tight">A2A UI</span>
-                  <span className="truncate text-[11.5px] font-medium text-sidebar-foreground/60">Workbench</span>
+                  <span className="text-sidebar-foreground/60 truncate text-[11.5px] font-medium">
+                    Workbench
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -151,7 +157,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
 
       <SidebarContent className="gap-4 px-1.5">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10.5px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
+          <SidebarGroupLabel className="text-sidebar-foreground/45 text-[10.5px] font-semibold tracking-wider uppercase">
             Workspace
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -169,7 +175,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
                     </Link>
                   </SidebarMenuButton>
                   {typeof workspaceCounts[item.href] === "number" && (
-                    <SidebarMenuBadge className="rounded-full border border-sidebar-border bg-sidebar-accent/40 font-semibold text-sidebar-foreground/60">
+                    <SidebarMenuBadge className="border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground/60 rounded-full border font-semibold">
                       {workspaceCounts[item.href]}
                     </SidebarMenuBadge>
                   )}
@@ -180,7 +186,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10.5px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
+          <SidebarGroupLabel className="text-sidebar-foreground/45 text-[10.5px] font-semibold tracking-wider uppercase">
             Tools
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -205,7 +211,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
 
         {/* Agents */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10.5px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
+          <SidebarGroupLabel className="text-sidebar-foreground/45 text-[10.5px] font-semibold tracking-wider uppercase">
             Agents
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -263,7 +269,7 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
 
         {/* Recent Chats */}
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10.5px] font-semibold tracking-wider text-sidebar-foreground/45 uppercase">
+          <SidebarGroupLabel className="text-sidebar-foreground/45 text-[10.5px] font-semibold tracking-wider uppercase">
             Recent Chats
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -278,13 +284,15 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
                       onClick={() => handleChatClick(chat.id)}
                       className="h-auto items-start py-1.5"
                     >
-                      <MessageSquareIcon className="mt-0.5 text-sidebar-foreground/50" />
+                      <MessageSquareIcon className="text-sidebar-foreground/50 mt-0.5" />
                       <div className="flex min-w-0 flex-col gap-0.5">
                         <span className="truncate text-[12.5px] leading-tight font-semibold">
                           {chat.title}
                           {chat.pinned ? <PinIcon className="ms-1 inline size-3" /> : null}
                         </span>
-                        <Caption className="truncate text-[11px] text-sidebar-foreground/45">{chat.agentName}</Caption>
+                        <Caption className="text-sidebar-foreground/45 truncate text-[11px]">
+                          {chat.agentName}
+                        </Caption>
                       </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -295,14 +303,18 @@ export function AppSidebar({ className, ...props }: React.ComponentProps<typeof 
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border px-3.5 py-2.5">
+      <SidebarFooter className="border-sidebar-border border-t px-3.5 py-2.5">
         <div className="flex items-center gap-2.5">
-          <div className="flex size-7 shrink-0 items-center justify-center rounded-full border border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground/70">
+          <div className="border-sidebar-border bg-sidebar-accent/40 text-sidebar-foreground/70 flex size-7 shrink-0 items-center justify-center rounded-full border">
             <BotIcon className="size-3.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-[12.5px] font-semibold leading-tight">Local workspace</div>
-              <div className="truncate text-[11px] font-medium text-sidebar-foreground/45">Stored in this browser</div>
+            <div className="truncate text-[12.5px] leading-tight font-semibold">
+              Local workspace
+            </div>
+            <div className="text-sidebar-foreground/45 truncate text-[11px] font-medium">
+              Stored in this browser
+            </div>
           </div>
           <ModeToggle compact />
         </div>

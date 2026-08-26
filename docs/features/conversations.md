@@ -17,10 +17,10 @@ The list is sorted by most recent by default. Use the search bar to filter by:
 
 ### Filters
 
-| Filter | Options |
-|--------|---------|
-| **Status** | All, Active, Archived |
-| **Sort** | Most recent, Oldest, Title (A → Z) |
+| Filter     | Options                            |
+| ---------- | ---------------------------------- |
+| **Status** | All, Active, Archived              |
+| **Sort**   | Most recent, Oldest, Title (A → Z) |
 
 ---
 
@@ -28,14 +28,14 @@ The list is sorted by most recent by default. Use the search bar to filter by:
 
 Each conversation has a context menu with the following actions:
 
-| Action | Description |
-|--------|-------------|
-| **Open** | Navigate to the chat view |
-| **Rename** | Change the conversation title |
-| **Pin** | Pinned conversations appear at the top of the list |
-| **Archive** | Move to the archived view (not deleted) |
-| **Clone** | Create a copy (see [Clone modes](#clone-modes)) |
-| **Delete** | Permanently remove the conversation |
+| Action      | Description                                        |
+| ----------- | -------------------------------------------------- |
+| **Open**    | Navigate to the chat view                          |
+| **Rename**  | Change the conversation title                      |
+| **Pin**     | Pinned conversations appear at the top of the list |
+| **Archive** | Move to the archived view (not deleted)            |
+| **Clone**   | Create a copy (see [Clone modes](#clone-modes))    |
+| **Delete**  | Permanently remove the conversation                |
 
 ---
 
@@ -61,12 +61,12 @@ visible in forensic JSON exports.
 Select multiple conversations using the checkboxes that appear on hover, then
 use the batch action toolbar:
 
-| Batch action | Description |
-|--------------|-------------|
-| **Export JSON** | Download selected conversations as a raw JSON bundle |
-| **Export forensic JSON** | Full state dump including debug logs |
-| **Export Markdown** | Human-readable trace for all selected conversations |
-| **Delete** | Permanently remove selected conversations |
+| Batch action             | Description                                          |
+| ------------------------ | ---------------------------------------------------- |
+| **Export JSON**          | Download selected conversations as a raw JSON bundle |
+| **Export forensic JSON** | Full state dump including debug logs                 |
+| **Export Markdown**      | Human-readable trace for all selected conversations  |
+| **Delete**               | Permanently remove selected conversations            |
 
 ---
 

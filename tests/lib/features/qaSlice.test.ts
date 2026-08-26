@@ -38,10 +38,7 @@ function makeRun(id = "run-1", suiteId = "suite-1"): QaSuiteRun {
 
 describe("qaSlice", () => {
   it("hydrates suites and runs", () => {
-    const state = reducer(
-      INITIAL_STATE,
-      hydrateQa({ suites: [makeSuite()], runs: [makeRun()] }),
-    );
+    const state = reducer(INITIAL_STATE, hydrateQa({ suites: [makeSuite()], runs: [makeRun()] }));
 
     expect(state.suites).toHaveLength(1);
     expect(state.runs).toHaveLength(1);
@@ -61,10 +58,10 @@ describe("qaSlice", () => {
     let state = reducer(INITIAL_STATE, recordQaRun(makeRun()));
     state = reducer(state, recordQaRun(makeRun("run-2", "suite-2")));
 
-    expect(state.runs.map((run) => run.id)).toEqual(["run-2", "run-1"]);
+    expect(state.runs.map(run => run.id)).toEqual(["run-2", "run-1"]);
 
     state = reducer(state, clearQaRunHistory("suite-1"));
-    expect(state.runs.map((run) => run.id)).toEqual(["run-2"]);
+    expect(state.runs.map(run => run.id)).toEqual(["run-2"]);
 
     state = reducer(state, clearQaRunHistory(undefined));
     expect(state.runs).toEqual([]);

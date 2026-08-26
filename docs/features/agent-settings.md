@@ -12,11 +12,11 @@ on an agent card, or via the sidebar when a chat with that agent is open.
 
 ## Identity
 
-| Field | Description |
-|-------|-------------|
+| Field            | Description                                                                                                                        |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | **Display name** | Overrides the agent's card name in the UI. Useful when you have multiple agents at different environments with the same card name. |
-| **Tags** | Free-form labels (e.g. `production`, `staging`, `experimental`). Used for filtering in the Agent Library. |
-| **Favorite** | Toggle to pin the agent at the top of the library. |
+| **Tags**         | Free-form labels (e.g. `production`, `staging`, `experimental`). Used for filtering in the Agent Library.                          |
+| **Favorite**     | Toggle to pin the agent at the top of the library.                                                                                 |
 
 ---
 
@@ -87,13 +87,13 @@ Click **Refresh card** to re-fetch the agent card without reconnecting.
 The compliance report validates the agent card against the A2A specification.
 Each check is listed with a pass/warn/fail status and a short description.
 
-| Check category | What is validated |
-|----------------|------------------|
-| Required fields | `name`, `description`, `version` present |
-| Auth schemes | Declared auth types are valid A2A values |
-| Skill format | Each skill has an `id`, `name`, and valid input/output modes |
-| Capabilities | Declared capabilities match known A2A capability keys |
-| Protocol version | Version string is well-formed |
+| Check category   | What is validated                                            |
+| ---------------- | ------------------------------------------------------------ |
+| Required fields  | `name`, `description`, `version` present                     |
+| Auth schemes     | Declared auth types are valid A2A values                     |
+| Skill format     | Each skill has an `id`, `name`, and valid input/output modes |
+| Capabilities     | Declared capabilities match known A2A capability keys        |
+| Protocol version | Version string is well-formed                                |
 
 ### Exporting a protocol report
 

@@ -9,8 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Caption, PageTitle, Muted, P } from "@/components/typography";
 import { useA2AConnection } from "@/hooks/use-a2a-connection";
 
-const DEMO_AGENT_URL =
-  process.env.NEXT_PUBLIC_DEMO_AGENT_URL ?? "http://localhost:3001";
+const DEMO_AGENT_URL = process.env.NEXT_PUBLIC_DEMO_AGENT_URL ?? "http://localhost:3001";
 
 export default function EmbedDemoPage() {
   const [copied, setCopied] = useState(false);
@@ -46,9 +45,11 @@ export function SupportAgentWidget() {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div className="hidden max-w-3xl flex-col gap-2 sm:flex">
-        <Caption className="text-[11px] font-semibold tracking-[0.06em] text-fg-subtle uppercase">Phase 1 Demo</Caption>
+        <Caption className="text-fg-subtle text-[11px] font-semibold tracking-[0.06em] uppercase">
+          Phase 1 Demo
+        </Caption>
         <PageTitle className="text-[26px] font-bold tracking-tight">Embeddable A2A Chat</PageTitle>
-        <P className="text-sm font-medium text-muted-foreground">
+        <P className="text-muted-foreground text-sm font-medium">
           This route uses the new headless hooks and embeddable components directly, without the
           dashboard chat route owning session orchestration.
         </P>
@@ -88,10 +89,12 @@ export function SupportAgentWidget() {
             onRefresh={cardConnection.refreshAgentCard}
           />
 
-          <div className="rounded-lg border bg-card p-5 shadow-xs">
+          <div className="bg-card rounded-lg border p-5 shadow-xs">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <Caption className="text-[11px] font-semibold tracking-[0.06em] text-fg-subtle uppercase">Configurator</Caption>
+                <Caption className="text-fg-subtle text-[11px] font-semibold tracking-[0.06em] uppercase">
+                  Configurator
+                </Caption>
                 <P className="text-sm font-bold">React snippet</P>
               </div>
               <Button size="sm" variant="outline" onClick={copySnippet}>

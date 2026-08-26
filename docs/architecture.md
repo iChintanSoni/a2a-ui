@@ -38,9 +38,9 @@ The Redux store is created by `createA2AStore()` in
 
 Owns: the list of connected agents and their per-agent configuration.
 
-| State field | Type | Description |
-|-------------|------|-------------|
-| `agents` | `Agent[]` | All connected agents |
+| State field     | Type             | Description                             |
+| --------------- | ---------------- | --------------------------------------- |
+| `agents`        | `Agent[]`        | All connected agents                    |
 | `activeAgentId` | `string \| null` | Currently selected agent in the library |
 
 Key actions: `addAgent`, `removeAgent`, `updateAgentAuth`, `updateAgentCard`,
@@ -52,9 +52,9 @@ Key actions: `addAgent`, `removeAgent`, `updateAgentAuth`, `updateAgentCard`,
 Owns: conversation history — messages, task statuses, artifacts, tool calls,
 and execution events for every chat session.
 
-| State field | Type | Description |
-|-------------|------|-------------|
-| `chats` | `Chat[]` | All saved conversations |
+| State field    | Type             | Description                 |
+| -------------- | ---------------- | --------------------------- |
+| `chats`        | `Chat[]`         | All saved conversations     |
 | `activeChatId` | `string \| null` | Currently open conversation |
 
 A `Chat` contains an ordered `items` array of `ChatItem` discriminated unions:
@@ -77,10 +77,10 @@ Key actions: `addChat`, `addUserMessage`, `applyStatusUpdate`,
 
 Owns: QA suites and run history.
 
-| State field | Type | Description |
-|-------------|------|-------------|
-| `suites` | `QaSuite[]` | All saved test suites |
-| `runs` | `QaSuiteRun[]` | Run history (max 100 entries, oldest dropped) |
+| State field | Type           | Description                                   |
+| ----------- | -------------- | --------------------------------------------- |
+| `suites`    | `QaSuite[]`    | All saved test suites                         |
+| `runs`      | `QaSuiteRun[]` | Run history (max 100 entries, oldest dropped) |
 
 Key actions: `saveQaSuite`, `removeQaSuite`, `recordQaRun`, `clearQaRunHistory`
 
@@ -99,11 +99,11 @@ Key actions: `savePromptPreset`, `removePromptPreset`, `markPromptPresetUsed`,
 [`lib/persistence.ts`](../lib/persistence.ts) manages four object stores in a
 single IndexedDB database (`a2a-ui`):
 
-| Store | Persists |
-|-------|---------|
-| `agents` | `agentsSlice` state |
-| `chats` | `chatsSlice` state |
-| `qa` | `qaSlice` state |
+| Store       | Persists               |
+| ----------- | ---------------------- |
+| `agents`    | `agentsSlice` state    |
+| `chats`     | `chatsSlice` state     |
+| `qa`        | `qaSlice` state        |
 | `workbench` | `workbenchSlice` state |
 
 ### Hydration on load

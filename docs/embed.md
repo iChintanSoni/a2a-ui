@@ -74,9 +74,9 @@ import { A2AChat } from "a2a-ui/components/chat/A2AChat";
 
 <A2AChat
   agentUrl="https://your-agent.example.com"
-  showDebugPanel={true}      // default: true
-  showEventExplorer={true}   // default: true
-/>
+  showDebugPanel={true} // default: true
+  showEventExplorer={true} // default: true
+/>;
 ```
 
 Or render it separately using hooks:
@@ -95,9 +95,7 @@ function DevLayout({ agentUrl }) {
   return (
     <div>
       {/* your custom chat UI using connection / debug */}
-      <button onClick={() => setShowDebug((v) => !v)}>
-        Debug ({debug.logs.length})
-      </button>
+      <button onClick={() => setShowDebug(v => !v)}>Debug ({debug.logs.length})</button>
       {showDebug && (
         <A2ADebugPanel
           logs={debug.logs}
@@ -156,14 +154,30 @@ import type { A2AExternalMessageStore } from "a2a-ui/lib/a2a/types";
 // Build a store backed by your own state management / database
 const myStore: A2AExternalMessageStore = {
   chat: undefined,
-  ensureChat: (meta) => { /* create chat record */ },
-  sanitizeStaleStreaming: (contextId) => { /* cleanup */ },
-  addUserMessage: (payload) => { /* store message */ },
-  applyStatusUpdate: (payload) => { /* update task state */ },
-  applyArtifactUpdate: (payload) => { /* upsert artifact */ },
-  applyToolCall: (payload) => { /* record tool call */ },
-  applyAgentMessage: (payload) => { /* store agent message */ },
-  appendExecutionEvent: (payload) => { /* append event */ },
+  ensureChat: meta => {
+    /* create chat record */
+  },
+  sanitizeStaleStreaming: contextId => {
+    /* cleanup */
+  },
+  addUserMessage: payload => {
+    /* store message */
+  },
+  applyStatusUpdate: payload => {
+    /* update task state */
+  },
+  applyArtifactUpdate: payload => {
+    /* upsert artifact */
+  },
+  applyToolCall: payload => {
+    /* record tool call */
+  },
+  applyAgentMessage: payload => {
+    /* store agent message */
+  },
+  appendExecutionEvent: payload => {
+    /* append event */
+  },
 };
 
 function PersistentChat({ agentUrl }) {
@@ -171,7 +185,9 @@ function PersistentChat({ agentUrl }) {
   const connection = useA2AConnection({ agentUrl, debug });
   const session = useA2ASession();
   const { items, sendMessage } = useA2AMessages({
-    connection, debug, session,
+    connection,
+    debug,
+    session,
     persistenceMode: "external",
     store: myStore,
   });
@@ -196,7 +212,9 @@ function HeadlessChat({ agentUrl, auth }) {
   const connection = useA2AConnection({ agentUrl, auth, debug, autoConnect: true });
   const session = useA2ASession();
   const { items, isInputRequired, sendMessage, cancelStream } = useA2AMessages({
-    connection, debug, session,
+    connection,
+    debug,
+    session,
   });
 
   const [input, setInput] = useState("");
@@ -208,20 +226,19 @@ function HeadlessChat({ agentUrl, auth }) {
   return (
     <div>
       <ul>
-        {items.map((item) => (
+        {items.map(item => (
           <li key={item.id}>
             {item.kind === "task-status" && `Task: ${item.state}`}
-            {item.kind === "agent-message" && item.parts.map((p) =>
-              p.kind === "text" ? p.text : `[${p.kind}]`
-            ).join("")}
+            {item.kind === "agent-message" &&
+              item.parts.map(p => (p.kind === "text" ? p.text : `[${p.kind}]`)).join("")}
           </li>
         ))}
       </ul>
       {isInputRequired && <p>⚠️ Agent needs input</p>}
       <input
         value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && handleSend()}
+        onChange={e => setInput(e.target.value)}
+        onKeyDown={e => e.key === "Enter" && handleSend()}
       />
       <button onClick={handleSend}>Send</button>
     </div>
@@ -251,20 +268,24 @@ All public exports are importable from within the `a2a-ui` package:
 ```ts
 // Hooks
 import { useA2AConnection } from "a2a-ui/hooks/use-a2a-connection";
-import { useA2ASession }    from "a2a-ui/hooks/use-a2a-session";
-import { useA2AMessages }   from "a2a-ui/hooks/use-a2a-messages";
-import { useA2ADebug }      from "a2a-ui/hooks/use-a2a-debug";
+import { useA2ASession } from "a2a-ui/hooks/use-a2a-session";
+import { useA2AMessages } from "a2a-ui/hooks/use-a2a-messages";
+import { useA2ADebug } from "a2a-ui/hooks/use-a2a-debug";
 
 // Components
-import { A2AChat }        from "a2a-ui/components/chat/A2AChat";
-import { A2AAgentCard }   from "a2a-ui/components/chat/A2AAgentCard";
-import { A2ADebugPanel }  from "a2a-ui/components/chat/A2ADebugPanel";
-import { EventExplorer }  from "a2a-ui/components/chat/EventExplorer";
+import { A2AChat } from "a2a-ui/components/chat/A2AChat";
+import { A2AAgentCard } from "a2a-ui/components/chat/A2AAgentCard";
+import { A2ADebugPanel } from "a2a-ui/components/chat/A2ADebugPanel";
+import { EventExplorer } from "a2a-ui/components/chat/EventExplorer";
 
 // Store
 import { createA2AStore } from "a2a-ui/lib/store";
 
 // Types
-import type { AuthConfig, CustomHeader }       from "a2a-ui/lib/features/agents/agentsSlice";
-import type { A2AContextConfig, A2ASessionPersistenceMode, A2AExternalMessageStore } from "a2a-ui/lib/a2a/types";
+import type { AuthConfig, CustomHeader } from "a2a-ui/lib/features/agents/agentsSlice";
+import type {
+  A2AContextConfig,
+  A2ASessionPersistenceMode,
+  A2AExternalMessageStore,
+} from "a2a-ui/lib/a2a/types";
 ```

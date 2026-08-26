@@ -19,7 +19,7 @@ function makeCard(overrides: Partial<Record<string, unknown>>): AgentCard {
 }
 
 function getCheck(result: ReturnType<typeof checkCompliance>, id: string) {
-  return result.checks.find((c) => c.id === id)!;
+  return result.checks.find(c => c.id === id)!;
 }
 
 describe("checkCompliance", () => {
@@ -38,26 +38,26 @@ describe("checkCompliance", () => {
   describe("required string fields", () => {
     it.each(["name", "description", "version", "protocolVersion"])(
       "fails when %s is missing",
-      (field) => {
+      field => {
         const result = checkCompliance(makeCard({ [field]: undefined }));
         expect(getCheck(result, field).pass).toBe(false);
-      }
+      },
     );
 
     it.each(["name", "description", "version", "protocolVersion"])(
       "fails when %s is empty string",
-      (field) => {
+      field => {
         const result = checkCompliance(makeCard({ [field]: "   " }));
         expect(getCheck(result, field).pass).toBe(false);
-      }
+      },
     );
 
     it.each(["name", "description", "version", "protocolVersion"])(
       "passes when %s has a value",
-      (field) => {
+      field => {
         const result = checkCompliance(VALID_CARD);
         expect(getCheck(result, field).pass).toBe(true);
-      }
+      },
     );
   });
 
@@ -160,15 +160,13 @@ describe("checkCompliance", () => {
     });
 
     it("flags snake_case-only mode fields instead of normalizing them", () => {
-      const result = checkCompliance(
-        {
-          ...VALID_CARD,
-          defaultInputModes: undefined,
-          defaultOutputModes: undefined,
-          default_input_modes: ["text"],
-          default_output_modes: ["text"],
-        } as unknown as AgentCard,
-      );
+      const result = checkCompliance({
+        ...VALID_CARD,
+        defaultInputModes: undefined,
+        defaultOutputModes: undefined,
+        default_input_modes: ["text"],
+        default_output_modes: ["text"],
+      } as unknown as AgentCard);
       expect(getCheck(result, "defaultInputModes").pass).toBe(false);
       expect(getCheck(result, "defaultOutputModes").pass).toBe(false);
     });
@@ -184,7 +182,7 @@ describe("checkCompliance", () => {
       const result = checkCompliance(
         makeCard({
           additionalInterfaces: [{ url: "not-a-url", transport: "JSONRPC" }],
-        })
+        }),
       );
       expect(getCheck(result, "additionalInterfaces").pass).toBe(false);
       expect(getCheck(result, "additionalInterfaces").severity).toBe("warning");
@@ -198,7 +196,7 @@ describe("checkCompliance", () => {
             { url: "http://127.0.0.1:4000/a2a/rest", transport: "HTTP+JSON" },
             { url: "127.0.0.1:4001", transport: "GRPC" },
           ],
-        })
+        }),
       );
 
       const check = getCheck(result, "additionalInterfaces");
@@ -220,7 +218,7 @@ describe("checkCompliance", () => {
               inputModes: ["image/png"],
             },
           ],
-        })
+        }),
       );
       expect(getCheck(result, "skills-inputModes").pass).toBe(false);
     });
@@ -230,7 +228,7 @@ describe("checkCompliance", () => {
         makeCard({
           security: [{ bearer: [] }],
           securitySchemes: {},
-        })
+        }),
       );
       expect(getCheck(result, "security-references").pass).toBe(false);
       expect(result.warningCount).toBeGreaterThan(0);

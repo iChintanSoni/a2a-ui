@@ -12,21 +12,21 @@ import type { QaSuite } from "@/lib/features/qa/types";
 
 export default function QaPage() {
   const dispatch = useAppDispatch();
-  const agents = useAppSelector((state) => state.agents.agents);
-  const suites = useAppSelector((state) => state.qa.suites);
-  const runs = useAppSelector((state) => state.qa.runs);
+  const agents = useAppSelector(state => state.agents.agents);
+  const suites = useAppSelector(state => state.qa.suites);
+  const runs = useAppSelector(state => state.qa.runs);
 
   const [agentUrl, setAgentUrl] = useState(agents[0]?.url ?? "");
   const [runningSuiteId, setRunningSuiteId] = useState<string | null>(null);
 
-  const selectedAgent = agents.find((a) => a.url === agentUrl) ?? agents[0];
+  const selectedAgent = agents.find(a => a.url === agentUrl) ?? agents[0];
   const suitesByAgent = useMemo(
-    () => suites.filter((suite) => !selectedAgent || suite.agentUrl === selectedAgent.url),
+    () => suites.filter(suite => !selectedAgent || suite.agentUrl === selectedAgent.url),
     [selectedAgent, suites],
   );
 
   const runSuite = async (suite: QaSuite) => {
-    const agent = agents.find((a) => a.url === suite.agentUrl);
+    const agent = agents.find(a => a.url === suite.agentUrl);
     if (!agent) return;
     setRunningSuiteId(suite.id);
     try {
@@ -41,7 +41,9 @@ export default function QaPage() {
     <div className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto p-4 sm:p-6 md:p-8">
       <div className="hidden sm:block">
         <PageTitle className="text-[26px] font-bold tracking-tight">QA Harness</PageTitle>
-        <Muted className="mt-2 text-sm font-medium">Save repeatable agent checks, run suites, and export pass/fail reports.</Muted>
+        <Muted className="mt-2 text-sm font-medium">
+          Save repeatable agent checks, run suites, and export pass/fail reports.
+        </Muted>
       </div>
 
       {agents.length === 0 ? (

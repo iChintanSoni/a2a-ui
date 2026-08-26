@@ -21,7 +21,10 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
 
   if (part.kind === "file") {
     const { file } = part;
-    const src = "uri" in file ? file.uri : `data:${file.mimeType ?? "application/octet-stream"};base64,${file.bytes}`;
+    const src =
+      "uri" in file
+        ? file.uri
+        : `data:${file.mimeType ?? "application/octet-stream"};base64,${file.bytes}`;
     const name = file.name ?? "file";
 
     if (file.mimeType?.startsWith("image/")) {
@@ -31,12 +34,7 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
 
     if (file.mimeType?.startsWith("audio/")) {
       return (
-        <audio
-          controls
-          src={src}
-          className="max-w-full rounded sm:max-w-xs"
-          aria-label={name}
-        />
+        <audio controls src={src} className="max-w-full rounded sm:max-w-xs" aria-label={name} />
       );
     }
 
@@ -65,7 +63,7 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
               download={name}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary underline text-sm"
+              className="text-primary text-sm underline"
             >
               {name} (download PDF)
             </a>
@@ -80,7 +78,7 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
         download={name}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-primary underline text-sm"
+        className="text-primary text-sm underline"
       >
         {name}
       </a>
@@ -94,7 +92,7 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
     }
 
     return (
-      <pre className="overflow-x-auto rounded bg-muted p-3 text-xs">
+      <pre className="bg-muted overflow-x-auto rounded p-3 text-xs">
         {JSON.stringify(part.data, null, 2)}
       </pre>
     );

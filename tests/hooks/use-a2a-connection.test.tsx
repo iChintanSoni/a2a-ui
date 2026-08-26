@@ -39,11 +39,7 @@ function AutoProbe({ tick = 0 }: { tick?: number }) {
   return <div data-testid="tick">{tick}</div>;
 }
 
-function RefreshProbe({
-  onReady,
-}: {
-  onReady: (refresh: () => Promise<AgentCard>) => void;
-}) {
+function RefreshProbe({ onReady }: { onReady: (refresh: () => Promise<AgentCard>) => void }) {
   const connection = useA2AConnection({
     agentUrl: "http://localhost:3001",
     autoConnect: false,
@@ -75,7 +71,7 @@ describe("useA2AConnection", () => {
     await waitFor(() => expect(getAgentCard).toHaveBeenCalledTimes(1));
 
     rerender(<AutoProbe tick={1} />);
-    await new Promise((resolve) => window.setTimeout(resolve, 20));
+    await new Promise(resolve => window.setTimeout(resolve, 20));
 
     expect(createFromUrl).toHaveBeenCalledTimes(1);
     expect(getAgentCard).toHaveBeenCalledTimes(1);
@@ -89,7 +85,13 @@ describe("useA2AConnection", () => {
     } as unknown as Client);
     const refreshRef: { current?: () => Promise<AgentCard> } = {};
 
-    render(<RefreshProbe onReady={(nextRefresh) => { refreshRef.current = nextRefresh; }} />);
+    render(
+      <RefreshProbe
+        onReady={nextRefresh => {
+          refreshRef.current = nextRefresh;
+        }}
+      />,
+    );
 
     await waitFor(() => expect(refreshRef.current).toBeTruthy());
     const refresh = refreshRef.current;
@@ -108,7 +110,13 @@ describe("useA2AConnection", () => {
     } as unknown as Client);
     const refreshRef: { current?: () => Promise<AgentCard> } = {};
 
-    render(<RefreshProbe onReady={(nextRefresh) => { refreshRef.current = nextRefresh; }} />);
+    render(
+      <RefreshProbe
+        onReady={nextRefresh => {
+          refreshRef.current = nextRefresh;
+        }}
+      />,
+    );
 
     await waitFor(() => expect(refreshRef.current).toBeTruthy());
     const refresh = refreshRef.current;

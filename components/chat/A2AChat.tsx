@@ -71,7 +71,7 @@ export function A2AChat({
   const outputModes = connection.card?.defaultOutputModes ?? initialCard?.defaultOutputModes ?? [];
   const skillPromptStarters = useMemo(() => {
     const card = connection.card ?? initialCard;
-    return (card?.skills ?? []).flatMap((skill) =>
+    return (card?.skills ?? []).flatMap(skill =>
       (skill.examples ?? []).map((example, index) => ({
         id: `agent-example-${skill.id}-${index}`,
         label: example.slice(0, 40) || skill.name,
@@ -84,14 +84,14 @@ export function A2AChat({
 
   if (!chat) {
     return (
-      <div className="flex min-h-80 items-center justify-center rounded-lg border bg-card p-6">
+      <div className="bg-card flex min-h-80 items-center justify-center rounded-lg border p-6">
         <Muted>Preparing chat session...</Muted>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card">
+    <div className="bg-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border">
       <div className="flex flex-wrap items-start gap-2 border-b px-3 py-3 sm:items-center sm:px-4">
         <div className="min-w-0 flex-1">
           <Small className="truncate">{title ?? chat.title}</Small>
@@ -103,7 +103,7 @@ export function A2AChat({
             size="icon"
             className="size-8.5 shrink-0"
             onClick={() => {
-              setEventsOpen((open) => !open);
+              setEventsOpen(open => !open);
               setDebugOpen(false);
             }}
             title="Toggle event explorer"
@@ -119,7 +119,7 @@ export function A2AChat({
             size="icon"
             className="size-8.5 shrink-0"
             onClick={() => {
-              setDebugOpen((open) => !open);
+              setDebugOpen(open => !open);
               setEventsOpen(false);
             }}
             title="Toggle debug console"
@@ -152,7 +152,7 @@ export function A2AChat({
       <ChatMessages
         chat={chat}
         a2uiEnabled={a2uiEnabled}
-        onRetry={(item) => sendMessage(item.parts, item.metadata)}
+        onRetry={item => sendMessage(item.parts, item.metadata)}
       />
 
       <ChatInput
@@ -166,15 +166,10 @@ export function A2AChat({
       />
 
       {showEventExplorer && eventsOpen && (
-        <EventExplorer
-          events={chat.executionEvents}
-          onClose={() => setEventsOpen(false)}
-        />
+        <EventExplorer events={chat.executionEvents} onClose={() => setEventsOpen(false)} />
       )}
 
-      {effectiveDebugOpen && (
-        <A2ADebugPanel debug={debug} onClose={() => setDebugOpen(false)} />
-      )}
+      {effectiveDebugOpen && <A2ADebugPanel debug={debug} onClose={() => setDebugOpen(false)} />}
     </div>
   );
 }

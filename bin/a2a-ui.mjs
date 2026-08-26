@@ -167,18 +167,13 @@ function validatePort(port) {
 }
 
 function localUrl({ hostname, port }) {
-  const host =
-    !hostname || hostname === "0.0.0.0" || hostname === "::" ? "localhost" : hostname;
+  const host = !hostname || hostname === "0.0.0.0" || hostname === "::" ? "localhost" : hostname;
   return `http://${host}:${port}`;
 }
 
 function openBrowser(url) {
   const command =
-    process.platform === "darwin"
-      ? "open"
-      : process.platform === "win32"
-        ? "cmd"
-        : "xdg-open";
+    process.platform === "darwin" ? "open" : process.platform === "win32" ? "cmd" : "xdg-open";
   const args =
     process.platform === "darwin"
       ? [url]
@@ -224,7 +219,7 @@ function spawnServer(command, args, env) {
     process.exit(code ?? 0);
   });
 
-  child.on("error", (error) => {
+  child.on("error", error => {
     console.error(error.message);
     process.exit(1);
   });

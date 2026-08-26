@@ -6,7 +6,8 @@ export function createAgentCard(baseUrl: string): AgentCard {
 
   return {
     name: "Chat Agent",
-    description: "A conversational A2A agent with search, image input, image generation, and A2UI demo surfaces.",
+    description:
+      "A conversational A2A agent with search, image input, image generation, and A2UI demo surfaces.",
     url: jsonRpcUrl,
     version: "1.0.0",
     protocolVersion: "0.3.0",
@@ -25,7 +26,8 @@ export function createAgentCard(baseUrl: string): AgentCard {
       {
         id: "chat",
         name: "Chat",
-        description: "Answer conversational prompts and use web search when current information is needed.",
+        description:
+          "Answer conversational prompts and use web search when current information is needed.",
         tags: ["chat", "search"],
         examples: ["What is the capital of France?", "Search for the latest news on AI"],
         inputModes: ["text/plain", "image/*"],
@@ -36,7 +38,10 @@ export function createAgentCard(baseUrl: string): AgentCard {
         name: "Image Generation",
         description: "Generate an image from a text prompt.",
         tags: ["image", "generation", "creative"],
-        examples: ["Generate an image of a sunset over mountains", "Draw a futuristic city at night"],
+        examples: [
+          "Generate an image of a sunset over mountains",
+          "Draw a futuristic city at night",
+        ],
         inputModes: ["text/plain"],
         outputModes: ["image/png"],
       },

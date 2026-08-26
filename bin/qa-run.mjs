@@ -49,35 +49,61 @@ export function parseQaRunArgs(args) {
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    if (arg === "-h" || arg === "--help") { options.help = true; continue; }
+    if (arg === "-h" || arg === "--help") {
+      options.help = true;
+      continue;
+    }
 
     if (arg === "--file" || arg === "-f") {
       options.file = args[++i] ?? null;
       continue;
     }
-    if (arg.startsWith("--file=")) { options.file = arg.slice("--file=".length); continue; }
+    if (arg.startsWith("--file=")) {
+      options.file = arg.slice("--file=".length);
+      continue;
+    }
 
-    if (arg === "--agent-url") { options.agentUrl = args[++i] ?? null; continue; }
-    if (arg.startsWith("--agent-url=")) { options.agentUrl = arg.slice("--agent-url=".length); continue; }
+    if (arg === "--agent-url") {
+      options.agentUrl = args[++i] ?? null;
+      continue;
+    }
+    if (arg.startsWith("--agent-url=")) {
+      options.agentUrl = arg.slice("--agent-url=".length);
+      continue;
+    }
 
-    if (arg === "--output" || arg === "-o") { options.output = args[++i] ?? null; continue; }
-    if (arg.startsWith("--output=")) { options.output = arg.slice("--output=".length); continue; }
+    if (arg === "--output" || arg === "-o") {
+      options.output = args[++i] ?? null;
+      continue;
+    }
+    if (arg.startsWith("--output=")) {
+      options.output = arg.slice("--output=".length);
+      continue;
+    }
 
     if (arg === "--format") {
       const fmt = args[++i];
-      if (fmt !== "json" && fmt !== "junit") throw new Error(`Unknown format: ${fmt}. Use json or junit.`);
+      if (fmt !== "json" && fmt !== "junit")
+        throw new Error(`Unknown format: ${fmt}. Use json or junit.`);
       options.format = fmt;
       continue;
     }
     if (arg.startsWith("--format=")) {
       const fmt = arg.slice("--format=".length);
-      if (fmt !== "json" && fmt !== "junit") throw new Error(`Unknown format: ${fmt}. Use json or junit.`);
+      if (fmt !== "json" && fmt !== "junit")
+        throw new Error(`Unknown format: ${fmt}. Use json or junit.`);
       options.format = fmt;
       continue;
     }
 
-    if (arg === "--timeout") { options.timeout = Number(args[++i]); continue; }
-    if (arg.startsWith("--timeout=")) { options.timeout = Number(arg.slice("--timeout=".length)); continue; }
+    if (arg === "--timeout") {
+      options.timeout = Number(args[++i]);
+      continue;
+    }
+    if (arg.startsWith("--timeout=")) {
+      options.timeout = Number(arg.slice("--timeout=".length));
+      continue;
+    }
 
     throw new Error(`Unknown argument: ${arg}`);
   }
@@ -110,18 +136,18 @@ Examples:
 
 function toJunit(suiteRun, suiteName) {
   const total = suiteRun.caseResults.length;
-  const failures = suiteRun.caseResults.filter((c) => !c.passed).length;
+  const failures = suiteRun.caseResults.filter(c => !c.passed).length;
   const totalMs = suiteRun.completedAt - suiteRun.startedAt;
 
   const cases = suiteRun.caseResults
-    .map((c) => {
+    .map(c => {
       const time = (c.durationMs / 1000).toFixed(3);
       if (c.passed) {
         return `    <testcase name="${escXml(c.caseName)}" classname="${escXml(suiteName)}" time="${time}" />`;
       }
       const msgs = c.error
         ? [c.error]
-        : c.assertionResults.filter((a) => !a.passed).map((a) => `${a.label}: ${a.message}`);
+        : c.assertionResults.filter(a => !a.passed).map(a => `${a.label}: ${a.message}`);
       return `    <testcase name="${escXml(c.caseName)}" classname="${escXml(suiteName)}" time="${time}">
       <failure message="${escXml(msgs.join("; "))}" />
     </testcase>`;
@@ -179,7 +205,14 @@ export async function runQaSuite(options) {
     executeQaSuite = await buildInlineRunner();
   }
 
-  const agentCard = { name: suite.agentName, url: suite.agentUrl, version: "1.0", description: "", capabilities: {}, skills: [] };
+  const agentCard = {
+    name: suite.agentName,
+    url: suite.agentUrl,
+    version: "1.0",
+    description: "",
+    capabilities: {},
+    skills: [],
+  };
   const agent = {
     id: "cli",
     url: suite.agentUrl,
@@ -192,15 +225,19 @@ export async function runQaSuite(options) {
     a2uiEnabled: false,
   };
 
-  console.error(`Running suite: ${suite.name} (${suite.cases.length} case${suite.cases.length === 1 ? "" : "s"}) → ${suite.agentUrl}`);
+  console.error(
+    `Running suite: ${suite.name} (${suite.cases.length} case${suite.cases.length === 1 ? "" : "s"}) → ${suite.agentUrl}`,
+  );
 
   const startedAt = Date.now();
   const run = await executeQaSuite({ suite, agent });
   const elapsed = Date.now() - startedAt;
 
-  const passed = run.caseResults.filter((c) => c.passed).length;
+  const passed = run.caseResults.filter(c => c.passed).length;
   const total = run.caseResults.length;
-  console.error(`\n${run.passed ? "✓ PASSED" : "✗ FAILED"} — ${passed}/${total} cases in ${elapsed} ms\n`);
+  console.error(
+    `\n${run.passed ? "✓ PASSED" : "✗ FAILED"} — ${passed}/${total} cases in ${elapsed} ms\n`,
+  );
 
   for (const c of run.caseResults) {
     const icon = c.passed ? "  ✓" : "  ✗";
@@ -232,7 +269,8 @@ export async function runQaSuite(options) {
 
 async function buildInlineRunner() {
   // Minimal inline runner using @a2a-js/sdk directly (no TS source needed).
-  const { ClientFactory, RestTransportFactory, JsonRpcTransportFactory } = await import("@a2a-js/sdk/client");
+  const { ClientFactory, RestTransportFactory, JsonRpcTransportFactory } =
+    await import("@a2a-js/sdk/client");
 
   async function executeQaSuite({ suite, agent }) {
     const caseResults = [];
@@ -240,7 +278,14 @@ async function buildInlineRunner() {
 
     const clientFactory = new ClientFactory({
       agentCardResolver: {
-        resolveAgentCard: async () => ({ name: suite.agentName, url: suite.agentUrl, version: "1.0", description: "", capabilities: {}, skills: [] }),
+        resolveAgentCard: async () => ({
+          name: suite.agentName,
+          url: suite.agentUrl,
+          version: "1.0",
+          description: "",
+          capabilities: {},
+          skills: [],
+        }),
       },
       transportFactories: [new RestTransportFactory(), new JsonRpcTransportFactory()],
     });
@@ -283,19 +328,59 @@ async function buildInlineRunner() {
           }
         }
       } catch (err) {
-        caseResults.push({ caseId: testCase.id, caseName: testCase.name, passed: false, durationMs: Date.now() - caseStart, finalTaskState, outputMode: "any", outputPreview: "", assertionResults: [], error: err instanceof Error ? err.message : String(err) });
+        caseResults.push({
+          caseId: testCase.id,
+          caseName: testCase.name,
+          passed: false,
+          durationMs: Date.now() - caseStart,
+          finalTaskState,
+          outputMode: "any",
+          outputPreview: "",
+          assertionResults: [],
+          error: err instanceof Error ? err.message : String(err),
+        });
         continue;
       }
 
       const durationMs = Date.now() - caseStart;
-      const text = outputParts.filter((p) => p.kind === "text").map((p) => p.text).join("\n").trim();
-      const assertionResults = evaluateAll(testCase, { text, artifactCount, artifactMimeTypes, durationMs, finalTaskState });
-      const passed = assertionResults.every((a) => a.passed);
-      const outputMode = artifactCount > 0 ? "artifact" : text.includes("{") ? "json" : text ? "text" : "any";
-      caseResults.push({ caseId: testCase.id, caseName: testCase.name, passed, durationMs, finalTaskState, outputMode, outputPreview: text.slice(0, 500), assertionResults });
+      const text = outputParts
+        .filter(p => p.kind === "text")
+        .map(p => p.text)
+        .join("\n")
+        .trim();
+      const assertionResults = evaluateAll(testCase, {
+        text,
+        artifactCount,
+        artifactMimeTypes,
+        durationMs,
+        finalTaskState,
+      });
+      const passed = assertionResults.every(a => a.passed);
+      const outputMode =
+        artifactCount > 0 ? "artifact" : text.includes("{") ? "json" : text ? "text" : "any";
+      caseResults.push({
+        caseId: testCase.id,
+        caseName: testCase.name,
+        passed,
+        durationMs,
+        finalTaskState,
+        outputMode,
+        outputPreview: text.slice(0, 500),
+        assertionResults,
+      });
     }
 
-    return { id: generateId(), suiteId: suite.id, suiteName: suite.name, agentUrl: suite.agentUrl, agentName: suite.agentName, startedAt, completedAt: Date.now(), passed: caseResults.every((c) => c.passed), caseResults };
+    return {
+      id: generateId(),
+      suiteId: suite.id,
+      suiteName: suite.name,
+      agentUrl: suite.agentUrl,
+      agentName: suite.agentName,
+      startedAt,
+      completedAt: Date.now(),
+      passed: caseResults.every(c => c.passed),
+      caseResults,
+    };
   }
 
   return executeQaSuite;
@@ -306,14 +391,16 @@ function generateId() {
 }
 
 function flattenDataTable(cases) {
-  return cases.flatMap((c) => {
+  return cases.flatMap(c => {
     if (!c.dataTable || c.dataTable.length === 0) return [c];
     return c.dataTable.map((row, i) => ({
       ...c,
       id: `${c.id}-row${i}`,
       name: `${c.name} [row ${i + 1}]`,
       prompt: applyRow(c.prompt, row),
-      metadata: Object.fromEntries(Object.entries(c.metadata ?? {}).map(([k, v]) => [k, applyRow(v, row)])),
+      metadata: Object.fromEntries(
+        Object.entries(c.metadata ?? {}).map(([k, v]) => [k, applyRow(v, row)]),
+      ),
       dataTable: undefined,
     }));
   });
@@ -327,32 +414,75 @@ function evaluateAll(testCase, output) {
   const results = [];
   if (testCase.expectedTaskState) {
     const passed = output.finalTaskState === testCase.expectedTaskState;
-    results.push({ assertionId: "expected-task-state", label: `Expected task state ${testCase.expectedTaskState}`, passed, message: passed ? `Final task state was ${testCase.expectedTaskState}.` : `Final task state was ${output.finalTaskState ?? "unknown"}.` });
+    results.push({
+      assertionId: "expected-task-state",
+      label: `Expected task state ${testCase.expectedTaskState}`,
+      passed,
+      message: passed
+        ? `Final task state was ${testCase.expectedTaskState}.`
+        : `Final task state was ${output.finalTaskState ?? "unknown"}.`,
+    });
   }
   if (testCase.expectedOutputMode && testCase.expectedOutputMode !== "any") {
     const mode = testCase.expectedOutputMode;
-    const passed = mode === "artifact" ? output.artifactCount > 0 : mode === "text" ? output.text.length > 0 : false;
-    results.push({ assertionId: "expected-output-mode", label: `Expected ${mode} output`, passed, message: passed ? `Observed ${mode} output.` : `Did not observe ${mode} output.` });
+    const passed =
+      mode === "artifact"
+        ? output.artifactCount > 0
+        : mode === "text"
+          ? output.text.length > 0
+          : false;
+    results.push({
+      assertionId: "expected-output-mode",
+      label: `Expected ${mode} output`,
+      passed,
+      message: passed ? `Observed ${mode} output.` : `Did not observe ${mode} output.`,
+    });
   }
   for (const a of testCase.assertions ?? []) {
     if (a.kind === "content-regex") {
       try {
         const passed = new RegExp(a.pattern, a.flags).test(output.text);
-        results.push({ assertionId: a.id, label: a.label, passed, message: passed ? `Matched /${a.pattern}/.` : `No match for /${a.pattern}/.` });
+        results.push({
+          assertionId: a.id,
+          label: a.label,
+          passed,
+          message: passed ? `Matched /${a.pattern}/.` : `No match for /${a.pattern}/.`,
+        });
       } catch (err) {
         results.push({ assertionId: a.id, label: a.label, passed: false, message: String(err) });
       }
     } else if (a.kind === "task-duration-ms") {
       const actual = output.durationMs;
-      const passed = a.operator === "lt" ? actual < a.value : a.operator === "lte" ? actual <= a.value : a.operator === "gt" ? actual > a.value : actual >= a.value;
-      results.push({ assertionId: a.id, label: a.label, passed, message: passed ? `Duration ${actual} ms satisfies constraint.` : `Duration ${actual} ms did not satisfy constraint (${a.operator} ${a.value} ms).` });
+      const passed =
+        a.operator === "lt"
+          ? actual < a.value
+          : a.operator === "lte"
+            ? actual <= a.value
+            : a.operator === "gt"
+              ? actual > a.value
+              : actual >= a.value;
+      results.push({
+        assertionId: a.id,
+        label: a.label,
+        passed,
+        message: passed
+          ? `Duration ${actual} ms satisfies constraint.`
+          : `Duration ${actual} ms did not satisfy constraint (${a.operator} ${a.value} ms).`,
+      });
     } else if (a.kind === "artifact-mime") {
-      const matched = output.artifactMimeTypes.some((m) => {
+      const matched = output.artifactMimeTypes.some(m => {
         const [pt, ps] = a.pattern.split("/");
         const [mt, ms] = m.split("/");
         return pt === mt && (ps === "*" || ps === ms);
       });
-      results.push({ assertionId: a.id, label: a.label, passed: matched, message: matched ? `Found artifact matching "${a.pattern}".` : `No artifact matching "${a.pattern}" (found: ${output.artifactMimeTypes.join(", ") || "none"}).` });
+      results.push({
+        assertionId: a.id,
+        label: a.label,
+        passed: matched,
+        message: matched
+          ? `Found artifact matching "${a.pattern}".`
+          : `No artifact matching "${a.pattern}" (found: ${output.artifactMimeTypes.join(", ") || "none"}).`,
+      });
     }
     // json-path: skip in CLI runner (requires a JSON path library)
   }

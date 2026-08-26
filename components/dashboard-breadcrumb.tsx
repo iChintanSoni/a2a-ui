@@ -14,8 +14,8 @@ import {
 
 export function DashboardBreadcrumb() {
   const pathname = usePathname();
-  const agents = useAppSelector((s) => s.agents.agents);
-  const chats = useAppSelector((s) => s.chats.chats);
+  const agents = useAppSelector(s => s.agents.agents);
+  const chats = useAppSelector(s => s.chats.chats);
 
   const pageLabels: Record<string, string> = {
     "/dashboard": "Workbench",
@@ -28,11 +28,9 @@ export function DashboardBreadcrumb() {
   };
 
   // /dashboard/agents/[agentId]/settings
-  const agentSettingsMatch = pathname.match(
-    /^\/dashboard\/agents\/([^/]+)\/settings/
-  );
+  const agentSettingsMatch = pathname.match(/^\/dashboard\/agents\/([^/]+)\/settings/);
   if (agentSettingsMatch) {
-    const agent = agents.find((a) => a.id === agentSettingsMatch[1]);
+    const agent = agents.find(a => a.id === agentSettingsMatch[1]);
     return (
       <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
         <BreadcrumbList className="min-w-0 flex-nowrap overflow-hidden">
@@ -49,7 +47,9 @@ export function DashboardBreadcrumb() {
           </BreadcrumbItem>
           <BreadcrumbSeparator className="shrink-0" />
           <BreadcrumbItem className="min-w-0">
-            <BreadcrumbPage className="block truncate">{agent?.card.name ?? "Unknown"}</BreadcrumbPage>
+            <BreadcrumbPage className="block truncate">
+              {agent?.card.name ?? "Unknown"}
+            </BreadcrumbPage>
           </BreadcrumbItem>
           <BreadcrumbSeparator className="hidden shrink-0 sm:inline-flex" />
           <BreadcrumbItem className="hidden shrink-0 sm:inline-flex">
@@ -63,7 +63,7 @@ export function DashboardBreadcrumb() {
   // /dashboard/chat/[chatId]
   const chatMatch = pathname.match(/^\/dashboard\/chat\/([^/]+)/);
   if (chatMatch) {
-    const chat = chats.find((c) => c.id === chatMatch[1]);
+    const chat = chats.find(c => c.id === chatMatch[1]);
     return (
       <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
         <BreadcrumbList className="min-w-0 flex-nowrap overflow-hidden">

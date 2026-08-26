@@ -84,10 +84,7 @@ export interface A2AExternalMessageStore {
     taskId?: string;
     parts: Part[];
   }) => void;
-  appendExecutionEvent: (payload: {
-    chatId: string;
-    event: ExecutionEvent;
-  }) => void;
+  appendExecutionEvent: (payload: { chatId: string; event: ExecutionEvent }) => void;
 }
 
 export interface A2ADebugState {

@@ -39,7 +39,6 @@ function findChat(state: ChatsState, chatId: string): Chat | undefined {
   return state.chats.find(c => c.id === chatId);
 }
 
-
 // ─── Slice ───────────────────────────────────────────────────────────────────
 
 export const chatsSlice = createSlice({
@@ -48,7 +47,7 @@ export const chatsSlice = createSlice({
   reducers: {
     hydrateChats: (_state, action: PayloadAction<Chat[]>) => {
       return {
-        chats: action.payload.map((chat) => ({
+        chats: action.payload.map(chat => ({
           ...chat,
           archived: chat.archived ?? false,
           pinned: chat.pinned ?? false,
@@ -110,10 +109,7 @@ export const chatsSlice = createSlice({
       }
     },
 
-    setChatArchived: (
-      state,
-      action: PayloadAction<{ chatId: string; archived: boolean }>
-    ) => {
+    setChatArchived: (state, action: PayloadAction<{ chatId: string; archived: boolean }>) => {
       const chat = findChat(state, action.payload.chatId);
       if (!chat) return;
       chat.archived = action.payload.archived;
@@ -123,10 +119,7 @@ export const chatsSlice = createSlice({
       }
     },
 
-    setChatPinned: (
-      state,
-      action: PayloadAction<{ chatId: string; pinned: boolean }>
-    ) => {
+    setChatPinned: (state, action: PayloadAction<{ chatId: string; pinned: boolean }>) => {
       const chat = findChat(state, action.payload.chatId);
       if (!chat) return;
       chat.pinned = action.payload.pinned;
@@ -140,7 +133,7 @@ export const chatsSlice = createSlice({
         newChatId: string;
         title?: string;
         mode?: ChatCloneMode;
-      }>
+      }>,
     ) => {
       const source = findChat(state, action.payload.chatId);
       if (!source) return;
@@ -151,7 +144,7 @@ export const chatsSlice = createSlice({
       const items =
         mode === "full"
           ? structuredClone(sourceItems)
-          : structuredClone(sourceItems.filter((item) => item.kind === "user-message"));
+          : structuredClone(sourceItems.filter(item => item.kind === "user-message"));
       for (const item of items) {
         item.timestamp = now;
         if (item.kind === "user-message") {

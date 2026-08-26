@@ -11,12 +11,12 @@ your workspace and quick navigation to every feature.
 
 Four cards summarise the current state of your workspace:
 
-| Card | What it counts | Links to |
-|------|----------------|----------|
-| **Agents** | Connected agent entries | Agent Library |
-| **Conversations** | Saved chat sessions | Conversations |
-| **Tasks** | Tasks across all conversations | Tasks |
-| **Favorites** | Agents marked as favorite | — |
+| Card              | What it counts                 | Links to      |
+| ----------------- | ------------------------------ | ------------- |
+| **Agents**        | Connected agent entries        | Agent Library |
+| **Conversations** | Saved chat sessions            | Conversations |
+| **Tasks**         | Tasks across all conversations | Tasks         |
+| **Favorites**     | Agents marked as favorite      | —             |
 
 Click a card (except Favorites) to jump directly to that section.
 

@@ -1,13 +1,6 @@
 #!/usr/bin/env node
 
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -47,10 +40,7 @@ const standalonePackageJson = {
   engines: packageJson.engines,
 };
 
-writeFileSync(
-  standalonePackageJsonPath,
-  `${JSON.stringify(standalonePackageJson, null, 2)}\n`,
-);
+writeFileSync(standalonePackageJsonPath, `${JSON.stringify(standalonePackageJson, null, 2)}\n`);
 
 console.log("Prepared Next.js standalone package:");
 console.log(`- public assets: ${copiedPublic ? "copied" : "skipped"}`);

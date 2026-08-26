@@ -15,6 +15,7 @@ import {
 } from "@/lib/utils/workspace";
 import { useToast } from "@/lib/toast";
 import { getErrorMessage } from "@/lib/utils/error";
+import { PresetGalleryModal } from "@/components/preset-gallery-modal";
 
 function downloadFile(name: string, content: string, type: string) {
   const blob = new Blob([content], { type });
@@ -28,19 +29,15 @@ function downloadFile(name: string, content: string, type: string) {
 
 export function WorkspaceActions() {
   const dispatch = useAppDispatch();
-  const agents = useAppSelector((state) => state.agents.agents);
-  const chats = useAppSelector((state) => state.chats.chats);
+  const agents = useAppSelector(state => state.agents.agents);
+  const chats = useAppSelector(state => state.chats.chats);
   const importRef = useRef<HTMLInputElement>(null);
   const [includeChats, setIncludeChats] = useState(true);
   const { toast } = useToast();
 
   const exportWorkspace = () => {
     const workspace = buildWorkspaceExport({ agents, chats, includeChats });
-    downloadFile(
-      "a2a-workspace.json",
-      JSON.stringify(workspace, null, 2),
-      "application/json"
-    );
+    downloadFile("a2a-workspace.json", JSON.stringify(workspace, null, 2), "application/json");
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,11 +79,12 @@ export function WorkspaceActions() {
         className="hidden"
         onChange={handleImport}
       />
-      <Label className="flex min-w-0 items-center gap-2 text-xs text-muted-foreground max-sm:basis-full">
+      <PresetGalleryModal />
+      <Label className="text-muted-foreground flex min-w-0 items-center gap-2 text-xs max-sm:basis-full">
         <input
           type="checkbox"
           checked={includeChats}
-          onChange={(e) => setIncludeChats(e.target.checked)}
+          onChange={e => setIncludeChats(e.target.checked)}
         />
         Include chats
       </Label>

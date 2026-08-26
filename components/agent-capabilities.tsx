@@ -45,12 +45,11 @@ export function AgentCapabilitiesBadges({
           </Badge>
         ))}
       </div>
-      {(defaultInputModes?.length || defaultOutputModes?.length) ? (
+      {defaultInputModes?.length || defaultOutputModes?.length ? (
         <div className="space-y-1">
           {defaultInputModes && defaultInputModes.length > 0 && (
             <Caption>
-              <Small className="text-foreground">Input modes:</Small>{" "}
-              {defaultInputModes.join(", ")}
+              <Small className="text-foreground">Input modes:</Small> {defaultInputModes.join(", ")}
             </Caption>
           )}
           {defaultOutputModes && defaultOutputModes.length > 0 && (

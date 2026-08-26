@@ -24,9 +24,9 @@ function buildCorsOrigin(allowedOrigins: string | undefined): cors.CorsOptions["
   // Never allow wildcard origins from configuration.
   const configuredOrigins = allowedOrigins
     .split(",")
-    .map((o) => o.trim())
+    .map(o => o.trim())
     .filter(Boolean)
-    .filter((origin) => {
+    .filter(origin => {
       try {
         const parsed = new URL(origin);
         return parsed.protocol === "http:" || parsed.protocol === "https:";

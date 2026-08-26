@@ -54,8 +54,7 @@ function summarizeLogEntry(entry: LogEntry): string {
     return `${count} validation warning${count === 1 ? "" : "s"}`;
   }
 
-  const status =
-    entry.transport?.status != null ? `${entry.transport.status}` : undefined;
+  const status = entry.transport?.status != null ? `${entry.transport.status}` : undefined;
   const duration =
     entry.transport?.durationMs != null ? `${entry.transport.durationMs}ms` : undefined;
   const parts = [entry.method, status, duration].filter(Boolean);
@@ -70,7 +69,8 @@ export function createExecutionEventFromLog(chatId: string, entry: LogEntry): Ex
   const logKind = entry.type === "validation" ? "validation" : "transport";
   const level: ExecutionEventLevel =
     entry.type === "error" ||
-    (entry.transport?.status != null && (entry.transport.status < 200 || entry.transport.status >= 400))
+    (entry.transport?.status != null &&
+      (entry.transport.status < 200 || entry.transport.status >= 400))
       ? "error"
       : entry.type === "validation"
         ? "warning"
@@ -104,7 +104,7 @@ export function filterExecutionEvents(
   const requestId = filters.requestId?.trim();
   const taskId = filters.taskId?.trim();
 
-  return events.filter((event) => {
+  return events.filter(event => {
     if (kind !== "all" && event.kind !== kind) return false;
     if (requestId && event.requestId !== requestId) return false;
     if (taskId && event.taskId !== taskId) return false;
@@ -113,9 +113,9 @@ export function filterExecutionEvents(
 }
 
 export function getTransportSummary(events: ExecutionEvent[]) {
-  const transportEvents = events.filter((event) => event.kind === "transport");
+  const transportEvents = events.filter(event => event.kind === "transport");
   const durations = transportEvents
-    .map((event) => {
+    .map(event => {
       const details = event.details?.transport;
       if (!details || typeof details !== "object" || !("durationMs" in details)) return null;
       const duration = (details as { durationMs?: unknown }).durationMs;
@@ -125,7 +125,7 @@ export function getTransportSummary(events: ExecutionEvent[]) {
 
   return {
     total: transportEvents.length,
-    errors: transportEvents.filter((event) => event.level === "error").length,
+    errors: transportEvents.filter(event => event.level === "error").length,
     avgDurationMs:
       durations.length > 0
         ? Math.round(durations.reduce((sum, value) => sum + value, 0) / durations.length)
@@ -189,10 +189,7 @@ export function getTaskTimelineStages(
       continue;
     }
 
-    if (
-      event.kind === "artifact-update" &&
-      !stages.has("artifact-streamed")
-    ) {
+    if (event.kind === "artifact-update" && !stages.has("artifact-streamed")) {
       stages.set("artifact-streamed", {
         key: "artifact-streamed",
         label: "Artifact Streamed",

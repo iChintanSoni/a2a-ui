@@ -14,19 +14,19 @@ artifacts, task status, a debug panel, and an event explorer.
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `agentUrl` | `string` | — | A2A agent URL (**required**) |
-| `auth` | `AuthConfig` | `{ type: "none" }` | Authentication config |
-| `headers` | `CustomHeader[]` | `[]` | Extra request headers |
-| `initialCard` | `AgentCard` | — | Pre-loaded card; skips initial card fetch |
-| `initialContextId` | `string` | Auto-generated | Starting context ID |
-| `persistenceMode` | `"memory" \| "none"` | `"memory"` | Message persistence strategy |
-| `context` | `A2AContextConfig` | — | Context injected into every message |
-| `a2uiEnabled` | `boolean` | `false` | Enable A2UI structured surface rendering |
-| `title` | `string` | — | Optional title shown above the chat |
-| `showDebugPanel` | `boolean` | `true` | Show/hide the debug panel toggle button |
-| `showEventExplorer` | `boolean` | `true` | Show/hide the event explorer toggle button |
+| Prop                | Type                 | Default            | Description                                |
+| ------------------- | -------------------- | ------------------ | ------------------------------------------ |
+| `agentUrl`          | `string`             | —                  | A2A agent URL (**required**)               |
+| `auth`              | `AuthConfig`         | `{ type: "none" }` | Authentication config                      |
+| `headers`           | `CustomHeader[]`     | `[]`               | Extra request headers                      |
+| `initialCard`       | `AgentCard`          | —                  | Pre-loaded card; skips initial card fetch  |
+| `initialContextId`  | `string`             | Auto-generated     | Starting context ID                        |
+| `persistenceMode`   | `"memory" \| "none"` | `"memory"`         | Message persistence strategy               |
+| `context`           | `A2AContextConfig`   | —                  | Context injected into every message        |
+| `a2uiEnabled`       | `boolean`            | `false`            | Enable A2UI structured surface rendering   |
+| `title`             | `string`             | —                  | Optional title shown above the chat        |
+| `showDebugPanel`    | `boolean`            | `true`             | Show/hide the debug panel toggle button    |
+| `showEventExplorer` | `boolean`            | `true`             | Show/hide the event explorer toggle button |
 
 ### Example
 
@@ -67,12 +67,12 @@ description, version, skills, capabilities, and compliance summary.
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `agentUrl` | `string` | — | URL of the A2A server (**required**) |
-| `auth` | `AuthConfig` | `{ type: "none" }` | Auth config for fetching the card |
-| `initialCard` | `AgentCard` | — | Pre-loaded card to display before fetching |
-| `showRefresh` | `boolean` | `true` | Show a "Refresh" button to re-fetch the card |
+| Prop          | Type         | Default            | Description                                  |
+| ------------- | ------------ | ------------------ | -------------------------------------------- |
+| `agentUrl`    | `string`     | —                  | URL of the A2A server (**required**)         |
+| `auth`        | `AuthConfig` | `{ type: "none" }` | Auth config for fetching the card            |
+| `initialCard` | `AgentCard`  | —                  | Pre-loaded card to display before fetching   |
+| `showRefresh` | `boolean`    | `true`             | Show a "Refresh" button to re-fetch the card |
 
 ### Example
 
@@ -82,10 +82,7 @@ import { A2AAgentCard } from "a2a-ui/components/chat/A2AAgentCard";
 export default function Sidebar() {
   return (
     <aside>
-      <A2AAgentCard
-        agentUrl="https://my-agent.example.com"
-        showRefresh={false}
-      />
+      <A2AAgentCard agentUrl="https://my-agent.example.com" showRefresh={false} />
     </aside>
   );
 }
@@ -102,11 +99,11 @@ show real-time protocol traffic alongside a custom chat UI.
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `logs` | `LogEntry[]` | — | Log entries from `useA2ADebug().logs` (**required**) |
-| `validationWarnings` | `ValidationWarning[]` | — | Warnings from `useA2ADebug().validationWarnings` (**required**) |
-| `onClear` | `() => void` | — | Called when the "Clear" button is clicked |
+| Prop                 | Type                  | Default | Description                                                     |
+| -------------------- | --------------------- | ------- | --------------------------------------------------------------- |
+| `logs`               | `LogEntry[]`          | —       | Log entries from `useA2ADebug().logs` (**required**)            |
+| `validationWarnings` | `ValidationWarning[]` | —       | Warnings from `useA2ADebug().validationWarnings` (**required**) |
+| `onClear`            | `() => void`          | —       | Called when the "Clear" button is clicked                       |
 
 ### Example
 
@@ -120,9 +117,7 @@ function DevPanel() {
 
   return (
     <>
-      <button onClick={() => setOpen((v) => !v)}>
-        Debug ({debug.logs.length})
-      </button>
+      <button onClick={() => setOpen(v => !v)}>Debug ({debug.logs.length})</button>
       {open && (
         <A2ADebugPanel
           logs={debug.logs}
@@ -146,11 +141,11 @@ filtered by kind, request ID, and task ID.
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `events` | `ExecutionEvent[]` | — | Events from `chat.executionEvents` (**required**) |
-| `defaultKindFilter` | `string` | `"all"` | Pre-select an event kind filter |
-| `defaultRequestIdFilter` | `string` | — | Pre-select a request ID filter |
+| Prop                     | Type               | Default | Description                                       |
+| ------------------------ | ------------------ | ------- | ------------------------------------------------- |
+| `events`                 | `ExecutionEvent[]` | —       | Events from `chat.executionEvents` (**required**) |
+| `defaultKindFilter`      | `string`           | `"all"` | Pre-select an event kind filter                   |
+| `defaultRequestIdFilter` | `string`           | —       | Pre-select a request ID filter                    |
 
 ### Example
 
@@ -161,24 +156,19 @@ import { useA2AMessages } from "a2a-ui/hooks/use-a2a-messages";
 function MyEventLog({ connection, debug, session }) {
   const { chat } = useA2AMessages({ connection, debug, session });
 
-  return (
-    <EventExplorer
-      events={chat?.executionEvents ?? []}
-      defaultKindFilter="task-status"
-    />
-  );
+  return <EventExplorer events={chat?.executionEvents ?? []} defaultKindFilter="task-status" />;
 }
 ```
 
 ### Event kinds
 
-| Kind | When it appears |
-|------|----------------|
-| `outgoing-message` | When the user sends a message |
-| `task-status` | On each task state transition |
-| `artifact-update` | When an artifact chunk arrives or completes |
-| `tool-call` | When the agent invokes a tool |
-| `agent-message` | When the agent sends a message (non-task) |
-| `structured-ui` | When an A2UI surface is detected |
-| `validation` | When a compliance warning is recorded |
-| `error` | When a stream error occurs |
+| Kind               | When it appears                             |
+| ------------------ | ------------------------------------------- |
+| `outgoing-message` | When the user sends a message               |
+| `task-status`      | On each task state transition               |
+| `artifact-update`  | When an artifact chunk arrives or completes |
+| `tool-call`        | When the agent invokes a tool               |
+| `agent-message`    | When the agent sends a message (non-task)   |
+| `structured-ui`    | When an A2UI surface is detected            |
+| `validation`       | When a compliance warning is recorded       |
+| `error`            | When a stream error occurs                  |

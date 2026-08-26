@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import type { AgentCard } from "@a2a-js/sdk";
 
@@ -40,17 +36,17 @@ export function AgentCardViewer({ card }: AgentCardViewerProps) {
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1.5 px-0 text-xs">
+        <Button variant="ghost" size="sm" className="gap-1.5 px-0 text-xs" aria-expanded={open}>
           {open ? (
-            <ChevronDownIcon className="size-3.5" />
+            <ChevronDownIcon className="size-3.5" aria-hidden="true" />
           ) : (
-            <ChevronRightIcon className="size-3.5" />
+            <ChevronRightIcon className="size-3.5" aria-hidden="true" />
           )}
           {open ? "Hide" : "Show"} raw agent card JSON
         </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <pre className="hljs mt-2 max-h-96 overflow-auto rounded-md p-4 text-xs font-mono leading-relaxed">
+        <pre className="hljs mt-2 max-h-96 overflow-auto rounded-md p-4 font-mono text-xs leading-relaxed">
           {highlighted ? (
             <code dangerouslySetInnerHTML={{ __html: highlighted }} />
           ) : (

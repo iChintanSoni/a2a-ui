@@ -27,10 +27,7 @@ import { PageTitle, Muted, Caption, Small } from "@/components/typography";
 import { getTransportSummary } from "@/lib/a2a/execution-events";
 import { partsToPlainText } from "@/lib/a2a/parts";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import {
-  buildTaskSummaries,
-  type TaskSummary,
-} from "@/lib/features/chats/taskIndex";
+import { buildTaskSummaries, type TaskSummary } from "@/lib/features/chats/taskIndex";
 import type { ArtifactItem, TaskStatusItem } from "@/lib/features/chats/chatsSlice";
 import {
   removeTaskFilterPreset,
@@ -68,8 +65,8 @@ function taskKey(task: TaskSummary) {
 
 export default function TasksPage() {
   const dispatch = useAppDispatch();
-  const chats = useAppSelector((state) => state.chats.chats);
-  const presets = useAppSelector((state) => state.workbench.taskFilterPresets);
+  const chats = useAppSelector(state => state.chats.chats);
+  const presets = useAppSelector(state => state.workbench.taskFilterPresets);
   const [query, setQuery] = useState("");
   const [stateFilter, setStateFilter] = useState<TaskFilter>("all");
   const [selectedTaskKey, setSelectedTaskKey] = useState<string | null>(null);
@@ -77,32 +74,35 @@ export default function TasksPage() {
   const tasks = useMemo(() => buildTaskSummaries(chats), [chats]);
   const filteredTasks = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    return tasks.filter((task) => {
+    return tasks.filter(task => {
       if (stateFilter !== "all" && task.state !== stateFilter) return false;
       if (normalizedQuery && !taskSearchText(task).includes(normalizedQuery)) return false;
       return true;
     });
   }, [query, stateFilter, tasks]);
-  const selectedTask = filteredTasks.find((task) => taskKey(task) === selectedTaskKey) ?? null;
+  const selectedTask = filteredTasks.find(task => taskKey(task) === selectedTaskKey) ?? null;
   const selectedChat = selectedTask
-    ? chats.find((chat) => chat.id === selectedTask.chatId) ?? null
+    ? (chats.find(chat => chat.id === selectedTask.chatId) ?? null)
     : null;
-  const selectedStatusHistory = selectedChat && selectedTask
-    ? selectedChat.items.filter(
-        (item): item is TaskStatusItem =>
-          item.kind === "task-status" && item.taskId === selectedTask.taskId,
-      )
-    : [];
-  const selectedArtifacts = selectedChat && selectedTask
-    ? selectedChat.items.filter(
-        (item): item is ArtifactItem =>
-          item.kind === "artifact" && item.taskId === selectedTask.taskId,
-      )
-    : [];
-  const selectedEvents = selectedChat && selectedTask
-    ? selectedChat.executionEvents.filter((event) => event.taskId === selectedTask.taskId)
-    : [];
-  const selectedWarnings = selectedEvents.filter((event) => event.level !== "info");
+  const selectedStatusHistory =
+    selectedChat && selectedTask
+      ? selectedChat.items.filter(
+          (item): item is TaskStatusItem =>
+            item.kind === "task-status" && item.taskId === selectedTask.taskId,
+        )
+      : [];
+  const selectedArtifacts =
+    selectedChat && selectedTask
+      ? selectedChat.items.filter(
+          (item): item is ArtifactItem =>
+            item.kind === "artifact" && item.taskId === selectedTask.taskId,
+        )
+      : [];
+  const selectedEvents =
+    selectedChat && selectedTask
+      ? selectedChat.executionEvents.filter(event => event.taskId === selectedTask.taskId)
+      : [];
+  const selectedWarnings = selectedEvents.filter(event => event.level !== "info");
   const selectedTiming = selectedChat ? getTransportSummary(selectedChat.executionEvents) : null;
 
   return (
@@ -119,9 +119,9 @@ export default function TasksPage() {
         <Input
           placeholder="Search by task, context, chat, agent, or artifact"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={event => setQuery(event.target.value)}
         />
-        <Select value={stateFilter} onValueChange={(value) => setStateFilter(value as TaskFilter)}>
+        <Select value={stateFilter} onValueChange={value => setStateFilter(value as TaskFilter)}>
           <SelectTrigger className="max-sm:hidden">
             <SelectValue />
           </SelectTrigger>
@@ -144,7 +144,7 @@ export default function TasksPage() {
         <Button
           variant="outline"
           size="sm"
-          className="border-dashed border-border-strong bg-transparent"
+          className="border-border-strong border-dashed bg-transparent"
           onClick={() =>
             dispatch(
               saveTaskFilterPreset({
@@ -157,20 +157,23 @@ export default function TasksPage() {
           <BookmarkPlusIcon data-icon="inline-start" />
           Save current filter
         </Button>
-        {presets.map((preset) => (
-          <div key={preset.id} className="flex items-center gap-1.5 rounded-full border bg-surface-2 px-3 py-1.25">
+        {presets.map(preset => (
+          <div
+            key={preset.id}
+            className="bg-surface-2 flex items-center gap-1.5 rounded-full border px-3 py-1.25"
+          >
             <button
               onClick={() => {
                 setQuery(preset.query);
                 setStateFilter(preset.state);
               }}
-              className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground text-xs font-medium transition-colors"
             >
               {preset.label}
             </button>
             <button
               onClick={() => dispatch(removeTaskFilterPreset(preset.id))}
-              className="text-muted-foreground transition-colors hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground transition-colors"
               aria-label={`Remove ${preset.label}`}
             >
               <Trash2Icon className="size-3" />
@@ -185,12 +188,17 @@ export default function TasksPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredTasks.map((task) => (
-            <div key={`${task.chatId}:${task.taskId}`} className="min-w-0 rounded-lg border bg-card p-5 shadow-xs">
+          {filteredTasks.map(task => (
+            <div
+              key={`${task.chatId}:${task.taskId}`}
+              className="bg-card min-w-0 rounded-lg border p-5 shadow-xs"
+            >
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="truncate font-mono text-[13.5px] font-semibold">{task.taskId}</span>
+                    <span className="truncate font-mono text-[13.5px] font-semibold">
+                      {task.taskId}
+                    </span>
                     <Badge variant={stateBadgeVariant(task.state)} className="gap-1.25">
                       {(task.state === "completed" || task.state === "input-required") && (
                         <span className="size-1.25 rounded-full bg-current" />
@@ -207,15 +215,15 @@ export default function TasksPage() {
                       {task.artifactCount} artifact{task.artifactCount === 1 ? "" : "s"}
                     </Badge>
                   </div>
-                  <Caption className="mt-1.5 block truncate text-[12px] text-fg-subtle">
+                  <Caption className="text-fg-subtle mt-1.5 block truncate text-[12px]">
                     {task.agentName} · Context <span className="font-mono">{task.contextId}</span>
                   </Caption>
-                  <p className="mt-2.5 text-[13.5px] leading-relaxed text-muted-foreground line-clamp-2">
+                  <p className="text-muted-foreground mt-2.5 line-clamp-2 text-[13.5px] leading-relaxed">
                     {task.latestStatusText || "No status detail recorded for this task yet."}
                   </p>
                   <TaskTimeline stages={task.timelineStages} className="mt-3" />
                   {task.artifactNames.length > 0 && (
-                    <Caption className="mt-3 block break-words font-mono text-[11.5px] text-fg-subtle">
+                    <Caption className="text-fg-subtle mt-3 block font-mono text-[11.5px] break-words">
                       Artifacts: {task.artifactNames.join(", ")}
                     </Caption>
                   )}
@@ -231,7 +239,7 @@ export default function TasksPage() {
                   </Button>
                   <Link
                     href={`/dashboard/chat/${task.chatId}`}
-                    className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand-soft-foreground transition-colors hover:opacity-80"
+                    className="text-brand-soft-foreground inline-flex items-center gap-1 text-[12.5px] font-semibold transition-colors hover:opacity-80"
                   >
                     Open chat
                     <ArrowRightIcon className="size-3.5" />
@@ -245,23 +253,23 @@ export default function TasksPage() {
 
       <Sheet
         open={selectedTask != null}
-        onOpenChange={(open) => {
+        onOpenChange={open => {
           if (!open) setSelectedTaskKey(null);
         }}
       >
         <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
           <SheetHeader>
             <SheetTitle>Task details</SheetTitle>
-            <SheetDescription>
-              {selectedTask?.taskId ?? "No task selected"}
-            </SheetDescription>
+            <SheetDescription>{selectedTask?.taskId ?? "No task selected"}</SheetDescription>
           </SheetHeader>
 
           {selectedTask && (
             <div className="flex flex-col gap-5 px-4 pb-4">
               <div className="rounded-md border p-3">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={stateBadgeVariant(selectedTask.state)}>{selectedTask.state}</Badge>
+                  <Badge variant={stateBadgeVariant(selectedTask.state)}>
+                    {selectedTask.state}
+                  </Badge>
                   <Badge variant="outline">
                     {selectedArtifacts.length} artifact{selectedArtifacts.length === 1 ? "" : "s"}
                   </Badge>
@@ -281,8 +289,11 @@ export default function TasksPage() {
                   <Muted>No status history recorded.</Muted>
                 ) : (
                   <div className="space-y-2">
-                    {selectedStatusHistory.map((item) => (
-                      <div key={`${item.id}:${item.timestamp}`} className="rounded-md bg-muted/30 p-3">
+                    {selectedStatusHistory.map(item => (
+                      <div
+                        key={`${item.id}:${item.timestamp}`}
+                        className="bg-muted/30 rounded-md p-3"
+                      >
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant={stateBadgeVariant(item.state)}>{item.state}</Badge>
                           <Caption>{new Date(item.timestamp).toLocaleString()}</Caption>
@@ -304,13 +315,15 @@ export default function TasksPage() {
                   <Muted>No artifacts recorded.</Muted>
                 ) : (
                   <div className="space-y-2">
-                    {selectedArtifacts.map((artifact) => (
-                      <div key={artifact.id} className="rounded-md bg-muted/30 p-3">
+                    {selectedArtifacts.map(artifact => (
+                      <div key={artifact.id} className="bg-muted/30 rounded-md p-3">
                         <Caption className="block">
                           {artifact.name || artifact.id}
                           {artifact.isStreaming ? " · streaming" : ""}
                         </Caption>
-                        {artifact.description && <Muted className="mt-1">{artifact.description}</Muted>}
+                        {artifact.description && (
+                          <Muted className="mt-1">{artifact.description}</Muted>
+                        )}
                         <Muted className="mt-2 line-clamp-3">
                           {partsToPlainText(artifact.parts) || "No preview available."}
                         </Muted>
@@ -323,15 +336,15 @@ export default function TasksPage() {
               <section className="space-y-2">
                 <Small>Request timing</Small>
                 <div className="grid gap-2 sm:grid-cols-3">
-                  <div className="rounded-md bg-muted/30 p-3">
+                  <div className="bg-muted/30 rounded-md p-3">
                     <Caption className="block">Requests</Caption>
                     <Small>{selectedTiming?.total ?? 0}</Small>
                   </div>
-                  <div className="rounded-md bg-muted/30 p-3">
+                  <div className="bg-muted/30 rounded-md p-3">
                     <Caption className="block">Errors</Caption>
                     <Small>{selectedTiming?.errors ?? 0}</Small>
                   </div>
-                  <div className="rounded-md bg-muted/30 p-3">
+                  <div className="bg-muted/30 rounded-md p-3">
                     <Caption className="block">Average</Caption>
                     <Small>
                       {selectedTiming?.avgDurationMs != null
@@ -348,8 +361,8 @@ export default function TasksPage() {
                   <Muted>No warnings or errors recorded for this task.</Muted>
                 ) : (
                   <div className="space-y-2">
-                    {selectedWarnings.map((event) => (
-                      <div key={event.id} className="rounded-md bg-muted/30 p-3">
+                    {selectedWarnings.map(event => (
+                      <div key={event.id} className="bg-muted/30 rounded-md p-3">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant={event.level === "error" ? "destructive" : "outline"}>
                             {event.level}

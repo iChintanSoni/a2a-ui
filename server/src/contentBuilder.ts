@@ -35,7 +35,10 @@ export function buildMessageContent(parts: Part[]): string | ContentBlock[] {
         blocks.push({ type: "image_url", image_url: { url } });
       } else {
         const name = file.name ?? "file";
-        blocks.push({ type: "text", text: `[Attached file: ${name} (${mimeType}) — content not shown]` });
+        blocks.push({
+          type: "text",
+          text: `[Attached file: ${name} (${mimeType}) — content not shown]`,
+        });
       }
     }
   }
@@ -49,9 +52,16 @@ export function contentToText(content: unknown): string {
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";
   return content
-    .map((block) => {
+    .map(block => {
       if (typeof block === "string") return block;
-      if (block && typeof block === "object" && "type" in block && block.type === "text" && "text" in block && typeof block.text === "string") {
+      if (
+        block &&
+        typeof block === "object" &&
+        "type" in block &&
+        block.type === "text" &&
+        "text" in block &&
+        typeof block.text === "string"
+      ) {
         return block.text;
       }
       return "";

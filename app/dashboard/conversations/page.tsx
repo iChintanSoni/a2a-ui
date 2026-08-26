@@ -56,7 +56,7 @@ function downloadFile(name: string, content: string, type: string) {
 function textOf(item: ArtifactItem | AgentMessageItem) {
   return item.parts
     .filter((part): part is Extract<Part, { kind: "text" }> => part.kind === "text")
-    .map((part) => part.text)
+    .map(part => part.text)
     .join("");
 }
 
@@ -66,7 +66,7 @@ function chatSearchText(chat: Chat) {
     chat.agentName,
     chat.agentUrl,
     chat.lastMessage,
-    ...chat.items.flatMap((item) => {
+    ...chat.items.flatMap(item => {
       if (item.kind === "user-message") return [partsToPlainText(item.parts)];
       if (item.kind === "artifact" || item.kind === "agent-message") return [textOf(item)];
       if (item.kind === "tool-call") return [item.toolName, item.query];
@@ -82,7 +82,7 @@ function chatSearchText(chat: Chat) {
 function exportMarkdownTrace(chats: Chat[]) {
   const generatedAt = new Date().toISOString();
   const content = chats
-    .map((chat) => buildChatTraceMarkdown({ chat, generatedAt }))
+    .map(chat => buildChatTraceMarkdown({ chat, generatedAt }))
     .join("\n\n---\n\n");
   downloadFile("a2a-conversations-trace.md", content, "text/markdown");
 }
@@ -95,7 +95,7 @@ function exportForensicJson(chats: Chat[]) {
       {
         version: 1,
         generatedAt,
-        chats: chats.map((chat) => buildChatTraceJson({ chat, generatedAt })),
+        chats: chats.map(chat => buildChatTraceJson({ chat, generatedAt })),
       },
       null,
       2,
@@ -107,7 +107,7 @@ function exportForensicJson(chats: Chat[]) {
 export default function ConversationsPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const chats = useAppSelector((state) => state.chats.chats);
+  const chats = useAppSelector(state => state.chats.chats);
   const [query, setQuery] = useState("");
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>("active");
   const [sort, setSort] = useState<SortMode>("recent");
@@ -118,7 +118,7 @@ export default function ConversationsPage() {
   const filteredChats = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return chats
-      .filter((chat) => {
+      .filter(chat => {
         if (archiveFilter === "active" && chat.archived) return false;
         if (archiveFilter === "archived" && !chat.archived) return false;
         if (normalizedQuery && !chatSearchText(chat).includes(normalizedQuery)) return false;
@@ -132,7 +132,7 @@ export default function ConversationsPage() {
       });
   }, [archiveFilter, chats, query, sort]);
 
-  const selectedChats = chats.filter((chat) => selected.includes(chat.id));
+  const selectedChats = chats.filter(chat => selected.includes(chat.id));
   const compareDisabledReason =
     selectedChats.length === 2
       ? null
@@ -140,8 +140,8 @@ export default function ConversationsPage() {
         ? "Select exactly two runs to compare."
         : `Select ${selectedChats.length > 2 ? "only" : "one more"} run to compare.`;
   const toggleSelected = (chatId: string) => {
-    setSelected((prev) =>
-      prev.includes(chatId) ? prev.filter((id) => id !== chatId) : [...prev, chatId]
+    setSelected(prev =>
+      prev.includes(chatId) ? prev.filter(id => id !== chatId) : [...prev, chatId],
     );
   };
 
@@ -163,7 +163,9 @@ export default function ConversationsPage() {
       <div className="hidden flex-col items-start justify-between gap-4 sm:flex lg:flex-row lg:items-center">
         <div>
           <PageTitle className="text-[26px] font-bold tracking-tight">Conversations</PageTitle>
-          <Muted className="mt-2 text-sm font-medium">Search, rename, archive, delete, and export saved chats.</Muted>
+          <Muted className="mt-2 text-sm font-medium">
+            Search, rename, archive, delete, and export saved chats.
+          </Muted>
         </div>
         <div className="grid w-full grid-cols-1 gap-2 sm:w-auto sm:grid-cols-2 lg:flex lg:flex-wrap lg:items-center">
           <Button
@@ -188,7 +190,7 @@ export default function ConversationsPage() {
               downloadFile(
                 "a2a-conversations.json",
                 JSON.stringify(selectedChats, null, 2),
-                "application/json"
+                "application/json",
               )
             }
           >
@@ -220,18 +222,30 @@ export default function ConversationsPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-[1fr_180px_160px]">
-        <Input placeholder="Search titles, agents, messages, or tool calls" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <Input
+          placeholder="Search titles, agents, messages, or tool calls"
+          aria-label="Search titles, agents, messages, or tool calls"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
         <div className="hidden sm:contents">
-          <Select value={archiveFilter} onValueChange={(value) => setArchiveFilter(value as ArchiveFilter)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select
+            value={archiveFilter}
+            onValueChange={value => setArchiveFilter(value as ArchiveFilter)}
+          >
+            <SelectTrigger aria-label="Filter by archive status">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="archived">Archived</SelectItem>
               <SelectItem value="all">All chats</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={sort} onValueChange={(value) => setSort(value as SortMode)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select value={sort} onValueChange={value => setSort(value as SortMode)}>
+            <SelectTrigger aria-label="Sort conversations">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="recent">Sort recent</SelectItem>
               <SelectItem value="title">Sort title</SelectItem>
@@ -247,12 +261,12 @@ export default function ConversationsPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {filteredChats.map((chat) => (
-            <div key={chat.id} className="min-w-0 rounded-lg border bg-card p-4 shadow-xs sm:p-5">
+          {filteredChats.map(chat => (
+            <div key={chat.id} className="bg-card min-w-0 rounded-lg border p-4 shadow-xs sm:p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="flex min-w-0 flex-1 items-start gap-3">
                   <input
-                    className="mt-1.5 accent-primary max-sm:hidden"
+                    className="accent-primary mt-1.5 max-sm:hidden"
                     type="checkbox"
                     checked={selected.includes(chat.id)}
                     onChange={() => toggleSelected(chat.id)}
@@ -261,17 +275,22 @@ export default function ConversationsPage() {
                   <div className="min-w-0 flex-1">
                     {editingId === chat.id ? (
                       <div className="flex flex-col gap-2 sm:flex-row">
-                        <Input value={editingTitle} onChange={(e) => setEditingTitle(e.target.value)} />
-                        <Button size="sm" onClick={saveRename}>Save</Button>
+                        <Input
+                          value={editingTitle}
+                          onChange={e => setEditingTitle(e.target.value)}
+                        />
+                        <Button size="sm" onClick={saveRename}>
+                          Save
+                        </Button>
                       </div>
                     ) : (
                       <span className="block truncate text-[15px] font-bold">{chat.title}</span>
                     )}
-                    <Caption className="mt-1 block truncate text-[12px] text-fg-subtle">
+                    <Caption className="text-fg-subtle mt-1 block truncate text-[12px]">
                       {chat.agentName} · {new Date(chat.timestamp).toLocaleString()}
                     </Caption>
                     {chat.lastMessage && (
-                      <p className="mt-2.5 text-[13px] leading-relaxed text-muted-foreground line-clamp-2">
+                      <p className="text-muted-foreground mt-2.5 line-clamp-2 text-[13px] leading-relaxed">
                         {chat.lastMessage}
                       </p>
                     )}
@@ -281,18 +300,25 @@ export default function ConversationsPage() {
                         {chat.archived ? "archived" : "active"}
                       </Badge>
                       {chat.pinned && <Badge variant="outline">pinned</Badge>}
-                      <Badge variant="outline">{chat.items.length} item{chat.items.length === 1 ? "" : "s"}</Badge>
+                      <Badge variant="outline">
+                        {chat.items.length} item{chat.items.length === 1 ? "" : "s"}
+                      </Badge>
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <Button size="sm" variant="outline" className="max-sm:flex-1 max-sm:border-primary max-sm:bg-primary max-sm:text-primary-foreground" asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="max-sm:border-primary max-sm:bg-primary max-sm:text-primary-foreground max-sm:flex-1"
+                    asChild
+                  >
                     <Link href={`/dashboard/chat/${chat.id}`}>Open</Link>
                   </Button>
                   <Button
                     size="icon"
                     variant="outline"
-                    className="size-8 max-sm:h-8 max-sm:flex-1 max-sm:w-auto"
+                    className="size-8 max-sm:h-8 max-sm:w-auto max-sm:flex-1"
                     onClick={() => startRename(chat)}
                     title="Rename"
                     aria-label="Rename"
@@ -303,7 +329,10 @@ export default function ConversationsPage() {
                   <Button
                     size="icon"
                     variant="outline"
-                    className={cn("size-8 max-sm:hidden", chat.pinned && "border-brand-soft bg-brand-soft text-brand-soft-foreground")}
+                    className={cn(
+                      "size-8 max-sm:hidden",
+                      chat.pinned && "border-brand-soft bg-brand-soft text-brand-soft-foreground",
+                    )}
                     onClick={() =>
                       dispatch(setChatPinned({ chatId: chat.id, pinned: !chat.pinned }))
                     }
@@ -318,11 +347,13 @@ export default function ConversationsPage() {
                     className="size-8 max-sm:hidden"
                     onClick={() => {
                       const nextChatId = crypto.randomUUID();
-                      dispatch(cloneChat({ chatId: chat.id, newChatId: nextChatId, mode: "prompt" }));
+                      dispatch(
+                        cloneChat({ chatId: chat.id, newChatId: nextChatId, mode: "prompt" }),
+                      );
                       router.push(`/dashboard/chat/${nextChatId}`);
                     }}
                     title={
-                      chat.items.some((item) => item.kind === "user-message")
+                      chat.items.some(item => item.kind === "user-message")
                         ? "Clone prompts into a fresh run"
                         : "Start a new run from this chat context"
                     }
@@ -334,20 +365,26 @@ export default function ConversationsPage() {
                     size="icon"
                     variant="outline"
                     className="size-8 max-sm:hidden"
-                    onClick={() => dispatch(setChatArchived({ chatId: chat.id, archived: !chat.archived }))}
+                    onClick={() =>
+                      dispatch(setChatArchived({ chatId: chat.id, archived: !chat.archived }))
+                    }
                     title={chat.archived ? "Restore" : "Archive"}
                     aria-label={chat.archived ? "Restore" : "Archive"}
                   >
-                    {chat.archived ? <ArchiveRestoreIcon className="size-3.5" /> : <ArchiveIcon className="size-3.5" />}
+                    {chat.archived ? (
+                      <ArchiveRestoreIcon className="size-3.5" />
+                    ) : (
+                      <ArchiveIcon className="size-3.5" />
+                    )}
                   </Button>
                   <Button
                     size="icon"
                     variant="outline"
-                    className="size-8 border-destructive-soft bg-destructive-soft text-destructive hover:bg-destructive-soft/70 max-sm:hidden"
+                    className="border-destructive-soft bg-destructive-soft text-destructive hover:bg-destructive-soft/70 size-8 max-sm:hidden"
                     onClick={() => {
                       if (!window.confirm(`Delete "${chat.title}"? This cannot be undone.`)) return;
                       dispatch(removeChat(chat.id));
-                      setSelected((prev) => prev.filter((id) => id !== chat.id));
+                      setSelected(prev => prev.filter(id => id !== chat.id));
                     }}
                     title="Delete"
                     aria-label="Delete"

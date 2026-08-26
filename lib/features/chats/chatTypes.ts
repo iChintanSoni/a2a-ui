@@ -52,11 +52,7 @@ export type ToolCallItem = {
 };
 
 export type ChatItem =
-  | UserMessageItem
-  | TaskStatusItem
-  | ArtifactItem
-  | AgentMessageItem
-  | ToolCallItem;
+  UserMessageItem | TaskStatusItem | ArtifactItem | AgentMessageItem | ToolCallItem;
 
 export interface Chat {
   id: string; // contextId

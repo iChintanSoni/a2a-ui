@@ -57,25 +57,25 @@ function EventRow({ event }: { event: ExecutionEvent }) {
       : null;
 
   return (
-    <div className="border-b border-border/50 last:border-0">
+    <div className="border-border/50 border-b last:border-0">
       <button
-        onClick={() => setOpen((value) => !value)}
-        className="flex w-full items-start gap-2 px-3 py-2 text-left transition-colors hover:bg-muted/40"
+        onClick={() => setOpen(value => !value)}
+        className="hover:bg-muted/40 flex w-full items-start gap-2 px-3 py-2 text-left transition-colors"
         aria-expanded={open}
         aria-label={`${open ? "Collapse" : "Expand"} ${event.kind} event ${event.summary}`}
       >
         <Caption className="mt-0.5 shrink-0 font-mono">{time}</Caption>
         <span
           className={cn(
-            "inline-flex shrink-0 rounded border px-1.5 py-0 text-[10px] font-semibold uppercase leading-5",
+            "inline-flex shrink-0 rounded border px-1.5 py-0 text-[10px] leading-5 font-semibold uppercase",
             KIND_STYLES[event.kind],
           )}
         >
           {event.kind}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm text-foreground">{event.summary}</div>
-          <div className="mt-1 flex flex-wrap gap-1 text-[11px] text-muted-foreground">
+          <div className="text-foreground truncate text-sm">{event.summary}</div>
+          <div className="text-muted-foreground mt-1 flex flex-wrap gap-1 text-[11px]">
             {event.taskId && <Badge variant="outline">task {event.taskId}</Badge>}
             {event.requestId && <Badge variant="outline">request {event.requestId}</Badge>}
             {duration && <Badge variant="outline">{duration}</Badge>}
@@ -85,8 +85,8 @@ function EventRow({ event }: { event: ExecutionEvent }) {
       </button>
 
       {open && (
-        <div className="overflow-x-auto bg-muted/30 px-3 pb-3 pt-1">
-          <pre className="whitespace-pre-wrap break-words text-[11px] leading-relaxed text-foreground/80">
+        <div className="bg-muted/30 overflow-x-auto px-3 pt-1 pb-3">
+          <pre className="text-foreground/80 text-[11px] leading-relaxed break-words whitespace-pre-wrap">
             {JSON.stringify(event, null, 2)}
           </pre>
         </div>
@@ -121,9 +121,9 @@ export function EventExplorer({ events, onClose }: EventExplorerProps) {
   const summary = useMemo(() => getTransportSummary(filtered), [filtered]);
 
   return (
-    <div className="flex h-85 max-h-[45dvh] min-h-52 shrink-0 resize-y flex-col overflow-hidden border-t bg-background">
+    <div className="bg-background flex h-85 max-h-[45dvh] min-h-52 shrink-0 resize-y flex-col overflow-hidden border-t">
       <div className="flex items-center gap-2 border-b px-3 py-2">
-        <ActivityIcon className="size-4 text-muted-foreground" />
+        <ActivityIcon className="text-muted-foreground size-4" />
         <Small className="text-foreground/80">Event Explorer</Small>
         <div className="ml-auto flex items-center gap-1">
           <Button
@@ -140,13 +140,14 @@ export function EventExplorer({ events, onClose }: EventExplorerProps) {
       </div>
 
       <div className="border-b px-3 py-2">
-        <div className="flex flex-wrap gap-1">
-          {FILTERS.map((entry) => (
+        <div className="flex flex-wrap gap-1" role="toolbar" aria-label="Filter execution events">
+          {FILTERS.map(entry => (
             <button
               key={entry.value}
               onClick={() => setFilter(entry.value)}
+              aria-pressed={filter === entry.value}
               className={cn(
-                "rounded px-2 py-0.5 text-[11px] font-medium transition-colors",
+                "focus-visible:ring-ring rounded px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:ring-1 focus-visible:outline-hidden",
                 filter === entry.value
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -160,19 +161,19 @@ export function EventExplorer({ events, onClose }: EventExplorerProps) {
         <div className="mt-2 grid gap-2 md:grid-cols-2">
           <Input
             value={taskFilter}
-            onChange={(event) => setTaskFilter(event.target.value)}
+            onChange={event => setTaskFilter(event.target.value)}
             placeholder="Filter by task ID"
             className="h-8 text-xs"
           />
           <Input
             value={requestFilter}
-            onChange={(event) => setRequestFilter(event.target.value)}
+            onChange={event => setRequestFilter(event.target.value)}
             placeholder="Filter by request ID"
             className="h-8 text-xs"
           />
         </div>
 
-        <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+        <div className="text-muted-foreground mt-2 flex flex-wrap gap-2 text-[11px]">
           <Badge variant="outline">{filtered.length} events</Badge>
           <Badge variant="outline">{summary.total} transport</Badge>
           <Badge variant="outline">{summary.errors} errors</Badge>
@@ -191,14 +192,14 @@ export function EventExplorer({ events, onClose }: EventExplorerProps) {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="text-xs text-primary underline hover:no-underline"
+                className="text-primary text-xs underline hover:no-underline"
               >
                 Clear filters
               </button>
             )}
           </div>
         ) : (
-          filtered.map((event) => <EventRow key={event.id} event={event} />)
+          filtered.map(event => <EventRow key={event.id} event={event} />)
         )}
       </div>
     </div>

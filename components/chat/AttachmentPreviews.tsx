@@ -19,21 +19,25 @@ export function AttachmentPreviews({ attachments, onRemove }: Props) {
       {attachments.map((a, i) => (
         <div
           key={i}
-          className="relative flex max-w-full items-center gap-1.5 rounded-lg border bg-muted/50 px-2 py-1.5 text-xs sm:max-w-45"
+          className="bg-muted/50 relative flex max-w-full items-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs sm:max-w-45"
         >
           {a.previewUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={a.previewUrl} alt={a.file.name} className="size-8 rounded object-cover shrink-0" />
+            <img
+              src={a.previewUrl}
+              alt={a.file.name}
+              className="size-8 shrink-0 rounded object-cover"
+            />
           ) : (
-            <PaperclipIcon className="size-4 text-muted-foreground shrink-0" />
+            <PaperclipIcon className="text-muted-foreground size-4 shrink-0" />
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate font-medium leading-none">{a.file.name}</p>
+            <p className="truncate leading-none font-medium">{a.file.name}</p>
             <p className="text-muted-foreground mt-0.5">{formatBytes(a.file.size)}</p>
           </div>
           <button
             onClick={() => onRemove(i)}
-            className="shrink-0 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground shrink-0"
             aria-label="Remove attachment"
           >
             <XIcon className="size-3" />

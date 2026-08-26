@@ -33,9 +33,7 @@ export function summarizeAuth(auth: AuthConfig): string {
     case "bearer":
       return auth.bearerToken ? "Bearer token configured" : "Bearer token selected";
     case "api-key":
-      return auth.apiKeyHeader
-        ? `API key header ${auth.apiKeyHeader}`
-        : "API key selected";
+      return auth.apiKeyHeader ? `API key header ${auth.apiKeyHeader}` : "API key selected";
     case "basic":
       return auth.basicUsername ? `Basic auth for ${auth.basicUsername}` : "Basic auth selected";
     case "none":
@@ -45,10 +43,10 @@ export function summarizeAuth(auth: AuthConfig): string {
 }
 
 export function summarizeHeaders(headers: CustomHeader[]): string {
-  const configured = headers.filter((header) => header.key.trim());
+  const configured = headers.filter(header => header.key.trim());
   if (configured.length === 0) return "No custom headers";
   return configured
-    .map((header) => `${header.key.trim()}: ${header.value ? "configured" : "empty"}`)
+    .map(header => `${header.key.trim()}: ${header.value ? "configured" : "empty"}`)
     .join(", ");
 }
 
@@ -105,16 +103,15 @@ export async function runAgentConnectionDiagnostic({
     const card = await Promise.race([
       client.getAgentCard(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Agent card fetch timed out after 15s")), 15_000)
+        setTimeout(() => reject(new Error("Agent card fetch timed out after 15s")), 15_000),
       ),
     ]);
     const interfaces = card.additionalInterfaces ?? [];
     const transports = Array.from(
       new Set(
-        [
-          card.preferredTransport,
-          ...interfaces.map((entry) => entry.transport),
-        ].filter((entry): entry is string => Boolean(entry)),
+        [card.preferredTransport, ...interfaces.map(entry => entry.transport)].filter(
+          (entry): entry is string => Boolean(entry),
+        ),
       ),
     );
 

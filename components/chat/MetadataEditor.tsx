@@ -26,21 +26,21 @@ export function MetadataEditor({
   onSaveDefaults,
 }: Props) {
   return (
-    <div className="rounded-lg border bg-muted/20 px-3 py-2 flex flex-col gap-2">
-      <p className="text-xs font-medium text-muted-foreground">Message metadata</p>
+    <div className="bg-muted/20 flex flex-col gap-2 rounded-lg border px-3 py-2">
+      <p className="text-muted-foreground text-xs font-medium">Message metadata</p>
       {rows.map((row, i) => (
         <div key={i} className="flex flex-col gap-1.5 sm:flex-row sm:items-center">
           <Input
-            className="h-7 text-xs flex-1"
+            className="h-7 flex-1 text-xs"
             placeholder="key"
             value={row.key}
-            onChange={(e) => onUpdateRow(i, "key", e.target.value)}
+            onChange={e => onUpdateRow(i, "key", e.target.value)}
           />
           <Input
-            className="h-7 text-xs flex-1"
+            className="h-7 flex-1 text-xs"
             placeholder="value"
             value={row.value}
-            onChange={(e) => onUpdateRow(i, "value", e.target.value)}
+            onChange={e => onUpdateRow(i, "value", e.target.value)}
           />
           <button
             onClick={() => onRemoveRow(i)}
@@ -54,7 +54,7 @@ export function MetadataEditor({
       ))}
       <button
         onClick={onAddRow}
-        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground w-fit"
+        className="text-muted-foreground hover:text-foreground flex w-fit items-center gap-1 text-xs"
       >
         <PlusIcon className="size-3" />
         Add row
@@ -63,7 +63,7 @@ export function MetadataEditor({
         {hasDefaultMetadata && (
           <button
             onClick={onApplyDefaults}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs"
           >
             <RotateCcwIcon className="size-3" />
             Apply agent defaults
@@ -72,7 +72,7 @@ export function MetadataEditor({
         {hasMetadataDraft && onSaveDefaults && (
           <button
             onClick={() => onSaveDefaults(currentMetadata)}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs"
           >
             <BookmarkPlusIcon className="size-3" />
             Save as agent defaults

@@ -59,9 +59,9 @@ describe("execution events", () => {
     expect(
       filterExecutionEvents(events, { kind: "all", requestId: "req-1", taskId: "task-a" }),
     ).toHaveLength(1);
-    expect(
-      filterExecutionEvents(events, { kind: "task-status", taskId: "task-b" }),
-    ).toHaveLength(1);
+    expect(filterExecutionEvents(events, { kind: "task-status", taskId: "task-b" })).toHaveLength(
+      1,
+    );
   });
 
   it("derives timeline stages and transport summary", () => {
@@ -118,7 +118,7 @@ describe("execution events", () => {
       },
     ];
 
-    expect(getTaskTimelineStages(events, "task-1").map((stage) => stage.key)).toEqual([
+    expect(getTaskTimelineStages(events, "task-1").map(stage => stage.key)).toEqual([
       "submitted",
       "tool-started",
       "artifact-streamed",

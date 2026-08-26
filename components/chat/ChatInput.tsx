@@ -118,18 +118,18 @@ export function ChatInput({
     e.stopPropagation();
     setIsDragging(false);
     const files = Array.from(e.dataTransfer.files);
-    const previews: AttachmentPreview[] = files.map((file) => ({
+    const previews: AttachmentPreview[] = files.map(file => ({
       file,
       previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
     }));
-    setAttachments((prev) => [...prev, ...previews]);
+    setAttachments(prev => [...prev, ...previews]);
   };
 
   const handleSend = () => {
     if (disabled) return;
 
     const metadata = metaRows
-      .filter((r) => r.key.trim())
+      .filter(r => r.key.trim())
       .reduce<Record<string, string>>((acc, r) => {
         acc[r.key.trim()] = r.value;
         return acc;
@@ -161,7 +161,7 @@ export function ChatInput({
     const trimmedText = text.trim();
     const parts: OutgoingMessagePartInput[] = [];
     if (trimmedText) parts.push({ kind: "text", text: trimmedText });
-    if (attachments.length > 0) parts.push(...attachments.map((a) => a.file));
+    if (attachments.length > 0) parts.push(...attachments.map(a => a.file));
     parts.push(...parsedDataParts);
 
     if (parts.length === 0) return;
@@ -193,16 +193,16 @@ export function ChatInput({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    const previews: AttachmentPreview[] = files.map((file) => ({
+    const previews: AttachmentPreview[] = files.map(file => ({
       file,
       previewUrl: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
     }));
-    setAttachments((prev) => [...prev, ...previews]);
+    setAttachments(prev => [...prev, ...previews]);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const stopTracks = useCallback(() => {
-    recordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+    recordingStreamRef.current?.getTracks().forEach(track => track.stop());
     recordingStreamRef.current = null;
   }, []);
 
@@ -226,7 +226,7 @@ export function ChatInput({
       recordingStreamRef.current = stream;
       mediaRecorderRef.current = recorder;
 
-      recorder.ondataavailable = (event) => {
+      recorder.ondataavailable = event => {
         if (event.data.size > 0) recordingChunksRef.current.push(event.data);
       };
       recorder.onstop = () => {
@@ -238,7 +238,7 @@ export function ChatInput({
             `voice-input-${new Date().toISOString().replace(/[:.]/g, "-")}.${extensionForMimeType(type)}`,
             { type },
           );
-          setAttachments((prev) => [...prev, { file }]);
+          setAttachments(prev => [...prev, { file }]);
         }
         recordingChunksRef.current = [];
         mediaRecorderRef.current = null;
@@ -263,7 +263,7 @@ export function ChatInput({
   };
 
   const removeAttachment = (index: number) => {
-    setAttachments((prev) => {
+    setAttachments(prev => {
       const updated = [...prev];
       const removed = updated.splice(index, 1)[0];
       if (removed.previewUrl) URL.revokeObjectURL(removed.previewUrl);
@@ -272,8 +272,10 @@ export function ChatInput({
   };
 
   const clearAttachments = useCallback(() => {
-    setAttachments((prev) => {
-      prev.forEach((a) => { if (a.previewUrl) URL.revokeObjectURL(a.previewUrl); });
+    setAttachments(prev => {
+      prev.forEach(a => {
+        if (a.previewUrl) URL.revokeObjectURL(a.previewUrl);
+      });
       return [];
     });
   }, []);
@@ -291,24 +293,28 @@ export function ChatInput({
   }, [clearAttachments, stopTracks]);
 
   const updateMetaRow = (index: number, field: "key" | "value", val: string) => {
-    setMetaRows((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: val } : row)));
+    setMetaRows(prev => prev.map((row, i) => (i === index ? { ...row, [field]: val } : row)));
   };
 
-  const addMetaRow = () => setMetaRows((prev) => [...prev, { key: "", value: "" }]);
+  const addMetaRow = () => setMetaRows(prev => [...prev, { key: "", value: "" }]);
 
   const removeMetaRow = (index: number) => {
-    setMetaRows((prev) => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
+    setMetaRows(prev => (prev.length > 1 ? prev.filter((_, i) => i !== index) : prev));
   };
 
   const addDataPart = () => {
     const id = crypto.randomUUID();
-    setDataParts((prev) => [...prev, { id, value: "{}" }]);
-    setDataErrors((prev) => { const next = { ...prev }; delete next[id]; return next; });
+    setDataParts(prev => [...prev, { id, value: "{}" }]);
+    setDataErrors(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const updateDataPart = (id: string, value: string) => {
-    setDataParts((prev) => prev.map((part) => (part.id === id ? { ...part, value } : part)));
-    setDataErrors((prev) => {
+    setDataParts(prev => prev.map(part => (part.id === id ? { ...part, value } : part)));
+    setDataErrors(prev => {
       if (!(id in prev)) return prev;
       const next = { ...prev };
       delete next[id];
@@ -317,8 +323,8 @@ export function ChatInput({
   };
 
   const removeDataPart = (id: string) => {
-    setDataParts((prev) => prev.filter((part) => part.id !== id));
-    setDataErrors((prev) => {
+    setDataParts(prev => prev.filter(part => part.id !== id));
+    setDataErrors(prev => {
       if (!(id in prev)) return prev;
       const next = { ...prev };
       delete next[id];
@@ -327,25 +333,25 @@ export function ChatInput({
   };
 
   const formatDataPart = (id: string) => {
-    const draft = dataParts.find((part) => part.id === id);
+    const draft = dataParts.find(part => part.id === id);
     const trimmedValue = draft?.value.trim();
     if (!trimmedValue) return;
     try {
       const parsed = JSON.parse(trimmedValue) as unknown;
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-        setDataErrors((prev) => ({ ...prev, [id]: "Data parts must be JSON objects." }));
+        setDataErrors(prev => ({ ...prev, [id]: "Data parts must be JSON objects." }));
         return;
       }
       updateDataPart(id, JSON.stringify(parsed, null, 2));
     } catch {
-      setDataErrors((prev) => ({ ...prev, [id]: "Enter valid JSON before sending." }));
+      setDataErrors(prev => ({ ...prev, [id]: "Enter valid JSON before sending." }));
     }
   };
 
   const currentMetadata = useMemo(
     () =>
       metaRows
-        .filter((row) => row.key.trim())
+        .filter(row => row.key.trim())
         .reduce<Record<string, string>>((acc, row) => {
           acc[row.key.trim()] = row.value;
           return acc;
@@ -356,7 +362,7 @@ export function ChatInput({
   const hasPromptDraft = text.trim().length > 0;
   const hasMetadataDraft = Object.keys(currentMetadata).length > 0;
   const hasDefaultMetadata = Object.keys(defaultMetadata ?? {}).length > 0;
-  const hasDataDraft = dataParts.some((part) => part.value.trim().length > 0);
+  const hasDataDraft = dataParts.some(part => part.value.trim().length > 0);
   const canSend = hasPromptDraft || attachments.length > 0 || hasDataDraft;
 
   const applyPromptPreset = (preset: PromptPreset) => {
@@ -376,8 +382,8 @@ export function ChatInput({
   return (
     <div
       className={cn(
-        "sticky bottom-0 z-20 flex shrink-0 flex-col gap-2 border-t bg-background px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] transition-colors sm:px-4",
-        isDragging && showFilePicker && "bg-primary/5 border-primary"
+        "bg-background sticky bottom-0 z-20 flex shrink-0 flex-col gap-2 border-t px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] transition-colors sm:px-4",
+        isDragging && showFilePicker && "bg-primary/5 border-primary",
       )}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -386,17 +392,21 @@ export function ChatInput({
       <PromptPresets presets={promptPresets} disabled={disabled} onApply={applyPromptPreset} />
 
       {isInputRequired && (
-        <div className="flex items-center gap-1.5 rounded-[9px] border border-warning-soft bg-warning-soft/60 px-3 py-1.5 text-xs font-medium text-warning-foreground">
-          <span className="size-1.5 rounded-full bg-warning-foreground shrink-0" />
+        <div className="border-warning-soft bg-warning-soft/60 text-warning-foreground flex items-center gap-1.5 rounded-[9px] border px-3 py-1.5 text-xs font-medium">
+          <span className="bg-warning-foreground size-1.5 shrink-0 rounded-full" />
           Responding to agent — your message will continue the current task
         </div>
       )}
 
       {recordingError && (
-        <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs text-destructive">
+        <div className="border-destructive/30 bg-destructive/10 text-destructive flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs">
           <span className="flex-1">{recordingError}</span>
           <button
-            onClick={() => { setRecordingError(null); setRecordingState("idle"); startRecording(); }}
+            onClick={() => {
+              setRecordingError(null);
+              setRecordingState("idle");
+              startRecording();
+            }}
             className="shrink-0 underline hover:no-underline"
           >
             Try again
@@ -432,7 +442,7 @@ export function ChatInput({
         />
       )}
 
-      <div className="flex min-h-12 min-w-0 items-end gap-1.5 rounded-[11px] border border-border-strong bg-card px-2.5 py-2 shadow-xs focus-within:ring-1 focus-within:ring-ring sm:gap-2 sm:px-3">
+      <div className="border-border-strong bg-card focus-within:ring-ring flex min-h-12 min-w-0 items-end gap-1.5 rounded-[11px] border px-2.5 py-2 shadow-xs focus-within:ring-1 sm:gap-2 sm:px-3">
         {showFilePicker && (
           <>
             <input
@@ -447,8 +457,8 @@ export function ChatInput({
               onClick={() => fileInputRef.current?.click()}
               disabled={disabled}
               className={cn(
-                "flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                disabled && "opacity-50 cursor-not-allowed"
+                "text-muted-foreground hover:bg-muted hover:text-foreground flex size-8 shrink-0 items-center justify-center rounded-md transition-colors",
+                disabled && "cursor-not-allowed opacity-50",
               )}
               aria-label="Attach files"
             >
@@ -459,12 +469,16 @@ export function ChatInput({
 
         <textarea
           ref={textareaRef}
-          className="max-h-40 min-h-8 min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 outline-none placeholder:text-muted-foreground"
-          placeholder={isInputRequired ? "Respond to agent… (Enter to send)" : "Message agent… (Enter to send, Shift+Enter for newline)"}
+          className="placeholder:text-muted-foreground max-h-40 min-h-8 min-w-0 flex-1 resize-none bg-transparent py-1.5 text-sm leading-5 outline-none"
+          placeholder={
+            isInputRequired
+              ? "Respond to agent… (Enter to send)"
+              : "Message agent… (Enter to send, Shift+Enter for newline)"
+          }
           aria-label={isInputRequired ? "Respond to agent" : "Message agent"}
           rows={1}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          onChange={e => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           onInput={handleInput}
           disabled={disabled}
@@ -474,8 +488,8 @@ export function ChatInput({
           onClick={addDataPart}
           disabled={disabled}
           className={cn(
-            "flex h-8 shrink-0 items-center rounded-md border bg-surface-2 px-2 font-mono text-[11px] font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-            disabled && "opacity-50 cursor-not-allowed"
+            "bg-surface-2 text-muted-foreground hover:bg-muted hover:text-foreground flex h-8 shrink-0 items-center rounded-md border px-2 font-mono text-[11px] font-semibold transition-colors",
+            disabled && "cursor-not-allowed opacity-50",
           )}
           title="Add a JSON data part"
           aria-label="Add JSON data part"
@@ -484,12 +498,12 @@ export function ChatInput({
         </button>
 
         <button
-          onClick={() => setMetaOpen((v) => !v)}
+          onClick={() => setMetaOpen(v => !v)}
           disabled={disabled}
           className={cn(
             "flex size-8 shrink-0 items-center justify-center rounded-md transition-colors",
             metaOpen ? "text-foreground" : "text-muted-foreground hover:text-foreground",
-            disabled && "opacity-50 cursor-not-allowed"
+            disabled && "cursor-not-allowed opacity-50",
           )}
           aria-label="Toggle metadata editor"
         >
@@ -507,7 +521,7 @@ export function ChatInput({
               hasPromptDraft
                 ? "text-muted-foreground hover:text-foreground"
                 : "text-muted-foreground/50",
-              disabled && "opacity-50 cursor-not-allowed"
+              disabled && "cursor-not-allowed opacity-50",
             )}
             title="Save as repeatable prompt"
             aria-label="Save prompt preset"
@@ -525,7 +539,7 @@ export function ChatInput({
               recordingState === "recording"
                 ? "text-red-600"
                 : "text-muted-foreground hover:text-foreground",
-              disabled && "opacity-50 cursor-not-allowed",
+              disabled && "cursor-not-allowed opacity-50",
             )}
             title={recordingState === "recording" ? "Stop recording" : "Record voice input"}
             aria-label={recordingState === "recording" ? "Stop recording" : "Record voice input"}

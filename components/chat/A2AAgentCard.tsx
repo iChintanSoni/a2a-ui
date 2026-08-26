@@ -20,12 +20,10 @@ export function A2AAgentCard({ card, loading, error, onRefresh }: A2AAgentCardPr
   const compliance = card ? checkCompliance(card) : null;
 
   return (
-    <div className="rounded-xl border bg-card p-4">
+    <div className="bg-card rounded-xl border p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <Small className="truncate">
-            {card?.name ?? "Agent card"}
-          </Small>
+          <Small className="truncate">{card?.name ?? "Agent card"}</Small>
           <Caption className="mt-1 truncate">
             {card?.description ?? "Fetch an agent card to inspect transports, skills, and modes."}
           </Caption>
@@ -52,7 +50,7 @@ export function A2AAgentCard({ card, loading, error, onRefresh }: A2AAgentCardPr
             )}
           </div>
 
-          <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+          <div className="text-muted-foreground grid gap-2 text-sm sm:grid-cols-2">
             <div>URL: {card.url ?? "Not declared"}</div>
             <div>Preferred transport: {card.preferredTransport ?? "Not declared"}</div>
             <div>Input modes: {(card.defaultInputModes ?? []).join(", ") || "None"}</div>
@@ -68,9 +66,7 @@ export function A2AAgentCard({ card, loading, error, onRefresh }: A2AAgentCardPr
           <Skeleton className="h-4 w-2/3" />
         </div>
       ) : (
-        <Muted className="mt-4 text-sm">
-          {error ?? "No agent card loaded yet."}
-        </Muted>
+        <Muted className="mt-4 text-sm">{error ?? "No agent card loaded yet."}</Muted>
       )}
     </div>
   );

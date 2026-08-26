@@ -19,17 +19,21 @@ interface Props {
   onSubmitRevision?: (item: ArtifactItem, revisedText: string) => Promise<void> | void;
 }
 
-export const ArtifactBlock = memo(function ArtifactBlock({ item, a2uiEnabled = false, onInspect, onSubmitRevision }: Props) {
+export const ArtifactBlock = memo(function ArtifactBlock({
+  item,
+  a2uiEnabled = false,
+  onInspect,
+  onSubmitRevision,
+}: Props) {
   const label = item.name ?? "Artifact";
-  const hasOnlyText = item.parts.every((p) => p.kind === "text");
+  const hasOnlyText = item.parts.every(p => p.kind === "text");
   const [isEditing, setIsEditing] = useState(false);
   const [revisedText, setRevisedText] = useState(() => getArtifactText(item));
   const [isSaving, setIsSaving] = useState(false);
 
   // Extract token usage if available
   const usage = item.metadata?.usage as
-    | { input_tokens?: number; output_tokens?: number; total_tokens?: number }
-    | undefined;
+    { input_tokens?: number; output_tokens?: number; total_tokens?: number } | undefined;
   const canEdit = isEditableArtifact(item) && Boolean(onSubmitRevision);
   const artifactKind = getEditableArtifactKind(item);
   const revisionLabel = getArtifactRevisionLabel(item);
@@ -47,11 +51,15 @@ export const ArtifactBlock = memo(function ArtifactBlock({ item, a2uiEnabled = f
           : FileTextIcon;
 
   return (
-    <div className="group relative my-1 min-w-0 overflow-hidden rounded-[9px] border bg-card text-sm shadow-xs">
-      <div className="flex flex-wrap items-center gap-2.5 border-b bg-surface-2 px-3.75 py-2.75">
-        <MicroLabel className="font-mono text-[11px] font-semibold tracking-[0.03em] text-foreground">{label.toUpperCase()}</MicroLabel>
+    <div className="group bg-card relative my-1 min-w-0 overflow-hidden rounded-[9px] border text-sm shadow-xs">
+      <div className="bg-surface-2 flex flex-wrap items-center gap-2.5 border-b px-3.75 py-2.75">
+        <MicroLabel className="text-foreground font-mono text-[11px] font-semibold tracking-[0.03em]">
+          {label.toUpperCase()}
+        </MicroLabel>
         {item.description && (
-          <Caption className="min-w-0 truncate text-[12px] text-fg-subtle">{item.description}</Caption>
+          <Caption className="text-fg-subtle min-w-0 truncate text-[12px]">
+            {item.description}
+          </Caption>
         )}
         <div className="ms-auto flex flex-wrap items-center justify-end gap-2 sm:gap-3">
           {canEdit && !item.isStreaming && (
@@ -61,7 +69,7 @@ export const ArtifactBlock = memo(function ArtifactBlock({ item, a2uiEnabled = f
               className="h-6 gap-1 px-2 text-xs"
               onClick={() => {
                 setRevisedText(getArtifactText(item));
-                setIsEditing((value) => !value);
+                setIsEditing(value => !value);
               }}
             >
               <PencilIcon className="size-3" />
@@ -69,14 +77,17 @@ export const ArtifactBlock = memo(function ArtifactBlock({ item, a2uiEnabled = f
             </Button>
           )}
           {usage?.total_tokens !== undefined && (
-            <Caption className="flex items-center gap-1 text-muted-foreground" title={`Input: ${usage.input_tokens} | Output: ${usage.output_tokens}`}>
+            <Caption
+              className="text-muted-foreground flex items-center gap-1"
+              title={`Input: ${usage.input_tokens} | Output: ${usage.output_tokens}`}
+            >
               <Cpu size={12} className="text-muted-foreground/60" />
               {usage.total_tokens} tokens
             </Caption>
           )}
           {item.isStreaming && (
             <Caption className="flex items-center gap-1">
-              <span className="size-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="size-1.5 animate-pulse rounded-full bg-amber-400" />
               streaming
             </Caption>
           )}
@@ -91,16 +102,17 @@ export const ArtifactBlock = memo(function ArtifactBlock({ item, a2uiEnabled = f
         )}
       </div>
       {isEditing && canEdit && (
-        <div className="border-t bg-muted/20 px-3 py-3">
-          <div className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="bg-muted/20 border-t px-3 py-3">
+          <div className="text-muted-foreground mb-2 flex items-center gap-1.5 text-xs">
             <KindIcon className="size-3.5" />
             <span className="capitalize">{artifactKind} artifact</span>
           </div>
           <textarea
-            className={`min-h-36 w-full resize-y rounded-md border bg-background px-3 py-2 outline-none focus:ring-1 focus:ring-ring ${editorClassName}`}
+            className={`bg-background focus:ring-ring min-h-36 w-full resize-y rounded-md border px-3 py-2 outline-none focus:ring-1 ${editorClassName}`}
             value={revisedText}
-            onChange={(event) => setRevisedText(event.target.value)}
+            onChange={event => setRevisedText(event.target.value)}
             spellCheck={artifactKind === "text" || artifactKind === "markdown"}
+            aria-label={`Edit ${label} content`}
           />
           <div className="mt-3 flex items-center justify-end gap-2">
             <Button
@@ -135,8 +147,9 @@ export const ArtifactBlock = memo(function ArtifactBlock({ item, a2uiEnabled = f
       {onInspect && (
         <button
           onClick={onInspect}
-          className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
+          className="bg-background text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border font-mono text-[10px] shadow-sm transition-colors group-focus-within:flex group-hover:flex focus-visible:flex focus-visible:ring-2"
           title="Inspect raw JSON"
+          aria-label="Inspect raw JSON"
         >
           {"{}"}
         </button>

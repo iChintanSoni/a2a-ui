@@ -39,7 +39,7 @@ function getDB(): Promise<IDBPDatabase<A2ASchema>> {
 // Migrate items from old format where UserMessageItem had `text` + `attachments`
 // instead of the current `parts` array.
 function migrateItems(items: unknown[]): ChatItem[] {
-  return items.map((item) => {
+  return items.map(item => {
     const raw = item as Record<string, unknown>;
     if (raw.kind === "user-message" && !Array.isArray(raw.parts)) {
       const parts: Part[] = [];
@@ -69,14 +69,14 @@ export async function loadPersistedState(): Promise<{
     db.get("qa", "state"),
   ]);
   // Reset runtime-only fields: status is re-evaluated on each page load
-  const restoredAgents = agents.map((a) => ({
+  const restoredAgents = agents.map(a => ({
     ...a,
     tags: a.tags ?? [],
     favorite: a.favorite ?? false,
     status: "disconnected" as const,
     error: undefined,
   }));
-  const restoredChats = chats.map((c) => ({
+  const restoredChats = chats.map(c => ({
     ...c,
     archived: c.archived ?? false,
     pinned: c.pinned ?? false,
@@ -101,7 +101,7 @@ export async function persistAgents(agents: Agent[]): Promise<void> {
   const db = await getDB();
   const tx = db.transaction("agents", "readwrite");
   await tx.store.clear();
-  await Promise.all(agents.map((a) => tx.store.put(a)));
+  await Promise.all(agents.map(a => tx.store.put(a)));
   await tx.done;
 }
 
@@ -109,7 +109,7 @@ export async function persistChats(chats: Chat[]): Promise<void> {
   const db = await getDB();
   const tx = db.transaction("chats", "readwrite");
   await tx.store.clear();
-  await Promise.all(chats.map((c) => tx.store.put(c)));
+  await Promise.all(chats.map(c => tx.store.put(c)));
   await tx.done;
 }
 

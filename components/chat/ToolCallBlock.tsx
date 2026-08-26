@@ -57,9 +57,7 @@ const isImageTool = (toolName: string) =>
   toolName === "generate_image" || toolName.toLowerCase().includes("image");
 
 function ImageShimmer() {
-  return (
-    <div className="mt-2 h-40 w-full max-w-xs animate-pulse rounded border bg-muted" />
-  );
+  return <div className="bg-muted mt-2 h-40 w-full max-w-xs animate-pulse rounded border" />;
 }
 
 export const ToolCallBlock = memo(function ToolCallBlock({ item, onInspect }: Props) {
@@ -72,24 +70,26 @@ export const ToolCallBlock = memo(function ToolCallBlock({ item, onInspect }: Pr
 
   const icon =
     phase === "running" ? (
-      <Loader2 className="h-3.5 w-3.5 animate-spin text-warning-foreground" />
+      <Loader2 className="text-warning-foreground h-3.5 w-3.5 animate-spin" />
     ) : phase === "done" ? (
-      <CheckCircle className="h-3.5 w-3.5 text-brand-soft-foreground" />
+      <CheckCircle className="text-brand-soft-foreground h-3.5 w-3.5" />
     ) : (
-      <XCircle className="h-3.5 w-3.5 text-destructive" />
+      <XCircle className="text-destructive h-3.5 w-3.5" />
     );
 
   return (
-    <div className="group relative flex w-fit max-w-full flex-col gap-1.5 rounded-[9px] border bg-card px-3.75 py-3.25 text-xs shadow-xs sm:max-w-sm">
+    <div className="group bg-card relative flex w-fit max-w-full flex-col gap-1.5 rounded-[9px] border px-3.75 py-3.25 text-xs shadow-xs sm:max-w-sm">
       <div className="flex items-start gap-2">
         {getToolIcon(toolName)}
         <div className="flex min-w-0 flex-col gap-1.5">
-          <Small className="font-mono text-[12.5px] font-semibold text-foreground">{toolName}</Small>
-          <Caption className="break-words text-[12.5px]">
+          <Small className="text-foreground font-mono text-[12.5px] font-semibold">
+            {toolName}
+          </Small>
+          <Caption className="text-[12.5px] break-words">
             <span className="text-fg-subtle">query: </span>
             {query}
           </Caption>
-          <div className="flex items-center gap-1.5 text-[11.5px] font-semibold text-brand-soft-foreground">
+          <div className="text-brand-soft-foreground flex items-center gap-1.5 text-[11.5px] font-semibold">
             {icon}
             {phase === "running" && <span className="text-warning-foreground">{gerund}…</span>}
             {phase === "done" && <span>{doneLabel}</span>}
@@ -99,8 +99,9 @@ export const ToolCallBlock = memo(function ToolCallBlock({ item, onInspect }: Pr
         {onInspect && (
           <button
             onClick={onInspect}
-            className="bg-background text-muted-foreground hover:text-foreground absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border font-mono text-[10px] shadow-sm group-hover:flex"
+            className="bg-background text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border font-mono text-[10px] shadow-sm transition-colors group-focus-within:flex group-hover:flex focus-visible:flex focus-visible:ring-2"
             title="Inspect raw JSON"
+            aria-label="Inspect raw JSON"
           >
             {"{}"}
           </button>
@@ -111,11 +112,7 @@ export const ToolCallBlock = memo(function ToolCallBlock({ item, onInspect }: Pr
           {phase === "running" && <ImageShimmer />}
           {phase === "done" && imageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={imageUrl}
-              alt={query}
-              className="max-w-full rounded border sm:max-w-xs"
-            />
+            <img src={imageUrl} alt={query} className="max-w-full rounded border sm:max-w-xs" />
           )}
         </div>
       )}

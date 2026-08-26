@@ -19,7 +19,7 @@ function JsonView({ value }: { value: unknown }) {
   const highlighted = hljs.highlight(str, { language: "json" }).value;
   return (
     <pre
-      className="hljs text-[11px] leading-relaxed whitespace-pre-wrap break-words"
+      className="hljs text-[11px] leading-relaxed break-words whitespace-pre-wrap"
       // highlight.js output is safe — it HTML-escapes content internally
       dangerouslySetInnerHTML={{ __html: highlighted }}
     />
@@ -29,24 +29,19 @@ function JsonView({ value }: { value: unknown }) {
 // ─── Badge helpers ────────────────────────────────────────────────────────────
 
 const TYPE_STYLES: Record<LogType, string> = {
-  request:
-    "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20",
-  response:
-    "bg-green-500/15 text-green-600 dark:text-green-400 border border-green-500/20",
-  error:
-    "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20",
-  transport:
-    "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20",
-  validation:
-    "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300 border border-yellow-500/20",
+  request: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20",
+  response: "bg-green-500/15 text-green-600 dark:text-green-400 border border-green-500/20",
+  error: "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20",
+  transport: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20",
+  validation: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-300 border border-yellow-500/20",
 };
 
 function TypeBadge({ type }: { type: LogType }) {
   return (
     <span
       className={cn(
-        "inline-block rounded px-1.5 py-0 text-[10px] font-semibold uppercase leading-5 shrink-0",
-        TYPE_STYLES[type]
+        "inline-block shrink-0 rounded px-1.5 py-0 text-[10px] leading-5 font-semibold uppercase",
+        TYPE_STYLES[type],
       )}
     >
       {type}
@@ -68,16 +63,16 @@ function LogRow({ entry }: { entry: LogEntry }) {
     .join(" · ");
 
   return (
-    <div className="border-b border-border/50 last:border-0">
+    <div className="border-border/50 border-b last:border-0">
       <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-start gap-2 px-3 py-1.5 text-left hover:bg-muted/40 transition-colors"
+        onClick={() => setOpen(v => !v)}
+        className="hover:bg-muted/40 flex w-full items-start gap-2 px-3 py-1.5 text-left transition-colors"
         aria-expanded={open}
         aria-label={`${open ? "Collapse" : "Expand"} ${entry.type} log ${entry.method}`}
       >
         <Caption className="mt-0.5 shrink-0 font-mono">{time}</Caption>
         <TypeBadge type={entry.type} />
-        <Caption className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/80">
+        <Caption className="text-foreground/80 min-w-0 flex-1 truncate font-mono text-[11px]">
           {entry.method}
         </Caption>
         {transportSummary && (
@@ -89,7 +84,7 @@ function LogRow({ entry }: { entry: LogEntry }) {
       </button>
 
       {open && (
-        <div className="overflow-x-auto bg-muted/30 px-3 pb-2 pt-1">
+        <div className="bg-muted/30 overflow-x-auto px-3 pt-1 pb-2">
           <JsonView
             value={{
               ...(entry.transport ? { transport: entry.transport } : {}),
@@ -143,8 +138,7 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
     };
   }, []);
 
-  const filtered =
-    filter === "all" ? logs : logs.filter((l) => l.type === filter);
+  const filtered = filter === "all" ? logs : logs.filter(l => l.type === filter);
 
   // Auto-scroll to bottom when new logs arrive
   useEffect(() => {
@@ -162,10 +156,7 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
       const onMouseMove = (ev: MouseEvent) => {
         if (!dragStartRef.current) return;
         const delta = dragStartRef.current.y - ev.clientY; // drag up → taller
-        const next = Math.max(
-          MIN_HEIGHT,
-          Math.min(MAX_HEIGHT, dragStartRef.current.h + delta)
-        );
+        const next = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, dragStartRef.current.h + delta));
         setHeight(next);
       };
 
@@ -180,49 +171,62 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [height]
+    [height],
   );
 
   return (
     <div
-      className="flex max-h-[45dvh] min-h-40 shrink-0 flex-col border-t bg-background h-(--panel-h)"
+      className="bg-background flex h-(--panel-h) max-h-[45dvh] min-h-40 shrink-0 flex-col border-t"
       style={{ "--panel-h": `${height}px` } as CSSProperties}
     >
       {/* Drag handle */}
       <div
+        role="separator"
+        tabIndex={0}
+        aria-orientation="horizontal"
+        aria-label="Resize debug console"
+        aria-valuenow={height}
+        aria-valuemin={MIN_HEIGHT}
+        aria-valuemax={MAX_HEIGHT}
         onMouseDown={handleDragMouseDown}
-        className="flex h-2 cursor-row-resize items-center justify-center hover:bg-muted/60 transition-colors"
-        title="Drag to resize"
+        onKeyDown={e => {
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setHeight(h => Math.min(MAX_HEIGHT, h + 20));
+          } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setHeight(h => Math.max(MIN_HEIGHT, h - 20));
+          }
+        }}
+        className="hover:bg-muted/60 focus-visible:bg-muted focus-visible:ring-ring flex h-2 cursor-row-resize items-center justify-center transition-colors focus-visible:ring-1 focus-visible:outline-hidden"
+        title="Drag or use arrow keys to resize"
       >
-        <div className="h-0.5 w-8 rounded-full bg-border" />
+        <div className="bg-border h-0.5 w-8 rounded-full" />
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-1 border-b px-3 py-1.5 shrink-0">
+      <div className="flex shrink-0 items-center gap-1 border-b px-3 py-1.5">
         <Small className="text-foreground/70 mr-1">Debug Console</Small>
 
         {/* Filter buttons */}
-        <div className="flex gap-0.5">
-          {FILTERS.map((f) => {
+        <div className="flex gap-0.5" role="toolbar" aria-label="Filter debug logs">
+          {FILTERS.map(f => {
             const count =
-              f.value === "all"
-                ? logs.length
-                : logs.filter((l) => l.type === f.value).length;
+              f.value === "all" ? logs.length : logs.filter(l => l.type === f.value).length;
             return (
               <button
                 key={f.value}
                 onClick={() => setFilter(f.value)}
+                aria-pressed={filter === f.value}
                 className={cn(
-                  "rounded px-2 py-0.5 text-[11px] font-medium transition-colors",
+                  "focus-visible:ring-ring rounded px-2 py-0.5 text-[11px] font-medium transition-colors focus-visible:ring-1 focus-visible:outline-hidden",
                   filter === f.value
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 {f.label}
-                {count > 0 && (
-                  <span className="ml-1 opacity-70">({count})</span>
-                )}
+                {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
               </button>
             );
           })}
@@ -253,13 +257,13 @@ export function DebugPanel({ logs, onClear, onClose }: DebugPanelProps) {
       </div>
 
       {/* Log list */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto" role="log" aria-live="polite">
         {filtered.length === 0 ? (
           <Caption className="p-4 text-center">
             No {filter === "all" ? "" : filter + " "}logs yet.
           </Caption>
         ) : (
-          filtered.map((entry) => <LogRow key={entry.id} entry={entry} />)
+          filtered.map(entry => <LogRow key={entry.id} entry={entry} />)
         )}
       </div>
     </div>

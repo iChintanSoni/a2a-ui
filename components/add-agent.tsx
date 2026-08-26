@@ -47,7 +47,12 @@ type AddAgentProps = {
   label?: string;
 };
 
-export function AddAgent({ className, variant = "outline", size, label = "Add Agent" }: AddAgentProps) {
+export function AddAgent({
+  className,
+  variant = "outline",
+  size,
+  label = "Add Agent",
+}: AddAgentProps) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -81,11 +86,10 @@ export function AddAgent({ className, variant = "outline", size, label = "Add Ag
     setAuth({ type });
   };
 
-  const addHeaderRow = () => setHeaders((h) => [...h, { key: "", value: "" }]);
-  const removeHeaderRow = (i: number) =>
-    setHeaders((h) => h.filter((_, idx) => idx !== i));
+  const addHeaderRow = () => setHeaders(h => [...h, { key: "", value: "" }]);
+  const removeHeaderRow = (i: number) => setHeaders(h => h.filter((_, idx) => idx !== i));
   const updateHeader = (i: number, field: "key" | "value", val: string) =>
-    setHeaders((h) => h.map((row, idx) => (idx === i ? { ...row, [field]: val } : row)));
+    setHeaders(h => h.map((row, idx) => (idx === i ? { ...row, [field]: val } : row)));
 
   const resetForm = () => {
     setUrl("http://localhost:3001");
@@ -127,8 +131,8 @@ export function AddAgent({ className, variant = "outline", size, label = "Add Ag
           card: result.card,
           status: "connected",
           auth,
-          customHeaders: headers.filter((h) => h.key.trim()),
-        })
+          customHeaders: headers.filter(h => h.key.trim()),
+        }),
       );
 
       setOpen(false);
@@ -136,10 +140,8 @@ export function AddAgent({ className, variant = "outline", size, label = "Add Ag
     } catch (err: unknown) {
       const errMsg = getErrorMessage(err, "Failed to connect. Check the URL and try again.");
       setError(errMsg);
-      setDiagnostic((current) =>
-        current
-          ? { ...current, status: "error", error: errMsg }
-          : current,
+      setDiagnostic(current =>
+        current ? { ...current, status: "error", error: errMsg } : current,
       );
     } finally {
       setLoading(false);
@@ -156,279 +158,274 @@ export function AddAgent({ className, variant = "outline", size, label = "Add Ag
       </DialogTrigger>
       <DialogContent className="flex max-h-[calc(100dvh-2rem)] flex-col sm:max-w-md">
         <ScrollArea className="flex-1 overflow-hidden">
-        <form onSubmit={handleAddAgent}>
-          <DialogHeader>
-            <DialogTitle>Add Agent</DialogTitle>
-            <DialogDescription>
-              Connect to an A2A-compatible agent by URL.
-            </DialogDescription>
-          </DialogHeader>
+          <form onSubmit={handleAddAgent}>
+            <DialogHeader>
+              <DialogTitle>Add Agent</DialogTitle>
+              <DialogDescription>Connect to an A2A-compatible agent by URL.</DialogDescription>
+            </DialogHeader>
 
-          <Tabs defaultValue="connection" className="mt-4">
-            <TabsList className="w-full overflow-x-auto">
-              <TabsTrigger value="connection" className="flex-1">
-                Connection
-              </TabsTrigger>
-              <TabsTrigger value="auth" className="flex-1">
-                Authentication
-              </TabsTrigger>
-              <TabsTrigger value="headers" className="flex-1">
-                Headers
-              </TabsTrigger>
-            </TabsList>
+            <Tabs defaultValue="connection" className="mt-4">
+              <TabsList className="w-full overflow-x-auto">
+                <TabsTrigger value="connection" className="flex-1">
+                  Connection
+                </TabsTrigger>
+                <TabsTrigger value="auth" className="flex-1">
+                  Authentication
+                </TabsTrigger>
+                <TabsTrigger value="headers" className="flex-1">
+                  Headers
+                </TabsTrigger>
+              </TabsList>
 
-            {/* ── Connection ─────────────────────────────────────────── */}
-            <TabsContent value="connection" className="mt-4">
-              <FieldGroup>
-                <Field>
-                  <Label htmlFor="agent-url">Agent URL</Label>
-                  <Input
-                    id="agent-url"
-                    type="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://my-agent.example.com"
-                    required
-                    disabled={loading}
-                  />
-                </Field>
-              </FieldGroup>
-            </TabsContent>
-
-            {/* ── Authentication ─────────────────────────────────────── */}
-            <TabsContent value="auth" className="mt-4">
-              <FieldGroup>
-                <Field>
-                  <Label>Auth Type</Label>
-                  <Select
-                    value={auth.type}
-                    onValueChange={(v) =>
-                      handleAuthTypeChange(v as AuthConfig["type"])
-                    }
-                    disabled={loading}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="bearer">Bearer Token</SelectItem>
-                      <SelectItem value="api-key">API Key</SelectItem>
-                      <SelectItem value="basic">Basic Auth</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </Field>
-
-                {auth.type === "bearer" && (
+              {/* ── Connection ─────────────────────────────────────────── */}
+              <TabsContent value="connection" className="mt-4">
+                <FieldGroup>
                   <Field>
-                    <Label htmlFor="bearer-token">Token</Label>
+                    <Label htmlFor="agent-url">Agent URL</Label>
                     <Input
-                      id="bearer-token"
-                      type="password"
-                      placeholder="your-token"
-                      value={auth.bearerToken ?? ""}
-                      onChange={(e) =>
-                        setAuth({ ...auth, bearerToken: e.target.value })
-                      }
+                      id="agent-url"
+                      type="url"
+                      value={url}
+                      onChange={e => setUrl(e.target.value)}
+                      placeholder="https://my-agent.example.com"
+                      required
                       disabled={loading}
                     />
                   </Field>
-                )}
+                </FieldGroup>
+              </TabsContent>
 
-                {auth.type === "api-key" && (
-                  <>
+              {/* ── Authentication ─────────────────────────────────────── */}
+              <TabsContent value="auth" className="mt-4">
+                <FieldGroup>
+                  <Field>
+                    <Label>Auth Type</Label>
+                    <Select
+                      value={auth.type}
+                      onValueChange={v => handleAuthTypeChange(v as AuthConfig["type"])}
+                      disabled={loading}
+                    >
+                      <SelectTrigger className="w-full" aria-label="Auth Type">
+                        <SelectValue placeholder="Select authentication type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        <SelectItem value="bearer">Bearer Token</SelectItem>
+                        <SelectItem value="api-key">API Key</SelectItem>
+                        <SelectItem value="basic">Basic Auth</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+
+                  {auth.type === "bearer" && (
                     <Field>
-                      <Label htmlFor="api-key-header">Header Name</Label>
+                      <Label htmlFor="bearer-token">Token</Label>
                       <Input
-                        id="api-key-header"
-                        placeholder="X-API-Key"
-                        value={auth.apiKeyHeader ?? ""}
-                        onChange={(e) =>
-                          setAuth({ ...auth, apiKeyHeader: e.target.value })
-                        }
-                        disabled={loading}
-                      />
-                    </Field>
-                    <Field>
-                      <Label htmlFor="api-key-value">Key Value</Label>
-                      <Input
-                        id="api-key-value"
+                        id="bearer-token"
                         type="password"
-                        placeholder="your-api-key"
-                        value={auth.apiKeyValue ?? ""}
-                        onChange={(e) =>
-                          setAuth({ ...auth, apiKeyValue: e.target.value })
-                        }
+                        placeholder="your-token"
+                        value={auth.bearerToken ?? ""}
+                        onChange={e => setAuth({ ...auth, bearerToken: e.target.value })}
                         disabled={loading}
                       />
                     </Field>
-                  </>
-                )}
+                  )}
 
-                {auth.type === "basic" && (
-                  <>
-                    <Field>
-                      <Label htmlFor="basic-user">Username</Label>
-                      <Input
-                        id="basic-user"
-                        placeholder="username"
-                        value={auth.basicUsername ?? ""}
-                        onChange={(e) =>
-                          setAuth({ ...auth, basicUsername: e.target.value })
-                        }
-                        disabled={loading}
-                      />
-                    </Field>
-                    <Field>
-                      <Label htmlFor="basic-pass">Password</Label>
-                      <Input
-                        id="basic-pass"
-                        type="password"
-                        placeholder="password"
-                        value={auth.basicPassword ?? ""}
-                        onChange={(e) =>
-                          setAuth({ ...auth, basicPassword: e.target.value })
-                        }
-                        disabled={loading}
-                      />
-                    </Field>
-                  </>
-                )}
-              </FieldGroup>
-            </TabsContent>
+                  {auth.type === "api-key" && (
+                    <>
+                      <Field>
+                        <Label htmlFor="api-key-header">Header Name</Label>
+                        <Input
+                          id="api-key-header"
+                          placeholder="X-API-Key"
+                          value={auth.apiKeyHeader ?? ""}
+                          onChange={e => setAuth({ ...auth, apiKeyHeader: e.target.value })}
+                          disabled={loading}
+                        />
+                      </Field>
+                      <Field>
+                        <Label htmlFor="api-key-value">Key Value</Label>
+                        <Input
+                          id="api-key-value"
+                          type="password"
+                          placeholder="your-api-key"
+                          value={auth.apiKeyValue ?? ""}
+                          onChange={e => setAuth({ ...auth, apiKeyValue: e.target.value })}
+                          disabled={loading}
+                        />
+                      </Field>
+                    </>
+                  )}
 
-            {/* ── Custom Headers ─────────────────────────────────────── */}
-            <TabsContent value="headers" className="mt-4 flex flex-col gap-3">
-              {headers.length === 0 && (
-                <Muted>No custom headers. Add key-value pairs below.</Muted>
-              )}
-              {headers.map((row, i) => (
-                <div key={i} className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center">
-                  <Input
-                    placeholder="Header name"
-                    value={row.key}
-                    onChange={(e) => updateHeader(i, "key", e.target.value)}
-                    disabled={loading}
-                    className="flex-1"
-                  />
-                  <Input
-                    placeholder="Value"
-                    value={row.value}
-                    onChange={(e) => updateHeader(i, "value", e.target.value)}
-                    disabled={loading}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeHeaderRow(i)}
-                    disabled={loading}
-                    aria-label="Remove header"
+                  {auth.type === "basic" && (
+                    <>
+                      <Field>
+                        <Label htmlFor="basic-user">Username</Label>
+                        <Input
+                          id="basic-user"
+                          placeholder="username"
+                          value={auth.basicUsername ?? ""}
+                          onChange={e => setAuth({ ...auth, basicUsername: e.target.value })}
+                          disabled={loading}
+                        />
+                      </Field>
+                      <Field>
+                        <Label htmlFor="basic-pass">Password</Label>
+                        <Input
+                          id="basic-pass"
+                          type="password"
+                          placeholder="password"
+                          value={auth.basicPassword ?? ""}
+                          onChange={e => setAuth({ ...auth, basicPassword: e.target.value })}
+                          disabled={loading}
+                        />
+                      </Field>
+                    </>
+                  )}
+                </FieldGroup>
+              </TabsContent>
+
+              {/* ── Custom Headers ─────────────────────────────────────── */}
+              <TabsContent value="headers" className="mt-4 flex flex-col gap-3">
+                {headers.length === 0 && (
+                  <Muted>No custom headers. Add key-value pairs below.</Muted>
+                )}
+                {headers.map((row, i) => (
+                  <div
+                    key={i}
+                    className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-center"
                   >
-                    <Trash2Icon />
-                  </Button>
+                    <Input
+                      placeholder="Header name"
+                      value={row.key}
+                      onChange={e => updateHeader(i, "key", e.target.value)}
+                      disabled={loading}
+                      className="flex-1"
+                    />
+                    <Input
+                      placeholder="Value"
+                      value={row.value}
+                      onChange={e => updateHeader(i, "value", e.target.value)}
+                      disabled={loading}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeHeaderRow(i)}
+                      disabled={loading}
+                      aria-label="Remove header"
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addHeaderRow}
+                  disabled={loading}
+                >
+                  <PlusIcon data-icon="inline-start" />
+                  Add Header
+                </Button>
+              </TabsContent>
+            </Tabs>
+
+            {diagnostic && (
+              <div
+                className="bg-muted/20 mt-4 rounded-md border p-3"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <Small>
+                    {diagnostic.status === "checking"
+                      ? "Checking connection"
+                      : diagnostic.status === "connected"
+                        ? "Agent card detected"
+                        : "Connection failed"}
+                  </Small>
+                  <Badge
+                    variant={
+                      diagnostic.status === "connected"
+                        ? "default"
+                        : diagnostic.status === "error"
+                          ? "destructive"
+                          : "secondary"
+                    }
+                  >
+                    {diagnostic.status}
+                  </Badge>
                 </div>
-              ))}
+                <div className="text-muted-foreground mt-3 grid gap-1.5 text-xs">
+                  <div>
+                    URL:{" "}
+                    <span className="text-foreground font-mono">
+                      {diagnostic.normalizedUrl ?? diagnostic.inputUrl}
+                    </span>
+                  </div>
+                  <div>
+                    Agent card:{" "}
+                    <span className="text-foreground font-mono">
+                      {diagnostic.attemptedCardUrl ?? "resolving..."}
+                    </span>
+                  </div>
+                  {diagnostic.agentName && (
+                    <div>
+                      Agent: <span className="text-foreground">{diagnostic.agentName}</span>
+                    </div>
+                  )}
+                  <div>
+                    Transport:{" "}
+                    <span className="text-foreground">
+                      {diagnostic.transports.length > 0
+                        ? diagnostic.transports.join(", ")
+                        : "detecting..."}
+                    </span>
+                  </div>
+                  <div>
+                    Path:{" "}
+                    <span className="text-foreground">
+                      {diagnostic.proxyPath ?? "detecting..."}
+                    </span>
+                  </div>
+                  <div>
+                    Auth: <span className="text-foreground">{diagnostic.authSummary}</span>
+                  </div>
+                  <div>
+                    Headers: <span className="text-foreground">{diagnostic.headerSummary}</span>
+                  </div>
+                  {diagnostic.latencyMs != null && (
+                    <div>
+                      Latency: <span className="text-foreground">{diagnostic.latencyMs} ms</span>
+                    </div>
+                  )}
+                  {diagnostic.error && (
+                    <Caption className="text-destructive">{diagnostic.error}</Caption>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {error && <ErrorText className="mt-3">{error}</ErrorText>}
+
+            <DialogFooter className="mt-6">
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                onClick={addHeaderRow}
+                onClick={() => setOpen(false)}
                 disabled={loading}
               >
-                <PlusIcon data-icon="inline-start" />
-                Add Header
+                Cancel
               </Button>
-            </TabsContent>
-          </Tabs>
-
-          {diagnostic && (
-            <div className="mt-4 rounded-md border bg-muted/20 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <Small>
-                  {diagnostic.status === "checking"
-                    ? "Checking connection"
-                    : diagnostic.status === "connected"
-                      ? "Agent card detected"
-                      : "Connection failed"}
-                </Small>
-                <Badge
-                  variant={
-                    diagnostic.status === "connected"
-                      ? "default"
-                      : diagnostic.status === "error"
-                        ? "destructive"
-                        : "secondary"
-                  }
-                >
-                  {diagnostic.status}
-                </Badge>
-              </div>
-              <div className="mt-3 grid gap-1.5 text-xs text-muted-foreground">
-                <div>
-                  URL:{" "}
-                  <span className="font-mono text-foreground">
-                    {diagnostic.normalizedUrl ?? diagnostic.inputUrl}
-                  </span>
-                </div>
-                <div>
-                  Agent card:{" "}
-                  <span className="font-mono text-foreground">
-                    {diagnostic.attemptedCardUrl ?? "resolving..."}
-                  </span>
-                </div>
-                {diagnostic.agentName && (
-                  <div>
-                    Agent: <span className="text-foreground">{diagnostic.agentName}</span>
-                  </div>
-                )}
-                <div>
-                  Transport:{" "}
-                  <span className="text-foreground">
-                    {diagnostic.transports.length > 0
-                      ? diagnostic.transports.join(", ")
-                      : "detecting..."}
-                  </span>
-                </div>
-                <div>
-                  Path:{" "}
-                  <span className="text-foreground">{diagnostic.proxyPath ?? "detecting..."}</span>
-                </div>
-                <div>
-                  Auth: <span className="text-foreground">{diagnostic.authSummary}</span>
-                </div>
-                <div>
-                  Headers: <span className="text-foreground">{diagnostic.headerSummary}</span>
-                </div>
-                {diagnostic.latencyMs != null && (
-                  <div>
-                    Latency: <span className="text-foreground">{diagnostic.latencyMs} ms</span>
-                  </div>
-                )}
-                {diagnostic.error && (
-                  <Caption className="text-destructive">{diagnostic.error}</Caption>
-                )}
-              </div>
-            </div>
-          )}
-
-          {error && <ErrorText className="mt-3">{error}</ErrorText>}
-
-          <DialogFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Connecting…" : "Connect"}
-            </Button>
-          </DialogFooter>
-        </form>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Connecting…" : "Connect"}
+              </Button>
+            </DialogFooter>
+          </form>
         </ScrollArea>
       </DialogContent>
     </Dialog>

@@ -25,9 +25,7 @@ export function H2({ className, ...props }: React.ComponentProps<"h2">) {
 }
 
 export function H3({ className, ...props }: React.ComponentProps<"h3">) {
-  return (
-    <h3 className={cn("scroll-m-20 text-2xl font-semibold", className)} {...props} />
-  );
+  return <h3 className={cn("scroll-m-20 text-2xl font-semibold", className)} {...props} />;
 }
 
 export function P({ className, ...props }: React.ComponentProps<"p">) {
@@ -56,7 +54,7 @@ export function Muted({ className, ...props }: React.ComponentProps<"p">) {
 
 /** App-level page heading (dashboard, settings pages). Smaller than prose H1/H2. */
 export function PageTitle({ className, ...props }: React.ComponentProps<"h1">) {
-  return <h1 className={cn("text-xl font-semibold leading-tight", className)} {...props} />;
+  return <h1 className={cn("text-xl leading-tight font-semibold", className)} {...props} />;
 }
 
 /** Within-card or within-panel subsection label. */
@@ -66,7 +64,7 @@ export function SectionTitle({ className, ...props }: React.ComponentProps<"h3">
 
 /** Metadata, timestamps, captions — smallest readable text. */
 export function Caption({ className, ...props }: React.ComponentProps<"p">) {
-  return <p className={cn("text-xs text-muted-foreground", className)} {...props} />;
+  return <p className={cn("text-muted-foreground text-xs", className)} {...props} />;
 }
 
 /** Monospace inline text for URLs, IDs, protocol values, code snippets. */
@@ -76,14 +74,14 @@ export function Mono({ className, ...props }: React.ComponentProps<"span">) {
 
 /** Validation / form error text. */
 export function ErrorText({ className, ...props }: React.ComponentProps<"p">) {
-  return <p className={cn("text-sm font-medium text-destructive", className)} {...props} />;
+  return <p className={cn("text-destructive text-sm font-medium", className)} {...props} />;
 }
 
 /** Uppercase label used in dense UI bars (session info, debug panel). */
 export function MicroLabel({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
-      className={cn("text-[10px] font-medium uppercase text-foreground/60", className)}
+      className={cn("text-foreground/60 text-[10px] font-medium uppercase", className)}
       {...props}
     />
   );

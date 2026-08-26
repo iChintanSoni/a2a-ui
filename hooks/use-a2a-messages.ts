@@ -4,7 +4,11 @@ import { useCallback, useEffect, useRef } from "react";
 import type { Message, TaskArtifactUpdateEvent, TaskStatusUpdateEvent } from "@a2a-js/sdk";
 import { getTextPartsText } from "@/lib/a2a/parts";
 import { buildOutgoingMessage, normalizeOutgoingParts } from "@/lib/a2a/message-utils";
-import type { A2AContextConfig, A2AExternalMessageStore, OutgoingMessagePartInput } from "@/lib/a2a/types";
+import type {
+  A2AContextConfig,
+  A2AExternalMessageStore,
+  OutgoingMessagePartInput,
+} from "@/lib/a2a/types";
 import { createExecutionEventFromLog } from "@/lib/a2a/execution-events";
 import { validateIncomingEvent, validateOutgoingMessage } from "@/lib/utils/compliance";
 import { getErrorMessage, isAbortError } from "@/lib/utils/error";
@@ -87,8 +91,8 @@ export function useA2AMessages({
   }, [debug.logs, messageStore, session.contextId]);
 
   const pendingInputTask = chat?.items
-    .filter((item) => item.kind === "task-status")
-    .findLast((item) => item.kind === "task-status");
+    .filter(item => item.kind === "task-status")
+    .findLast(item => item.kind === "task-status");
   const isInputRequired = pendingInputTask?.state === "input-required";
   const inputRequiredTaskId = isInputRequired ? pendingInputTask.taskId : undefined;
 
@@ -132,8 +136,8 @@ export function useA2AMessages({
 
       const messageId = crypto.randomUUID();
       const text = getTextPartsText(parts);
-      const fileCount = parts.filter((p) => p.kind === "file").length;
-      const dataCount = parts.filter((p) => p.kind === "data").length;
+      const fileCount = parts.filter(p => p.kind === "file").length;
+      const dataCount = parts.filter(p => p.kind === "data").length;
       const modalities = summarizePartModalities(parts);
 
       messageStore.addUserMessage({
@@ -202,7 +206,12 @@ export function useA2AMessages({
           }
 
           if (event.kind === "artifact-update") {
-            await handleArtifactUpdate(event as TaskArtifactUpdateEvent, session, messageStore, connection);
+            await handleArtifactUpdate(
+              event as TaskArtifactUpdateEvent,
+              session,
+              messageStore,
+              connection,
+            );
             continue;
           }
 
@@ -247,8 +256,15 @@ async function handleStatusUpdate(
     chatId: session.contextId,
     taskId: statusEvent.taskId,
     state: statusEvent.status.state as
-      | "submitted" | "working" | "input-required" | "completed"
-      | "canceled" | "failed" | "rejected" | "auth-required" | "unknown",
+      | "submitted"
+      | "working"
+      | "input-required"
+      | "completed"
+      | "canceled"
+      | "failed"
+      | "rejected"
+      | "auth-required"
+      | "unknown",
     statusMessage: statusEvent.status.message
       ? { parts: statusEvent.status.message.parts }
       : undefined,
@@ -262,7 +278,8 @@ async function handleStatusUpdate(
       level:
         statusEvent.status.state === "failed" || statusEvent.status.state === "rejected"
           ? "error"
-          : statusEvent.status.state === "input-required" || statusEvent.status.state === "auth-required"
+          : statusEvent.status.state === "input-required" ||
+              statusEvent.status.state === "auth-required"
             ? "warning"
             : "info",
       timestamp: Date.now(),
@@ -315,7 +332,12 @@ async function handleArtifactUpdate(
           traceId: null,
           spanId: null,
           parentSpanId: null,
-          details: { phase: data.phase, toolName: data.toolName, query: data.query, resultCount: data.resultCount },
+          details: {
+            phase: data.phase,
+            toolName: data.toolName,
+            query: data.query,
+            resultCount: data.resultCount,
+          },
         },
       });
     }
@@ -375,7 +397,11 @@ async function handleArtifactUpdate(
         traceId: null,
         spanId: null,
         parentSpanId: null,
-        details: { source: "artifact", enabled: connection.a2uiEnabled, surfaceCount: structuredSurfaceCount },
+        details: {
+          source: "artifact",
+          enabled: connection.a2uiEnabled,
+          surfaceCount: structuredSurfaceCount,
+        },
       },
     });
   }
@@ -408,7 +434,10 @@ function handleAgentMessage(
       traceId: null,
       spanId: null,
       parentSpanId: null,
-      details: { partCount: agentMessage.parts.length, modalities: summarizePartModalities(agentMessage.parts) },
+      details: {
+        partCount: agentMessage.parts.length,
+        modalities: summarizePartModalities(agentMessage.parts),
+      },
     },
   });
   if (structuredSurfaceCount > 0) {
@@ -426,7 +455,11 @@ function handleAgentMessage(
         traceId: null,
         spanId: null,
         parentSpanId: null,
-        details: { source: "message", enabled: connection.a2uiEnabled, surfaceCount: structuredSurfaceCount },
+        details: {
+          source: "message",
+          enabled: connection.a2uiEnabled,
+          surfaceCount: structuredSurfaceCount,
+        },
       },
     });
   }

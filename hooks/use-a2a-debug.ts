@@ -23,7 +23,7 @@ export function useA2ADebug() {
       payload: entry.payload,
       transport: entry.transport,
     };
-    setLogs((prev) => appendLog(prev, nextEntry));
+    setLogs(prev => appendLog(prev, nextEntry));
   }, []);
   const interceptor = useMemo(() => new DebugInterceptor(append), [append]);
   const interceptors = useMemo(() => [interceptor], [interceptor]);
@@ -31,7 +31,7 @@ export function useA2ADebug() {
   const recordValidation = useCallback(
     (method: string, warnings: ValidationWarning[]) => {
       if (warnings.length === 0) return;
-      setValidationWarnings((prev) => [...prev, ...warnings]);
+      setValidationWarnings(prev => [...prev, ...warnings]);
       append({
         type: "validation",
         method,

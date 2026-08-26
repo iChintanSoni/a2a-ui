@@ -10,13 +10,16 @@ export interface TextDiffSummary {
 export type EditableArtifactKind = "text" | "markdown" | "code" | "table" | "diagram";
 
 export function isEditableArtifact(item: ArtifactItem): boolean {
-  return item.parts.length > 0 && item.parts.every((part) => part.kind === "text");
+  return item.parts.length > 0 && item.parts.every(part => part.kind === "text");
 }
 
 export function getArtifactText(item: ArtifactItem): string {
   return item.parts
-    .filter((part): part is Extract<(typeof item.parts)[number], { kind: "text" }> => part.kind === "text")
-    .map((part) => part.text)
+    .filter(
+      (part): part is Extract<(typeof item.parts)[number], { kind: "text" }> =>
+        part.kind === "text",
+    )
+    .map(part => part.text)
     .join("");
 }
 
@@ -28,8 +31,8 @@ export function summarizeTextDiff(original: string, revised: string): TextDiffSu
 
   return {
     changed: original !== revised,
-    addedLines: revisedLines.filter((line) => !originalSet.has(line)).length,
-    removedLines: originalLines.filter((line) => !revisedSet.has(line)).length,
+    addedLines: revisedLines.filter(line => !originalSet.has(line)).length,
+    removedLines: originalLines.filter(line => !revisedSet.has(line)).length,
   };
 }
 

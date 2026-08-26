@@ -64,8 +64,7 @@ export function useA2AConnection({
     card: initialCard ?? null,
   });
 
-  const transportMethod =
-    transportState.key === configKey ? transportState.transportMethod : null;
+  const transportMethod = transportState.key === configKey ? transportState.transportMethod : null;
   const status =
     transportState.key === configKey
       ? transportState.status === "idle" && initialCard
@@ -75,7 +74,8 @@ export function useA2AConnection({
         ? "connected"
         : "idle";
   const error = transportState.key === configKey ? transportState.error : null;
-  const card = cardState.key === configKey ? (cardState.card ?? initialCard ?? null) : (initialCard ?? null);
+  const card =
+    cardState.key === configKey ? (cardState.card ?? initialCard ?? null) : (initialCard ?? null);
 
   // Keep debug in a ref so getClient doesn't need it as a dep (debug is a new
   // object every render, which would otherwise cause getClient to change and
@@ -151,7 +151,7 @@ export function useA2AConnection({
   const refreshAgentCard = useCallback(async () => {
     if (pendingCardRef.current?.key === configKey) return pendingCardRef.current.promise;
 
-    const promise = getClient().then(async (client) => {
+    const promise = getClient().then(async client => {
       const nextCard = await client.getAgentCard();
       setCardState({ key: configKey, card: nextCard });
       return nextCard;

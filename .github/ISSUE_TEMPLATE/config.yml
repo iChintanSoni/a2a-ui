@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://github.com/iChintanSoni/a2a-ui#readme
+    about: Read the project overview, architecture, and feature guides.
+  - name: Contributing Guide
+    url: https://github.com/iChintanSoni/a2a-ui/blob/main/CONTRIBUTING.md
+    about: Instructions for local development, branch naming, testing, and pull requests.
+  - name: GitHub Discussions
+    url: https://github.com/iChintanSoni/a2a-ui/discussions
+    about: Ask questions, share ideas, and connect with other developers building A2A agents.

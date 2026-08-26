@@ -23,14 +23,14 @@ function CodeBlock({ children }: { children: React.ReactNode }) {
     <div className="group relative mb-2">
       <pre
         ref={preRef}
-        className="overflow-x-auto rounded-md bg-muted p-3 font-mono text-sm leading-relaxed"
+        className="bg-muted overflow-x-auto rounded-md p-3 font-mono text-sm leading-relaxed"
       >
         {children}
       </pre>
       <button
         onClick={copy}
         aria-label="Copy code"
-        className="absolute right-2 top-2 hidden rounded p-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground group-hover:flex"
+        className="text-muted-foreground hover:bg-background hover:text-foreground absolute top-2 right-2 hidden rounded p-1 transition-colors group-hover:flex"
       >
         {copied ? (
           <CheckIcon className="size-3.5 text-green-500" />
@@ -44,40 +44,28 @@ function CodeBlock({ children }: { children: React.ReactNode }) {
 
 const components: Components = {
   // Headings
-  h1: ({ children }) => (
-    <h1 className="text-2xl font-bold mt-4 mb-2 leading-tight">{children}</h1>
-  ),
-  h2: ({ children }) => (
-    <h2 className="text-xl font-bold mt-3 mb-2 leading-tight">{children}</h2>
-  ),
+  h1: ({ children }) => <h1 className="mt-4 mb-2 text-2xl leading-tight font-bold">{children}</h1>,
+  h2: ({ children }) => <h2 className="mt-3 mb-2 text-xl leading-tight font-bold">{children}</h2>,
   h3: ({ children }) => (
-    <h3 className="text-lg font-semibold mt-3 mb-1 leading-tight">{children}</h3>
+    <h3 className="mt-3 mb-1 text-lg leading-tight font-semibold">{children}</h3>
   ),
-  h4: ({ children }) => (
-    <h4 className="text-base font-semibold mt-2 mb-1">{children}</h4>
-  ),
-  h5: ({ children }) => (
-    <h5 className="text-sm font-semibold mt-2 mb-1">{children}</h5>
-  ),
+  h4: ({ children }) => <h4 className="mt-2 mb-1 text-base font-semibold">{children}</h4>,
+  h5: ({ children }) => <h5 className="mt-2 mb-1 text-sm font-semibold">{children}</h5>,
   h6: ({ children }) => (
-    <h6 className="text-sm font-medium mt-2 mb-1 text-muted-foreground">{children}</h6>
+    <h6 className="text-muted-foreground mt-2 mb-1 text-sm font-medium">{children}</h6>
   ),
 
   // Paragraphs
-  p: ({ children }) => (
-    <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>
-  ),
+  p: ({ children }) => <p className="mb-2 leading-relaxed last:mb-0">{children}</p>,
 
   // Lists
   ul: ({ children }) => (
-    <ul className="list-disc list-outside pl-5 mb-2 space-y-0.5">{children}</ul>
+    <ul className="mb-2 list-outside list-disc space-y-0.5 pl-5">{children}</ul>
   ),
   ol: ({ children }) => (
-    <ol className="list-decimal list-outside pl-5 mb-2 space-y-0.5">{children}</ol>
+    <ol className="mb-2 list-outside list-decimal space-y-0.5 pl-5">{children}</ol>
   ),
-  li: ({ children }) => (
-    <li className="leading-relaxed">{children}</li>
-  ),
+  li: ({ children }) => <li className="leading-relaxed">{children}</li>,
 
   // Inline code
   code: ({ className, children, ...props }) => {
@@ -91,7 +79,7 @@ const components: Components = {
     }
     return (
       <code
-        className="bg-muted text-foreground rounded px-1 py-0.5 text-[0.85em] font-mono"
+        className="bg-muted text-foreground rounded px-1 py-0.5 font-mono text-[0.85em]"
         {...props}
       >
         {children}
@@ -104,7 +92,7 @@ const components: Components = {
 
   // Blockquote
   blockquote: ({ children }) => (
-    <blockquote className="border-l-4 border-border pl-4 italic text-muted-foreground my-2">
+    <blockquote className="border-border text-muted-foreground my-2 border-l-4 pl-4 italic">
       {children}
     </blockquote>
   ),
@@ -125,40 +113,28 @@ const components: Components = {
   hr: () => <hr className="border-border my-3" />,
 
   // Strong / emphasis
-  strong: ({ children }) => (
-    <strong className="font-semibold">{children}</strong>
-  ),
+  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
   em: ({ children }) => <em className="italic">{children}</em>,
 
   // Strikethrough (GFM)
-  del: ({ children }) => (
-    <del className="line-through text-muted-foreground">{children}</del>
-  ),
+  del: ({ children }) => <del className="text-muted-foreground line-through">{children}</del>,
 
   // Tables (GFM) — wrapped in overflow-x-auto for narrow viewports
   table: ({ children }) => (
     <div className="mb-2 overflow-x-auto">
-      <table className="w-full text-sm border-collapse">{children}</table>
+      <table className="w-full border-collapse text-sm">{children}</table>
     </div>
   ),
-  thead: ({ children }) => (
-    <thead className="bg-muted">{children}</thead>
-  ),
+  thead: ({ children }) => <thead className="bg-muted">{children}</thead>,
   tbody: ({ children }) => <tbody>{children}</tbody>,
-  tr: ({ children }) => (
-    <tr className="border-b border-border">{children}</tr>
-  ),
-  th: ({ children }) => (
-    <th className="px-3 py-2 text-left font-semibold">{children}</th>
-  ),
-  td: ({ children }) => (
-    <td className="px-3 py-2">{children}</td>
-  ),
+  tr: ({ children }) => <tr className="border-border border-b">{children}</tr>,
+  th: ({ children }) => <th className="px-3 py-2 text-left font-semibold">{children}</th>,
+  td: ({ children }) => <td className="px-3 py-2">{children}</td>,
 
   // Images
   img: ({ src, alt }) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt ?? ""} className="max-w-full rounded border my-2" />
+    <img src={src} alt={alt ?? ""} className="my-2 max-w-full rounded border" />
   ),
 };
 

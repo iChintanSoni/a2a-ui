@@ -43,7 +43,7 @@ export function summarizeModalities(modes: string[] = []): ModalitySummary {
 }
 
 export function supportsAudioInput(modes: string[] = []): boolean {
-  return modes.some((mode) => modalityFamily(mode) === "audio");
+  return modes.some(mode => modalityFamily(mode) === "audio");
 }
 
 export function preferredAudioMimeType(modes: string[] = []): string {
@@ -51,10 +51,10 @@ export function preferredAudioMimeType(modes: string[] = []): string {
     typeof MediaRecorder !== "undefined" && typeof MediaRecorder.isTypeSupported === "function";
   const declared = modes
     .map(normalizeMimeType)
-    .filter((mode) => mode.startsWith("audio/") && !mode.endsWith("/*"));
+    .filter(mode => mode.startsWith("audio/") && !mode.endsWith("/*"));
   const candidates = [...declared, "audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
 
-  return candidates.find((mimeType) => !supported || MediaRecorder.isTypeSupported(mimeType)) ?? "";
+  return candidates.find(mimeType => !supported || MediaRecorder.isTypeSupported(mimeType)) ?? "";
 }
 
 export function extensionForMimeType(mimeType: string): string {

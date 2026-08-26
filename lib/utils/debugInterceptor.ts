@@ -43,7 +43,6 @@ export function appendLog(prev: LogEntry[], entry: LogEntry): LogEntry[] {
   return next.length > MAX_LOGS ? next.slice(next.length - MAX_LOGS) : next;
 }
 
-
 function normalizeHeaders(headers: HeadersInit | undefined): Record<string, string> {
   if (!headers) return {};
   if (headers instanceof Headers) return Object.fromEntries(headers.entries());
@@ -61,7 +60,7 @@ export function maskHeaders(headers: HeadersInit | undefined): Record<string, st
         lower.includes("secret") ||
         lower.includes("password");
       return [key, secret ? "********" : String(value)];
-    })
+    }),
   );
 }
 
@@ -80,7 +79,7 @@ export function maskSecrets(value: unknown): unknown {
         lower.includes("apikey") ||
         lower.includes("api-key");
       return [key, secret ? "********" : maskSecrets(entry)];
-    })
+    }),
   );
 }
 
@@ -107,11 +106,12 @@ function headersFromResponse(response: Response): Record<string, string> {
 
 export function createDebugFetch(
   baseFetch: typeof fetch,
-  onLog: (entry: LogEntry) => void
+  onLog: (entry: LogEntry) => void,
 ): typeof fetch {
   return async (input, init) => {
     const startedAt = performance.now();
-    const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    const url =
+      typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
     const httpMethod =
       init?.method ??
       (typeof input === "object" && "method" in input ? input.method : undefined) ??
@@ -197,9 +197,7 @@ export class DebugInterceptor implements CallInterceptor {
       payload: maskSecrets((args.result as { value?: unknown }).value ?? null),
       transport: {
         durationMs:
-          typeof startedAt === "number"
-            ? Math.round(performance.now() - startedAt)
-            : undefined,
+          typeof startedAt === "number" ? Math.round(performance.now() - startedAt) : undefined,
       },
     });
   }

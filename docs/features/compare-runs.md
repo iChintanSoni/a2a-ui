@@ -51,12 +51,12 @@ runs.
 A **delta badge** shows whether the Right run was faster or slower than the
 Left:
 
-| Badge | Meaning |
-|-------|---------|
-| "Right run faster by 1.2 s" | Right completed faster |
-| "Right run slower by 450 ms" | Right took longer |
-| "Same duration" | Within rounding to the nearest ms |
-| "Timing unavailable" | One or both runs have no timing data |
+| Badge                        | Meaning                              |
+| ---------------------------- | ------------------------------------ |
+| "Right run faster by 1.2 s"  | Right completed faster               |
+| "Right run slower by 450 ms" | Right took longer                    |
+| "Same duration"              | Within rounding to the nearest ms    |
+| "Timing unavailable"         | One or both runs have no timing data |
 
 Timing is measured from message send to final task state.
 

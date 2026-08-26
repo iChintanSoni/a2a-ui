@@ -12,16 +12,24 @@ interface Props {
   onFormat: (id: string) => void;
 }
 
-export function DataPartEditor({ parts, errors, disabled, onAdd, onUpdate, onRemove, onFormat }: Props) {
+export function DataPartEditor({
+  parts,
+  errors,
+  disabled,
+  onAdd,
+  onUpdate,
+  onRemove,
+  onFormat,
+}: Props) {
   if (parts.length === 0) return null;
   return (
-    <div className="flex flex-col gap-2 rounded-lg border bg-muted/20 px-3 py-2">
+    <div className="bg-muted/20 flex flex-col gap-2 rounded-lg border px-3 py-2">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium text-muted-foreground">Data parts</p>
+        <p className="text-muted-foreground text-xs font-medium">Data parts</p>
         <button
           onClick={onAdd}
           disabled={disabled}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs disabled:opacity-50"
         >
           <PlusIcon className="size-3" />
           Add another
@@ -29,7 +37,7 @@ export function DataPartEditor({ parts, errors, disabled, onAdd, onUpdate, onRem
       </div>
 
       {parts.map((part, index) => (
-        <div key={part.id} className="rounded-lg border bg-background/90 p-2">
+        <div key={part.id} className="bg-background/90 rounded-lg border p-2">
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-xs font-medium">Data part {index + 1}</p>
             <button
@@ -43,26 +51,26 @@ export function DataPartEditor({ parts, errors, disabled, onAdd, onUpdate, onRem
           <Textarea
             rows={6}
             value={part.value}
-            onChange={(e) => onUpdate(part.id, e.target.value)}
+            onChange={e => onUpdate(part.id, e.target.value)}
             onBlur={() => onFormat(part.id)}
             spellCheck={false}
             className="min-h-28 resize-y border-0 bg-transparent px-0 py-0 font-mono text-xs shadow-none focus-visible:ring-0"
             placeholder={'{\n  "type": "search",\n  "query": "hello"\n}'}
           />
           <div className="mt-2 flex items-center justify-between gap-2">
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-muted-foreground text-[11px]">
               Sent as an A2A `DataPart`. Use a JSON object payload.
             </p>
             <button
               onClick={() => onFormat(part.id)}
-              className="text-[11px] text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground text-[11px]"
               disabled={!part.value.trim()}
             >
               Format JSON
             </button>
           </div>
           {errors[part.id] && (
-            <p className="mt-2 text-[11px] text-destructive">{errors[part.id]}</p>
+            <p className="text-destructive mt-2 text-[11px]">{errors[part.id]}</p>
           )}
         </div>
       ))}

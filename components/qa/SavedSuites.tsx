@@ -20,16 +20,46 @@ export function SavedSuites({ suites, runs, runningSuiteId, onRun }: Props) {
   const dispatch = useAppDispatch();
 
   const exportRunHistoryAsCsv = (suite: QaSuite) => {
-    const suiteRuns = runs.filter((r) => r.suiteId === suite.id);
-    const headers = ["run_id", "started_at", "passed", "duration_ms", "case_name", "case_passed", "assertion_label", "assertion_passed", "assertion_message"];
+    const suiteRuns = runs.filter(r => r.suiteId === suite.id);
+    const headers = [
+      "run_id",
+      "started_at",
+      "passed",
+      "duration_ms",
+      "case_name",
+      "case_passed",
+      "assertion_label",
+      "assertion_passed",
+      "assertion_message",
+    ];
     const rows: string[][] = [headers];
     for (const run of suiteRuns) {
       for (const c of run.caseResults) {
         if (c.assertionResults.length === 0) {
-          rows.push([run.id, new Date(run.startedAt).toISOString(), String(run.passed), String(run.completedAt - run.startedAt), c.caseName, String(c.passed), "", "", c.error ?? ""]);
+          rows.push([
+            run.id,
+            new Date(run.startedAt).toISOString(),
+            String(run.passed),
+            String(run.completedAt - run.startedAt),
+            c.caseName,
+            String(c.passed),
+            "",
+            "",
+            c.error ?? "",
+          ]);
         }
         for (const a of c.assertionResults) {
-          rows.push([run.id, new Date(run.startedAt).toISOString(), String(run.passed), String(run.completedAt - run.startedAt), c.caseName, String(c.passed), a.label, String(a.passed), a.message]);
+          rows.push([
+            run.id,
+            new Date(run.startedAt).toISOString(),
+            String(run.passed),
+            String(run.completedAt - run.startedAt),
+            c.caseName,
+            String(c.passed),
+            a.label,
+            String(a.passed),
+            a.message,
+          ]);
         }
       }
     }
@@ -57,12 +87,12 @@ export function SavedSuites({ suites, runs, runningSuiteId, onRun }: Props) {
           <Muted>No suites saved for this agent.</Muted>
         </div>
       ) : (
-        suites.map((suite) => {
-          const latestRun = runs.find((run) => run.suiteId === suite.id);
+        suites.map(suite => {
+          const latestRun = runs.find(run => run.suiteId === suite.id);
           const rate = passRate(runs, suite.id);
           const isRunning = runningSuiteId === suite.id;
           return (
-            <div key={suite.id} className="min-w-0 rounded-lg border bg-card p-4.5 shadow-xs">
+            <div key={suite.id} className="bg-card min-w-0 rounded-lg border p-4.5 shadow-xs">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -71,7 +101,10 @@ export function SavedSuites({ suites, runs, runningSuiteId, onRun }: Props) {
                       {suite.cases.length} case{suite.cases.length === 1 ? "" : "s"}
                     </Badge>
                     {latestRun && (
-                      <Badge variant={latestRun.passed ? "brand" : "destructive"} className="gap-1.25">
+                      <Badge
+                        variant={latestRun.passed ? "brand" : "destructive"}
+                        className="gap-1.25"
+                      >
                         {latestRun.passed && <span className="size-1.25 rounded-full bg-current" />}
                         {latestRun.passed ? "Passing" : "Failing"}
                       </Badge>
@@ -83,7 +116,12 @@ export function SavedSuites({ suites, runs, runningSuiteId, onRun }: Props) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                  <Button className="justify-center" size="sm" onClick={() => onRun(suite)} disabled={isRunning}>
+                  <Button
+                    className="justify-center"
+                    size="sm"
+                    onClick={() => onRun(suite)}
+                    disabled={isRunning}
+                  >
                     <PlayIcon className="size-4" />
                     {isRunning ? "Running" : "Run"}
                   </Button>
@@ -91,7 +129,12 @@ export function SavedSuites({ suites, runs, runningSuiteId, onRun }: Props) {
                     className="justify-center"
                     variant="outline"
                     size="sm"
-                    onClick={() => downloadJson(`${suite.name}-qa-report.json`, { suite, runs: runs.filter((r) => r.suiteId === suite.id) })}
+                    onClick={() =>
+                      downloadJson(`${suite.name}-qa-report.json`, {
+                        suite,
+                        runs: runs.filter(r => r.suiteId === suite.id),
+                      })
+                    }
                   >
                     <DownloadIcon className="size-4" />
                     JSON
@@ -109,7 +152,8 @@ export function SavedSuites({ suites, runs, runningSuiteId, onRun }: Props) {
                     variant="outline"
                     size="icon"
                     onClick={() => {
-                      if (!window.confirm(`Remove "${suite.name}"? Run history will remain.`)) return;
+                      if (!window.confirm(`Remove "${suite.name}"? Run history will remain.`))
+                        return;
                       dispatch(removeQaSuite(suite.id));
                     }}
                     aria-label={`Remove ${suite.name}`}

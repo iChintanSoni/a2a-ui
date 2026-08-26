@@ -133,8 +133,8 @@ async function executeQaCase(input: {
       evaluateExpectedTaskState(input.testCase.expectedTaskState, output),
       evaluateOutputMode(input.testCase.expectedOutputMode, output),
       ...evaluateQaAssertions(input.testCase.assertions, output),
-    ].filter((result) => result != null);
-    const passed = assertionResults.every((result) => result.passed);
+    ].filter(result => result != null);
+    const passed = assertionResults.every(result => result.passed);
 
     return {
       caseId: input.testCase.id,
@@ -187,7 +187,7 @@ export async function executeQaSuite({
     agentName: suite.agentName,
     startedAt,
     completedAt: Date.now(),
-    passed: caseResults.every((result) => result.passed),
+    passed: caseResults.every(result => result.passed),
     caseResults,
   };
 }

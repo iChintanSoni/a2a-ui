@@ -1,10 +1,6 @@
 import type { Part, TaskState } from "@a2a-js/sdk";
 import { getErrorMessage } from "@/lib/utils/error";
-import type {
-  QaAssertion,
-  QaAssertionResult,
-  QaOutputMode,
-} from "@/lib/features/qa/types";
+import type { QaAssertion, QaAssertionResult, QaOutputMode } from "@/lib/features/qa/types";
 
 const regexCache = new Map<string, RegExp>();
 
@@ -30,7 +26,7 @@ export interface QaCapturedOutput {
 export function textFromParts(parts: Part[]): string {
   return parts
     .filter((part): part is Extract<Part, { kind: "text" }> => part.kind === "text")
-    .map((part) => part.text)
+    .map(part => part.text)
     .join("\n")
     .trim();
 }
@@ -57,7 +53,7 @@ function readPath(value: unknown, path: string): unknown {
     .replace(/^\$\./, "")
     .replace(/^\$/, "")
     .split(".")
-    .map((segment) => segment.trim())
+    .map(segment => segment.trim())
     .filter(Boolean);
 
   let current = value;
@@ -113,9 +109,7 @@ export function evaluateOutputMode(
     assertionId: "expected-output-mode",
     label: `Expected ${expected} output`,
     passed,
-    message: passed
-      ? `Observed ${expected} output.`
-      : `Did not observe ${expected} output.`,
+    message: passed ? `Observed ${expected} output.` : `Did not observe ${expected} output.`,
   };
 }
 
@@ -184,7 +178,7 @@ export function evaluateAssertion(
   }
 
   if (assertion.kind === "artifact-mime") {
-    const matched = output.artifactMimeTypes.some((mime) =>
+    const matched = output.artifactMimeTypes.some(mime =>
       matchesMimePattern(mime, assertion.pattern),
     );
     return {
@@ -229,5 +223,5 @@ export function evaluateQaAssertions(
   assertions: QaAssertion[],
   output: QaCapturedOutput,
 ): QaAssertionResult[] {
-  return assertions.map((assertion) => evaluateAssertion(assertion, output));
+  return assertions.map(assertion => evaluateAssertion(assertion, output));
 }

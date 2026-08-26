@@ -11,13 +11,13 @@ produces many tasks or when you want to find a specific task by its state.
 
 ## Task View vs Conversation View
 
-| | Conversations | Tasks |
-|--|--------------|-------|
-| Unit of organisation | Chat session | Individual task |
-| Best for | Session replay, comparing runs | Auditing task states, finding failures |
-| Shows agent messages | Yes | Via linked conversation |
-| Shows artifacts | Via chat timeline | Inline artifact panel |
-| Filter by task state | No | Yes |
+|                      | Conversations                  | Tasks                                  |
+| -------------------- | ------------------------------ | -------------------------------------- |
+| Unit of organisation | Chat session                   | Individual task                        |
+| Best for             | Session replay, comparing runs | Auditing task states, finding failures |
+| Shows agent messages | Yes                            | Via linked conversation                |
+| Shows artifacts      | Via chat timeline              | Inline artifact panel                  |
+| Filter by task state | No                             | Yes                                    |
 
 ---
 
@@ -25,17 +25,17 @@ produces many tasks or when you want to find a specific task by its state.
 
 Filter tasks by their final state:
 
-| State | Meaning |
-|-------|---------|
-| `submitted` | Task received, not yet processed |
-| `working` | Agent is actively processing |
-| `input-required` | Agent is waiting for user input |
-| `completed` | Task finished successfully |
-| `canceled` | Task was canceled by the user |
-| `failed` | Task ended with an error |
-| `rejected` | Agent refused to process the task |
-| `auth-required` | Task requires additional authentication |
-| `unknown` | State could not be determined |
+| State            | Meaning                                 |
+| ---------------- | --------------------------------------- |
+| `submitted`      | Task received, not yet processed        |
+| `working`        | Agent is actively processing            |
+| `input-required` | Agent is waiting for user input         |
+| `completed`      | Task finished successfully              |
+| `canceled`       | Task was canceled by the user           |
+| `failed`         | Task ended with an error                |
+| `rejected`       | Agent refused to process the task       |
+| `auth-required`  | Task requires additional authentication |
+| `unknown`        | State could not be determined           |
 
 ---
 

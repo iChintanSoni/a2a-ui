@@ -21,7 +21,11 @@ function renderComponent(component: A2UIComponent, index: number) {
     if (component.variant === "caption") {
       return <Caption key={index}>{component.text}</Caption>;
     }
-    return <p key={index} className="text-sm leading-6">{component.text}</p>;
+    return (
+      <p key={index} className="text-sm leading-6">
+        {component.text}
+      </p>
+    );
   }
 
   if (component.kind === "markdown") {
@@ -38,7 +42,11 @@ function renderComponent(component: A2UIComponent, index: number) {
             ? "outline"
             : "default";
     return (
-      <Badge key={index} variant={variant} className={component.tone === "success" ? "bg-emerald-600 text-white" : ""}>
+      <Badge
+        key={index}
+        variant={variant}
+        className={component.tone === "success" ? "bg-emerald-600 text-white" : ""}
+      >
         {component.label}
       </Badge>
     );
@@ -46,11 +54,14 @@ function renderComponent(component: A2UIComponent, index: number) {
 
   if (component.kind === "key-value") {
     return (
-      <dl key={index} className="grid gap-x-3 gap-y-2 text-sm sm:grid-cols-[minmax(7rem,0.45fr)_1fr]">
-        {component.items.map((item) => (
+      <dl
+        key={index}
+        className="grid gap-x-3 gap-y-2 text-sm sm:grid-cols-[minmax(7rem,0.45fr)_1fr]"
+      >
+        {component.items.map(item => (
           <div key={item.label} className="grid gap-1 sm:contents">
             <dt className="text-muted-foreground">{item.label}</dt>
-            <dd className="min-w-0 break-words font-medium">{formatValue(item.value)}</dd>
+            <dd className="min-w-0 font-medium break-words">{formatValue(item.value)}</dd>
           </div>
         ))}
       </dl>
@@ -77,7 +88,7 @@ function renderComponent(component: A2UIComponent, index: number) {
         <table className="w-full min-w-80 text-sm">
           <thead className="bg-muted/60">
             <tr>
-              {component.columns.map((column) => (
+              {component.columns.map(column => (
                 <th key={column.key} className="px-3 py-2 text-left font-medium">
                   {column.label}
                 </th>
@@ -87,7 +98,7 @@ function renderComponent(component: A2UIComponent, index: number) {
           <tbody>
             {component.rows.map((row, rowIndex) => (
               <tr key={rowIndex} className="border-t">
-                {component.columns.map((column) => (
+                {component.columns.map(column => (
                   <td key={column.key} className="px-3 py-2 align-top">
                     {formatValue(row[column.key] ?? null)}
                   </td>
@@ -105,16 +116,14 @@ function renderComponent(component: A2UIComponent, index: number) {
 
 export function A2UISurfaceRenderer({ surface }: Props) {
   return (
-    <section className="rounded-md border bg-background text-foreground shadow-sm">
+    <section className="bg-background text-foreground rounded-md border shadow-sm">
       {(surface.title || surface.description) && (
         <div className="border-b px-3 py-2">
           {surface.title && <SectionTitle>{surface.title}</SectionTitle>}
           {surface.description && <Caption className="mt-1">{surface.description}</Caption>}
         </div>
       )}
-      <div className="flex flex-col gap-3 px-3 py-3">
-        {surface.components.map(renderComponent)}
-      </div>
+      <div className="flex flex-col gap-3 px-3 py-3">{surface.components.map(renderComponent)}</div>
     </section>
   );
 }

@@ -51,9 +51,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const agent = useAppSelector((s) =>
-    s.agents.agents.find((a) => a.id === agentId)
-  );
+  const agent = useAppSelector(s => s.agents.agents.find(a => a.id === agentId));
 
   const [displayName, setDisplayName] = useState(agent?.displayName ?? "");
   const [tagText, setTagText] = useState((agent?.tags ?? []).join(", "));
@@ -92,10 +90,15 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
 
   const saveDisplayName = () => {
     dispatch(updateAgentDisplayName({ agentId, displayName }));
-    dispatch(updateAgentTags({
-      agentId,
-      tags: tagText.split(",").map((t) => t.trim()).filter(Boolean),
-    }));
+    dispatch(
+      updateAgentTags({
+        agentId,
+        tags: tagText
+          .split(",")
+          .map(t => t.trim())
+          .filter(Boolean),
+      }),
+    );
     dispatch(setAgentA2UIEnabled({ agentId, enabled: a2uiEnabled }));
     setDisplayNameSaved(true);
     setTimeout(() => setDisplayNameSaved(false), 4000);
@@ -117,7 +120,11 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
       } catch (err) {
         const fallbackUrl = getAgentCardUrlFallback(normalizedUrl);
         if (fallbackUrl && fallbackUrl !== normalizedUrl) {
-          try { client = await factory.createFromUrl(fallbackUrl); } catch { throw err; }
+          try {
+            client = await factory.createFromUrl(fallbackUrl);
+          } catch {
+            throw err;
+          }
         } else {
           throw err;
         }
@@ -126,7 +133,7 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
       const card = await Promise.race([
         client.getAgentCard(),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Request timed out after 10s")), 10_000)
+          setTimeout(() => reject(new Error("Request timed out after 10s")), 10_000),
         ),
       ]);
       dispatch(updateAgentCard({ agentId, card }));
@@ -150,15 +157,21 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
     setAuthSaved(false);
   };
 
-  const addHeaderRow = () => { setHeaders((h) => [...h, { key: "", value: "" }]); setHeadersSaved(false); };
-  const removeHeaderRow = (i: number) => { setHeaders((h) => h.filter((_, idx) => idx !== i)); setHeadersSaved(false); };
+  const addHeaderRow = () => {
+    setHeaders(h => [...h, { key: "", value: "" }]);
+    setHeadersSaved(false);
+  };
+  const removeHeaderRow = (i: number) => {
+    setHeaders(h => h.filter((_, idx) => idx !== i));
+    setHeadersSaved(false);
+  };
   const updateHeader = (i: number, field: "key" | "value", val: string) => {
-    setHeaders((h) => h.map((row, idx) => (idx === i ? { ...row, [field]: val } : row)));
+    setHeaders(h => h.map((row, idx) => (idx === i ? { ...row, [field]: val } : row)));
     setHeadersSaved(false);
   };
 
   const saveHeaders = () => {
-    dispatch(updateAgentHeaders({ agentId, headers: headers.filter((h) => h.key.trim()) }));
+    dispatch(updateAgentHeaders({ agentId, headers: headers.filter(h => h.key.trim()) }));
     setHeadersSaved(true);
     setTimeout(() => setHeadersSaved(false), 4000);
   };
@@ -215,7 +228,12 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:shrink-0">
-            <Button variant="outline" size="sm" onClick={copyShareLink} className="justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyShareLink}
+              className="justify-center gap-2"
+            >
               <LinkIcon className="size-3.5" />
               {linkCopied ? "Copied!" : "Copy Link"}
             </Button>
@@ -225,9 +243,11 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
               onClick={() => dispatch(toggleAgentFavorite(agent.id))}
               className="justify-center gap-2"
             >
-              {agent.favorite
-                ? <StarIcon className="size-3.5 fill-current" />
-                : <StarOffIcon className="size-3.5" />}
+              {agent.favorite ? (
+                <StarIcon className="size-3.5 fill-current" />
+              ) : (
+                <StarOffIcon className="size-3.5" />
+              )}
               {agent.favorite ? "Favorited" : "Favorite"}
             </Button>
 
@@ -241,13 +261,17 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                 <DialogHeader>
                   <DialogTitle>Remove Agent</DialogTitle>
                   <DialogDescription>
-                    Remove <strong>{agent.displayName ?? agent.card.name}</strong> from this workspace?
-                    Chat history will be kept but no new chats can be started.
+                    Remove <strong>{agent.displayName ?? agent.card.name}</strong> from this
+                    workspace? Chat history will be kept but no new chats can be started.
                   </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-                  <Button variant="destructive" onClick={handleDelete}>Remove</Button>
+                  <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={handleDelete}>
+                    Remove
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -272,15 +296,29 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
               tagText={tagText}
               a2uiEnabled={a2uiEnabled}
               saved={displayNameSaved}
-              onDisplayNameChange={(v) => { setDisplayName(v); setDisplayNameSaved(false); }}
-              onTagTextChange={(v) => { setTagText(v); setDisplayNameSaved(false); }}
-              onA2UIEnabledChange={(v) => { setA2uiEnabled(v); setDisplayNameSaved(false); }}
+              onDisplayNameChange={v => {
+                setDisplayName(v);
+                setDisplayNameSaved(false);
+              }}
+              onTagTextChange={v => {
+                setTagText(v);
+                setDisplayNameSaved(false);
+              }}
+              onA2UIEnabledChange={v => {
+                setA2uiEnabled(v);
+                setDisplayNameSaved(false);
+              }}
               onSave={saveDisplayName}
             />
           </TabsContent>
 
           <TabsContent value="auth">
-            <AuthTab auth={auth} saved={authSaved} onAuthChange={handleAuthChange} onSave={saveAuth} />
+            <AuthTab
+              auth={auth}
+              saved={authSaved}
+              onAuthChange={handleAuthChange}
+              onSave={saveAuth}
+            />
           </TabsContent>
 
           <TabsContent value="headers">

@@ -81,27 +81,28 @@ export function TaskStatusRow({ item, timelineStages = [], onInspect, onRetry }:
   // Render a prominent callout card for input-required state
   if (item.state === "input-required") {
     return (
-      <div className="group relative rounded-[9px] border border-warning-soft bg-warning-soft/60 px-4 py-3">
-        <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-warning-foreground">
+      <div className="group border-warning-soft bg-warning-soft/60 relative rounded-[9px] border px-4 py-3">
+        <div className="text-warning-foreground mb-1 flex items-center gap-2 text-xs font-semibold">
           <AlertCircle className="size-3.5 shrink-0" />
           <span>Agent needs your input</span>
         </div>
         {item.statusMessage && item.statusMessage.parts.length > 0 ? (
-          <div className="text-sm text-foreground">
+          <div className="text-foreground text-sm">
             {item.statusMessage.parts.map((part, i) => (
               <PartRenderer key={i} part={part} />
             ))}
           </div>
         ) : (
-          <p className="text-sm text-warning-foreground">
+          <p className="text-warning-foreground text-sm">
             Please provide additional information to continue.
           </p>
         )}
         {onInspect && (
           <button
             onClick={onInspect}
-            className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
+            className="bg-background text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border font-mono text-[10px] shadow-sm transition-colors group-focus-within:flex group-hover:flex focus-visible:flex focus-visible:ring-2"
             title="Inspect raw JSON"
+            aria-label="Inspect raw JSON"
           >
             {"{}"}
           </button>
@@ -111,16 +112,16 @@ export function TaskStatusRow({ item, timelineStages = [], onInspect, onRetry }:
   }
 
   return (
-    <div className="flex flex-col gap-1 py-1 group relative">
+    <div className="group relative flex flex-col gap-1 py-1" role="status" aria-live="polite">
       <div className={`flex items-center gap-1.5 text-xs ${config.className}`}>
-        <Icon className={`size-3.5 ${config.spin ? "animate-spin" : ""}`} />
+        <Icon className={`size-3.5 ${config.spin ? "animate-spin" : ""}`} aria-hidden="true" />
         <span>{config.label}</span>
       </div>
       {timelineStages.length > 0 && (
         <TaskTimeline stages={timelineStages} compact className="ms-5" />
       )}
       {item.statusMessage && item.statusMessage.parts.length > 0 && (
-        <div className="ms-5 text-sm text-muted-foreground">
+        <div className="text-muted-foreground ms-5 text-sm">
           {item.statusMessage.parts.map((part, i) => (
             <PartRenderer key={i} part={part} />
           ))}
@@ -128,7 +129,7 @@ export function TaskStatusRow({ item, timelineStages = [], onInspect, onRetry }:
       )}
       {item.state === "canceled" && onRetry && (
         <div className="ms-5 mt-1">
-          <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={onRetry}>
+          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onRetry}>
             <RotateCcw className="size-3" />
             Retry
           </Button>
@@ -137,8 +138,9 @@ export function TaskStatusRow({ item, timelineStages = [], onInspect, onRetry }:
       {onInspect && (
         <button
           onClick={onInspect}
-          className="absolute -top-2 -right-2 hidden group-hover:flex size-5 items-center justify-center rounded-full border bg-background text-muted-foreground hover:text-foreground text-[10px] font-mono shadow-sm"
+          className="bg-background text-muted-foreground hover:text-foreground focus-visible:ring-ring absolute -top-2 -right-2 hidden size-5 items-center justify-center rounded-full border font-mono text-[10px] shadow-sm transition-colors group-focus-within:flex group-hover:flex focus-visible:flex focus-visible:ring-2"
           title="Inspect raw JSON"
+          aria-label="Inspect raw JSON"
         >
           {"{}"}
         </button>

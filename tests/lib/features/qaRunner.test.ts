@@ -83,6 +83,6 @@ describe("qa runner", () => {
     expect(run.passed).toBe(true);
     expect(run.caseResults).toHaveLength(1);
     expect(run.caseResults[0].finalTaskState).toBe("completed");
-    expect(run.caseResults[0].assertionResults.every((result) => result.passed)).toBe(true);
+    expect(run.caseResults[0].assertionResults.every(result => result.passed)).toBe(true);
   });
 });

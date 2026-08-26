@@ -33,8 +33,7 @@ export type ChatAction =
   | ReturnType<typeof hydrateChats>;
 
 export type MemoryStoreAction =
-  | ChatAction
-  | { type: "a2a/reset"; payload: Omit<Chat, "items" | "executionEvents"> };
+  ChatAction | { type: "a2a/reset"; payload: Omit<Chat, "items" | "executionEvents"> };
 
 // ── Utilities ──────────────────────────────────────────────────────────────
 
@@ -105,7 +104,7 @@ export function useMemoryMessageStore(options: {
     activeChatId: null,
   });
   const previousContextRef = useRef<string | null>(null);
-  const chat = state.chats.find((entry) => entry.id === options.contextId);
+  const chat = state.chats.find(entry => entry.id === options.contextId);
 
   useEffect(() => {
     const meta = createChatMeta({
@@ -128,25 +127,19 @@ export function useMemoryMessageStore(options: {
       dispatch(addChat(meta));
     }
     previousContextRef.current = options.contextId;
-  }, [
-    chat,
-    options.agentName,
-    options.agentUrl,
-    options.contextId,
-    options.persistenceMode,
-  ]);
+  }, [chat, options.agentName, options.agentUrl, options.contextId, options.persistenceMode]);
 
   return useMemo(
     () => ({
       chat,
-      ensureChat: (meta) => dispatch(addChat(meta)),
-      sanitizeStaleStreaming: (contextId) => dispatch(sanitizeStaleStreaming(contextId)),
-      addUserMessage: (payload) => dispatch(addUserMessage(payload)),
-      applyStatusUpdate: (payload) => dispatch(applyStatusUpdate(payload)),
-      applyArtifactUpdate: (payload) => dispatch(applyArtifactUpdate(payload)),
-      applyToolCall: (payload) => dispatch(applyToolCall(payload)),
-      applyAgentMessage: (payload) => dispatch(applyAgentMessage(payload)),
-      appendExecutionEvent: (payload) => dispatch(appendExecutionEvent(payload)),
+      ensureChat: meta => dispatch(addChat(meta)),
+      sanitizeStaleStreaming: contextId => dispatch(sanitizeStaleStreaming(contextId)),
+      addUserMessage: payload => dispatch(addUserMessage(payload)),
+      applyStatusUpdate: payload => dispatch(applyStatusUpdate(payload)),
+      applyArtifactUpdate: payload => dispatch(applyArtifactUpdate(payload)),
+      applyToolCall: payload => dispatch(applyToolCall(payload)),
+      applyAgentMessage: payload => dispatch(applyAgentMessage(payload)),
+      appendExecutionEvent: payload => dispatch(appendExecutionEvent(payload)),
     }),
     [chat],
   );

@@ -24,16 +24,16 @@ card, and handling auth and custom headers.
 
 ### Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `agentUrl` | `string` | — | Base URL of the A2A server (**required**) |
-| `auth` | `AuthConfig` | `{ type: "none" }` | Authentication configuration |
-| `headers` | `CustomHeader[]` | `[]` | Extra headers sent with every request |
-| `a2uiEnabled` | `boolean` | `false` | Send the A2UI extension header to request structured UI surfaces |
-| `debug` | `ReturnType<typeof useA2ADebug>` | — | Debug hook instance for logging |
-| `autoConnect` | `boolean` | `true` | Connect to the agent on mount |
-| `autoLoadCard` | `boolean` | `false` | Also fetch the agent card on connect |
-| `initialCard` | `AgentCard` | — | Pre-loaded card to use before the first fetch |
+| Option         | Type                             | Default            | Description                                                      |
+| -------------- | -------------------------------- | ------------------ | ---------------------------------------------------------------- |
+| `agentUrl`     | `string`                         | —                  | Base URL of the A2A server (**required**)                        |
+| `auth`         | `AuthConfig`                     | `{ type: "none" }` | Authentication configuration                                     |
+| `headers`      | `CustomHeader[]`                 | `[]`               | Extra headers sent with every request                            |
+| `a2uiEnabled`  | `boolean`                        | `false`            | Send the A2UI extension header to request structured UI surfaces |
+| `debug`        | `ReturnType<typeof useA2ADebug>` | —                  | Debug hook instance for logging                                  |
+| `autoConnect`  | `boolean`                        | `true`             | Connect to the agent on mount                                    |
+| `autoLoadCard` | `boolean`                        | `false`            | Also fetch the agent card on connect                             |
+| `initialCard`  | `AgentCard`                      | —                  | Pre-loaded card to use before the first fetch                    |
 
 #### `AuthConfig`
 
@@ -48,21 +48,24 @@ type AuthConfig =
 #### `CustomHeader`
 
 ```ts
-interface CustomHeader { key: string; value: string }
+interface CustomHeader {
+  key: string;
+  value: string;
+}
 ```
 
 ### Returns
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `card` | `AgentCard \| null` | The fetched agent card, or `initialCard` while loading |
-| `status` | `"idle" \| "connecting" \| "connected" \| "error"` | Connection state |
-| `error` | `string \| null` | Last connection error message |
-| `transportMethod` | `string \| null` | `"rest"` or `"json-rpc"` once connected |
-| `getClient` | `() => Promise<Client>` | Returns the A2A SDK client, connecting if needed |
-| `refreshAgentCard` | `() => Promise<AgentCard>` | Re-fetches the agent card |
-| `cancelTask` | `(taskId: string) => Promise<void>` | Sends a cancel request for a running task |
-| `resetConnection` | `() => void` | Clears the cached client and forces reconnect on next call |
+| Property           | Type                                               | Description                                                |
+| ------------------ | -------------------------------------------------- | ---------------------------------------------------------- |
+| `card`             | `AgentCard \| null`                                | The fetched agent card, or `initialCard` while loading     |
+| `status`           | `"idle" \| "connecting" \| "connected" \| "error"` | Connection state                                           |
+| `error`            | `string \| null`                                   | Last connection error message                              |
+| `transportMethod`  | `string \| null`                                   | `"rest"` or `"json-rpc"` once connected                    |
+| `getClient`        | `() => Promise<Client>`                            | Returns the A2A SDK client, connecting if needed           |
+| `refreshAgentCard` | `() => Promise<AgentCard>`                         | Re-fetches the agent card                                  |
+| `cancelTask`       | `(taskId: string) => Promise<void>`                | Sends a cancel request for a running task                  |
+| `resetConnection`  | `() => void`                                       | Clears the cached client and forces reconnect on next call |
 
 ### Example
 
@@ -79,7 +82,11 @@ function AgentStatus({ url }: { url: string }) {
 
   if (status === "connecting") return <span>Connecting…</span>;
   if (status === "error") return <span>Error: {error}</span>;
-  return <span>{card?.name ?? "Unknown agent"} — {status}</span>;
+  return (
+    <span>
+      {card?.name ?? "Unknown agent"} — {status}
+    </span>
+  );
 }
 ```
 
@@ -94,21 +101,21 @@ abort controller, active task tracking).
 
 ### Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `contextId` | `string` | — | Controlled context ID. If provided, the hook never generates its own ID. |
-| `defaultContextId` | `string` | `crypto.randomUUID()` | Initial context ID when uncontrolled |
-| `onNewSession` | `(contextId: string) => void` | — | Called when `newSession()` is invoked in controlled mode |
+| Option             | Type                          | Default               | Description                                                              |
+| ------------------ | ----------------------------- | --------------------- | ------------------------------------------------------------------------ |
+| `contextId`        | `string`                      | —                     | Controlled context ID. If provided, the hook never generates its own ID. |
+| `defaultContextId` | `string`                      | `crypto.randomUUID()` | Initial context ID when uncontrolled                                     |
+| `onNewSession`     | `(contextId: string) => void` | —                     | Called when `newSession()` is invoked in controlled mode                 |
 
 ### Returns
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `contextId` | `string` | Current conversation context ID |
-| `isStreaming` | `boolean` | `true` while a message stream is in flight |
-| `activeTaskId` | `string \| null` | Task ID of the currently running task |
-| `error` | `string \| null` | Last stream error |
-| `newSession` | `() => void` | Generate a new context ID (starts a fresh conversation) |
+| Property       | Type             | Description                                             |
+| -------------- | ---------------- | ------------------------------------------------------- |
+| `contextId`    | `string`         | Current conversation context ID                         |
+| `isStreaming`  | `boolean`        | `true` while a message stream is in flight              |
+| `activeTaskId` | `string \| null` | Task ID of the currently running task                   |
+| `error`        | `string \| null` | Last stream error                                       |
+| `newSession`   | `() => void`     | Generate a new context ID (starts a fresh conversation) |
 
 ### Example
 
@@ -142,15 +149,15 @@ you must create those three hooks first and pass them in.
 
 ### Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `connection` | `ReturnType<typeof useA2AConnection>` | — | Connection hook instance (**required**) |
-| `debug` | `ReturnType<typeof useA2ADebug>` | — | Debug hook instance (**required**) |
-| `session` | `ReturnType<typeof useA2ASession>` | — | Session hook instance (**required**) |
-| `agentName` | `string` | From card | Override the agent display name in the chat history |
-| `context` | `A2AContextConfig` | — | Context injected into every outgoing message |
-| `persistenceMode` | `"memory" \| "none" \| "external"` | `"memory"` | Where messages are stored |
-| `store` | `A2AExternalMessageStore` | — | Required when `persistenceMode` is `"external"` |
+| Option            | Type                                  | Default    | Description                                         |
+| ----------------- | ------------------------------------- | ---------- | --------------------------------------------------- |
+| `connection`      | `ReturnType<typeof useA2AConnection>` | —          | Connection hook instance (**required**)             |
+| `debug`           | `ReturnType<typeof useA2ADebug>`      | —          | Debug hook instance (**required**)                  |
+| `session`         | `ReturnType<typeof useA2ASession>`    | —          | Session hook instance (**required**)                |
+| `agentName`       | `string`                              | From card  | Override the agent display name in the chat history |
+| `context`         | `A2AContextConfig`                    | —          | Context injected into every outgoing message        |
+| `persistenceMode` | `"memory" \| "none" \| "external"`    | `"memory"` | Where messages are stored                           |
+| `store`           | `A2AExternalMessageStore`             | —          | Required when `persistenceMode` is `"external"`     |
 
 #### `A2AContextConfig`
 
@@ -164,21 +171,21 @@ interface A2AContextConfig {
 
 #### `A2ASessionPersistenceMode`
 
-| Mode | Behaviour |
-|------|-----------|
-| `"memory"` | In-component reducer — cleared on unmount |
-| `"none"` | Same as memory but history is cleared when the context ID changes |
-| `"external"` | Caller provides a `store` implementing `A2AExternalMessageStore` |
+| Mode         | Behaviour                                                         |
+| ------------ | ----------------------------------------------------------------- |
+| `"memory"`   | In-component reducer — cleared on unmount                         |
+| `"none"`     | Same as memory but history is cleared when the context ID changes |
+| `"external"` | Caller provides a `store` implementing `A2AExternalMessageStore`  |
 
 ### Returns
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `chat` | `Chat \| undefined` | The full chat object including all items and events |
-| `items` | `ChatItem[]` | Convenience shortcut for `chat?.items ?? []` |
-| `isInputRequired` | `boolean` | `true` when the agent is waiting for user input |
-| `sendMessage` | `(parts: OutgoingMessagePartInput[], metadata?: Record<string, string>) => Promise<void>` | Send a message and consume the stream |
-| `cancelStream` | `() => void` | Abort the in-flight stream and cancel the active task |
+| Property          | Type                                                                                      | Description                                           |
+| ----------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `chat`            | `Chat \| undefined`                                                                       | The full chat object including all items and events   |
+| `items`           | `ChatItem[]`                                                                              | Convenience shortcut for `chat?.items ?? []`          |
+| `isInputRequired` | `boolean`                                                                                 | `true` when the agent is waiting for user input       |
+| `sendMessage`     | `(parts: OutgoingMessagePartInput[], metadata?: Record<string, string>) => Promise<void>` | Send a message and consume the stream                 |
+| `cancelStream`    | `() => void`                                                                              | Abort the in-flight stream and cancel the active task |
 
 ### Example
 
@@ -203,12 +210,17 @@ function MyChat({ agentUrl }: { agentUrl: string }) {
   return (
     <div>
       <ul>
-        {items.map((item) => (
+        {items.map(item => (
           <li key={item.id}>{item.kind}</li>
         ))}
       </ul>
-      <input value={input} onChange={(e) => setInput(e.target.value)} />
-      <button onClick={() => { sendMessage([{ kind: "text", text: input }]); setInput(""); }}>
+      <input value={input} onChange={e => setInput(e.target.value)} />
+      <button
+        onClick={() => {
+          sendMessage([{ kind: "text", text: input }]);
+          setInput("");
+        }}
+      >
         Send
       </button>
       {session.isStreaming && <button onClick={cancelStream}>Cancel</button>}
@@ -229,13 +241,13 @@ A2A client. Pass the returned object to `useA2AConnection` and
 
 ### Returns
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `logs` | `LogEntry[]` | Chronological list of HTTP and validation log entries |
-| `validationWarnings` | `ValidationWarning[]` | Protocol compliance warnings from outgoing and incoming messages |
-| `interceptors` | `CallInterceptor[]` | Pass to `createClientFactory` to capture HTTP traffic |
-| `onTransportLog` | `(entry: AppendLogInput) => void` | Low-level log appender |
-| `clearLogs` | `() => void` | Clear all logs and warnings |
+| Property             | Type                              | Description                                                      |
+| -------------------- | --------------------------------- | ---------------------------------------------------------------- |
+| `logs`               | `LogEntry[]`                      | Chronological list of HTTP and validation log entries            |
+| `validationWarnings` | `ValidationWarning[]`             | Protocol compliance warnings from outgoing and incoming messages |
+| `interceptors`       | `CallInterceptor[]`               | Pass to `createClientFactory` to capture HTTP traffic            |
+| `onTransportLog`     | `(entry: AppendLogInput) => void` | Low-level log appender                                           |
+| `clearLogs`          | `() => void`                      | Clear all logs and warnings                                      |
 
 ### Example
 
@@ -249,7 +261,9 @@ function DebugAwareAgent({ agentUrl }: { agentUrl: string }) {
 
   return (
     <div>
-      <p>Status: {status} — {debug.logs.length} log entries</p>
+      <p>
+        Status: {status} — {debug.logs.length} log entries
+      </p>
       {debug.validationWarnings.length > 0 && (
         <p>{debug.validationWarnings.length} protocol warning(s)</p>
       )}

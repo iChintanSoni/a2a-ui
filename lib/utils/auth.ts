@@ -34,7 +34,7 @@ function shouldProxyRequest(targetUrl: string): boolean {
 export function buildRequestHeaders(
   auth: AuthConfig,
   customHeaders: CustomHeader[],
-  options: { a2uiEnabled?: boolean } = {}
+  options: { a2uiEnabled?: boolean } = {},
 ): Record<string, string> {
   const headers: Record<string, string> = {};
 
@@ -51,9 +51,7 @@ export function buildRequestHeaders(
       break;
     case "basic":
       if (auth.basicUsername || auth.basicPassword) {
-        const encoded = btoa(
-          `${auth.basicUsername ?? ""}:${auth.basicPassword ?? ""}`
-        );
+        const encoded = btoa(`${auth.basicUsername ?? ""}:${auth.basicPassword ?? ""}`);
         headers["Authorization"] = `Basic ${encoded}`;
       }
       break;
@@ -75,7 +73,7 @@ export function buildRequestHeaders(
 /** Wrap the global fetch to always inject the given headers. */
 function createFetchWithHeaders(
   extraHeaders: Record<string, string>,
-  onLog?: (entry: LogEntry) => void
+  onLog?: (entry: LogEntry) => void,
 ): typeof fetch {
   const observedFetch = onLog ? createDebugFetch(fetch, onLog) : fetch;
 
@@ -121,11 +119,10 @@ export function createClientFactory(
   customHeaders: CustomHeader[],
   interceptors?: CallInterceptor[],
   onTransportLog?: (entry: LogEntry) => void,
-  options: { a2uiEnabled?: boolean } = {}
+  options: { a2uiEnabled?: boolean } = {},
 ): ClientFactory {
   const extraHeaders = buildRequestHeaders(auth, customHeaders, options);
-  const clientConfig =
-    interceptors && interceptors.length > 0 ? { interceptors } : undefined;
+  const clientConfig = interceptors && interceptors.length > 0 ? { interceptors } : undefined;
 
   const fetchImpl = createFetchWithHeaders(extraHeaders, onTransportLog);
   return new ClientFactory(
@@ -136,6 +133,6 @@ export function createClientFactory(
       ],
       cardResolver: new DefaultAgentCardResolver({ fetchImpl }),
       ...(clientConfig ? { clientConfig } : {}),
-    })
+    }),
   );
 }

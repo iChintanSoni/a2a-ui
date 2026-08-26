@@ -2,27 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BotIcon,
-  HomeIcon,
-  ListTodoIcon,
-  MessageSquareIcon,
-  NotebookTabsIcon,
-} from "lucide-react";
+import { BotIcon, HomeIcon, ListTodoIcon, MessageSquareIcon, NotebookTabsIcon } from "lucide-react";
 
 import { useAppSelector } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
-  const chats = useAppSelector((state) => state.chats.chats);
-  const activeChatId = useAppSelector((state) => state.chats.activeChatId);
+  const chats = useAppSelector(state => state.chats.chats);
+  const activeChatId = useAppSelector(state => state.chats.activeChatId);
   const latestChat = [...chats]
-    .filter((chat) => !chat.archived)
+    .filter(chat => !chat.archived)
     .sort((a, b) => b.timestamp - a.timestamp)[0];
-  const chatHref = activeChatId || latestChat?.id
-    ? `/dashboard/chat/${activeChatId ?? latestChat?.id}`
-    : "/dashboard/conversations";
+  const chatHref =
+    activeChatId || latestChat?.id
+      ? `/dashboard/chat/${activeChatId ?? latestChat?.id}`
+      : "/dashboard/conversations";
 
   const items = [
     { label: "Home", href: "/dashboard", icon: HomeIcon, active: pathname === "/dashboard" },
@@ -55,9 +50,9 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Primary navigation"
-      className="fixed inset-x-0 bottom-0 z-30 flex h-[66px] items-stretch border-t bg-card px-1 pt-1.5 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-1px_3px_rgb(18_20_26/.04)] md:hidden"
+      className="bg-card fixed inset-x-0 bottom-0 z-30 flex h-[66px] items-stretch border-t px-1 pt-1.5 pb-[max(.5rem,env(safe-area-inset-bottom))] shadow-[0_-1px_3px_rgb(18_20_26/.04)] md:hidden"
     >
-      {items.map((item) => (
+      {items.map(item => (
         <Link
           key={item.label}
           href={item.href}

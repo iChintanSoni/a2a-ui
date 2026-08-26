@@ -10,7 +10,11 @@ import {
   persistQa,
   persistWorkbench,
 } from "@/lib/persistence";
-import { hydrateAgents, updateAgentCard, updateAgentStatus } from "@/lib/features/agents/agentsSlice";
+import {
+  hydrateAgents,
+  updateAgentCard,
+  updateAgentStatus,
+} from "@/lib/features/agents/agentsSlice";
 import { createClientFactory } from "@/lib/utils/auth";
 import { hydrateChats } from "@/lib/features/chats/chatsSlice";
 import { hydrateQa } from "@/lib/features/qa/qaSlice";
@@ -29,21 +33,23 @@ export default function StoreProvider({ children }: { children: React.ReactNode 
         s.dispatch(hydrateWorkbench(workbench));
         s.dispatch(hydrateQa(qa));
 
-        const disconnected = agents.filter((a) => a.status === "disconnected");
+        const disconnected = agents.filter(a => a.status === "disconnected");
         for (const agent of disconnected) {
           const factory = createClientFactory(agent.auth, agent.customHeaders);
           factory
             .createFromUrl(agent.url)
-            .then((client) => client.getAgentCard())
-            .then((card) => {
+            .then(client => client.getAgentCard())
+            .then(card => {
               s.dispatch(updateAgentCard({ agentId: agent.id, card }));
             })
             .catch(() => {
-              s.dispatch(updateAgentStatus({ url: agent.url, status: "error", error: "Unreachable" }));
+              s.dispatch(
+                updateAgentStatus({ url: agent.url, status: "error", error: "Unreachable" }),
+              );
             });
         }
       })
-      .catch((err) => {
+      .catch(err => {
         console.error("[StoreProvider] Failed to load persisted state:", err);
       })
       .finally(() => {

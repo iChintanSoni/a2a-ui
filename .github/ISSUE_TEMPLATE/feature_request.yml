@@ -1,0 +1,53 @@
+name: Feature Proposal
+description: Propose a new feature, capability, or enhancement for a2a-ui
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a feature! Please check existing issues and PRs before submitting.
+        See [Contributing Guide](https://github.com/iChintanSoni/a2a-ui/blob/main/CONTRIBUTING.md) for how we design and review new capabilities.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Motivation
+      description: Is your feature request related to a problem or limitation in a2a-ui?
+      placeholder: I want to be able to... because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution / Workflow
+      description: Describe the feature, user experience, or architectural changes you envision.
+      placeholder: Add a new view or configuration option that allows...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other approaches or workarounds have you considered?
+      placeholder: A clear and concise description of any alternative solutions.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any relevant mockups, related A2A specification sections, or examples.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: pr-willingness
+    attributes:
+      label: Pull Request
+      options:
+        - label: I am willing to submit a pull request for this feature
+          required: false

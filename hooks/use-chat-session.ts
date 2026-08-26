@@ -3,7 +3,16 @@
 import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { addChat, addUserMessage, applyAgentMessage, applyArtifactUpdate, appendExecutionEvent, applyStatusUpdate, applyToolCall, sanitizeStaleStreaming } from "@/lib/features/chats/chatsSlice";
+import {
+  addChat,
+  addUserMessage,
+  applyAgentMessage,
+  applyArtifactUpdate,
+  appendExecutionEvent,
+  applyStatusUpdate,
+  applyToolCall,
+  sanitizeStaleStreaming,
+} from "@/lib/features/chats/chatsSlice";
 import { setActiveAgent } from "@/lib/features/agents/agentsSlice";
 import type { A2AExternalMessageStore, OutgoingMessagePartInput } from "@/lib/a2a/types";
 import { useA2AConnection } from "@/hooks/use-a2a-connection";
@@ -31,9 +40,9 @@ export function useChatSession(chatId: string): ChatSessionState {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const chat = useAppSelector((state) => state.chats.chats.find((entry) => entry.id === chatId));
-  const agent = useAppSelector((state) =>
-    state.agents.agents.find((entry) => entry.url === chat?.agentUrl),
+  const chat = useAppSelector(state => state.chats.chats.find(entry => entry.id === chatId));
+  const agent = useAppSelector(state =>
+    state.agents.agents.find(entry => entry.url === chat?.agentUrl),
   );
 
   const debug = useA2ADebug();
@@ -48,7 +57,7 @@ export function useChatSession(chatId: string): ChatSessionState {
   });
   const session = useA2ASession({
     contextId: chatId,
-    onNewSession: (nextChatId) => {
+    onNewSession: nextChatId => {
       if (!agent) return;
       dispatch(setActiveAgent(agent.url));
       dispatch(
@@ -71,14 +80,14 @@ export function useChatSession(chatId: string): ChatSessionState {
     if (!chat) return undefined;
     return {
       chat,
-      ensureChat: (payload) => dispatch(addChat(payload)),
-      sanitizeStaleStreaming: (contextId) => dispatch(sanitizeStaleStreaming(contextId)),
-      addUserMessage: (payload) => dispatch(addUserMessage(payload)),
-      applyStatusUpdate: (payload) => dispatch(applyStatusUpdate(payload)),
-      applyArtifactUpdate: (payload) => dispatch(applyArtifactUpdate(payload)),
-      applyToolCall: (payload) => dispatch(applyToolCall(payload)),
-      applyAgentMessage: (payload) => dispatch(applyAgentMessage(payload)),
-      appendExecutionEvent: (payload) => dispatch(appendExecutionEvent(payload)),
+      ensureChat: payload => dispatch(addChat(payload)),
+      sanitizeStaleStreaming: contextId => dispatch(sanitizeStaleStreaming(contextId)),
+      addUserMessage: payload => dispatch(addUserMessage(payload)),
+      applyStatusUpdate: payload => dispatch(applyStatusUpdate(payload)),
+      applyArtifactUpdate: payload => dispatch(applyArtifactUpdate(payload)),
+      applyToolCall: payload => dispatch(applyToolCall(payload)),
+      applyAgentMessage: payload => dispatch(applyAgentMessage(payload)),
+      appendExecutionEvent: payload => dispatch(appendExecutionEvent(payload)),
     };
   }, [chat, dispatch]);
 

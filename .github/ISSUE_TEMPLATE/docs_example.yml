@@ -1,0 +1,58 @@
+name: Documentation & Example Improvement
+description: Propose improvements or additions to documentation, guides, or example presets
+title: "[Docs]: "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve a2a-ui documentation and examples!
+        Browse the existing [Documentation](https://github.com/iChintanSoni/a2a-ui/tree/main/docs) and [Contributing Guide](https://github.com/iChintanSoni/a2a-ui/blob/main/CONTRIBUTING.md).
+
+  - type: dropdown
+    id: doc-area
+    attributes:
+      label: Target Documentation Area
+      description: Which part of the documentation or examples should be improved?
+      options:
+        - Getting Started & Quickstart
+        - Architecture & Protocol Overview
+        - Feature Guides (Workbench, Chat, QA Harness, Compare Runs, Tasks)
+        - Curated Example Presets & Gallery
+        - Embed Mode & SDK Integration
+        - API Reference (Components & Hooks)
+        - Contributing & Developer Workflow
+        - Accessibility Guide
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of Improvement
+      description: What is missing, unclear, outdated, or in need of examples?
+      placeholder: The documentation on custom headers does not explain how Bearer tokens are sanitized...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-changes
+    attributes:
+      label: Proposed Content or Changes
+      description: Suggest specific text, code examples, diagrams, or preset definitions.
+      placeholder: |
+        Add the following section to `docs/...`:
+        ```markdown
+        ...
+        ```
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: pr-willingness
+    attributes:
+      label: Pull Request
+      options:
+        - label: I am willing to submit a pull request for this documentation change
+          required: false

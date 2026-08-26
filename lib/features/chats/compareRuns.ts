@@ -39,27 +39,30 @@ export interface RunComparison {
 }
 
 function getLatestPrompt(chat: Chat) {
-  return chat.items.findLast((item) => item.kind === "user-message");
+  return chat.items.findLast(item => item.kind === "user-message");
 }
 
 function getLatestOutput(chat: Chat): string {
-  const agentMessage = chat.items.findLast((item) => item.kind === "agent-message");
+  const agentMessage = chat.items.findLast(item => item.kind === "agent-message");
   if (agentMessage) {
     return agentMessage.parts
-      .filter((part): part is Extract<(typeof agentMessage.parts)[number], { kind: "text" }> => part.kind === "text")
-      .map((part) => part.text)
+      .filter(
+        (part): part is Extract<(typeof agentMessage.parts)[number], { kind: "text" }> =>
+          part.kind === "text",
+      )
+      .map(part => part.text)
       .join("");
   }
 
-  const artifact = chat.items.findLast((item) => item.kind === "artifact");
+  const artifact = chat.items.findLast(item => item.kind === "artifact");
   return artifact ? getArtifactText(artifact) : "";
 }
 
 function getComparableArtifacts(chat: Chat): ComparableArtifact[] {
   return chat.items
     .filter((item): item is ArtifactItem => item.kind === "artifact")
-    .filter((item) => item.parts.every((part) => part.kind === "text"))
-    .map((item) => ({
+    .filter(item => item.parts.every(part => part.kind === "text"))
+    .map(item => ({
       key: item.name ?? item.id,
       label: item.name ?? item.id,
       text: getArtifactText(item),
@@ -67,11 +70,11 @@ function getComparableArtifacts(chat: Chat): ComparableArtifact[] {
 }
 
 function getDurationMs(chat: Chat): number | null {
-  const outgoing = chat.executionEvents.find((event) => event.kind === "outgoing-message");
+  const outgoing = chat.executionEvents.find(event => event.kind === "outgoing-message");
   const terminal = [...chat.executionEvents]
     .reverse()
     .find(
-      (event) =>
+      event =>
         event.kind === "task-status" &&
         (event.details?.state === "completed" ||
           event.details?.state === "failed" ||
@@ -103,13 +106,13 @@ export function compareRuns(leftChat: Chat, rightChat: Chat): RunComparison {
   const right = toSnapshot(rightChat);
 
   const artifactKeys = new Set([
-    ...left.artifacts.map((artifact) => artifact.key),
-    ...right.artifacts.map((artifact) => artifact.key),
+    ...left.artifacts.map(artifact => artifact.key),
+    ...right.artifacts.map(artifact => artifact.key),
   ]);
 
-  const artifactComparisons = [...artifactKeys].map((key) => {
-    const leftArtifact = left.artifacts.find((artifact) => artifact.key === key);
-    const rightArtifact = right.artifacts.find((artifact) => artifact.key === key);
+  const artifactComparisons = [...artifactKeys].map(key => {
+    const leftArtifact = left.artifacts.find(artifact => artifact.key === key);
+    const rightArtifact = right.artifacts.find(artifact => artifact.key === key);
     const leftText = leftArtifact?.text ?? "";
     const rightText = rightArtifact?.text ?? "";
     return {

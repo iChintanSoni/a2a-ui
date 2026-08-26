@@ -82,7 +82,8 @@ export function publishA2UIDemo(eventBus: ExecutionEventBus, taskId: string, con
                 },
                 {
                   kind: "markdown",
-                  markdown: "This fixture intentionally avoids executable code and only renders a constrained component subset.",
+                  markdown:
+                    "This fixture intentionally avoids executable code and only renders a constrained component subset.",
                 },
               ],
             },

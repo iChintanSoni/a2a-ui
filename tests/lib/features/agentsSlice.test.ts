@@ -58,7 +58,11 @@ describe("agentsSlice", () => {
 
     it("upserts by URL — updates existing agent rather than duplicating", () => {
       const first = makeAgent({ id: "a1", url: "https://agent.test" });
-      const updated = makeAgent({ id: "a2", url: "https://agent.test", card: { ...first.card, name: "Updated" } });
+      const updated = makeAgent({
+        id: "a2",
+        url: "https://agent.test",
+        card: { ...first.card, name: "Updated" },
+      });
 
       let state = reducer(INITIAL_STATE, addAgent(first));
       state = reducer(state, addAgent(updated));
@@ -68,7 +72,10 @@ describe("agentsSlice", () => {
     });
 
     it("does NOT change activeAgentUrl when a second agent is added", () => {
-      let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1", url: "https://first.test" })));
+      let state = reducer(
+        INITIAL_STATE,
+        addAgent(makeAgent({ id: "a1", url: "https://first.test" })),
+      );
       state = reducer(state, addAgent(makeAgent({ id: "a2", url: "https://second.test" })));
       expect(state.activeAgentUrl).toBe("https://first.test");
     });
@@ -93,20 +100,13 @@ describe("agentsSlice", () => {
                 },
               ],
             },
-          })
-        )
+          }),
+        ),
       );
 
-      expect(state.agents[0].card.defaultInputModes).toEqual([
-        "text/plain",
-        "image/*",
-      ]);
-      expect(state.agents[0].card.defaultOutputModes).toEqual([
-        "application/json",
-      ]);
-      expect(state.agents[0].card.skills?.[0].inputModes).toEqual([
-        "text/plain",
-      ]);
+      expect(state.agents[0].card.defaultInputModes).toEqual(["text/plain", "image/*"]);
+      expect(state.agents[0].card.defaultOutputModes).toEqual(["application/json"]);
+      expect(state.agents[0].card.skills?.[0].inputModes).toEqual(["text/plain"]);
     });
   });
 
@@ -118,13 +118,19 @@ describe("agentsSlice", () => {
     });
 
     it("clears activeAgentUrl when the active agent is removed", () => {
-      let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1", url: "https://active.test" })));
+      let state = reducer(
+        INITIAL_STATE,
+        addAgent(makeAgent({ id: "a1", url: "https://active.test" })),
+      );
       state = reducer(state, removeAgent("a1"));
       expect(state.activeAgentUrl).toBeNull();
     });
 
     it("falls back to first remaining agent as activeAgentUrl", () => {
-      let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1", url: "https://first.test" })));
+      let state = reducer(
+        INITIAL_STATE,
+        addAgent(makeAgent({ id: "a1", url: "https://first.test" })),
+      );
       state = reducer(state, addAgent(makeAgent({ id: "a2", url: "https://second.test" })));
       // Manually set active to first
       state = reducer(state, setActiveAgent("https://first.test"));
@@ -151,7 +157,7 @@ describe("agentsSlice", () => {
       let state = reducer(INITIAL_STATE, addAgent(makeAgent({ status: "connected" })));
       state = reducer(
         state,
-        updateAgentStatus({ url: "https://example.com/agent", status: "error", error: "timeout" })
+        updateAgentStatus({ url: "https://example.com/agent", status: "error", error: "timeout" }),
       );
       expect(state.agents[0].status).toBe("error");
       expect(state.agents[0].error).toBe("timeout");
@@ -169,7 +175,7 @@ describe("agentsSlice", () => {
       let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1", auth: { type: "none" } })));
       state = reducer(
         state,
-        updateAgentAuth({ agentId: "a1", auth: { type: "bearer", bearerToken: "tok" } })
+        updateAgentAuth({ agentId: "a1", auth: { type: "bearer", bearerToken: "tok" } }),
       );
       expect(state.agents[0].auth.type).toBe("bearer");
     });
@@ -208,16 +214,12 @@ describe("agentsSlice", () => {
               },
             ],
           } satisfies AgentCard,
-        })
+        }),
       );
 
       expect(state.agents[0].card.defaultInputModes).toEqual(["text/plain"]);
-      expect(state.agents[0].card.defaultOutputModes).toEqual([
-        "application/json",
-      ]);
-      expect(state.agents[0].card.skills?.[0].outputModes).toEqual([
-        "application/json",
-      ]);
+      expect(state.agents[0].card.defaultOutputModes).toEqual(["application/json"]);
+      expect(state.agents[0].card.skills?.[0].outputModes).toEqual(["application/json"]);
     });
   });
 
@@ -226,7 +228,7 @@ describe("agentsSlice", () => {
       let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1", customHeaders: [] })));
       state = reducer(
         state,
-        updateAgentHeaders({ agentId: "a1", headers: [{ key: "X-Foo", value: "bar" }] })
+        updateAgentHeaders({ agentId: "a1", headers: [{ key: "X-Foo", value: "bar" }] }),
       );
       expect(state.agents[0].customHeaders).toEqual([{ key: "X-Foo", value: "bar" }]);
     });
@@ -237,7 +239,7 @@ describe("agentsSlice", () => {
       let state = reducer(INITIAL_STATE, addAgent(makeAgent({ id: "a1" })));
       state = reducer(
         state,
-        updateAgentTags({ agentId: "a1", tags: [" demo ", "local", "demo", ""] })
+        updateAgentTags({ agentId: "a1", tags: [" demo ", "local", "demo", ""] }),
       );
       expect(state.agents[0].tags).toEqual(["demo", "local"]);
     });

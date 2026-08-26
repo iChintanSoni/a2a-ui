@@ -30,11 +30,7 @@ import { cn } from "@/lib/utils";
 import { Caption, Muted } from "@/components/typography";
 import { useToast } from "@/lib/toast";
 import { addChat, cloneChat } from "@/lib/features/chats/chatsSlice";
-import type {
-  Chat,
-  ArtifactItem,
-  UserMessageItem,
-} from "@/lib/features/chats/chatsSlice";
+import type { Chat, ArtifactItem, UserMessageItem } from "@/lib/features/chats/chatsSlice";
 import { checkCompliance } from "@/lib/utils/compliance";
 import { buildProtocolReport, protocolReportFilename } from "@/lib/utils/protocolReport";
 import {
@@ -71,7 +67,7 @@ function exportAsJson(chat: Chat) {
   downloadFile(
     `${chat.title.replace(/[^a-z0-9]/gi, "_")}.json`,
     JSON.stringify(chat, null, 2),
-    "application/json"
+    "application/json",
   );
 }
 
@@ -82,16 +78,24 @@ export default function ChatPage({ params }: PageProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const chat = useAppSelector((s) => s.chats.chats.find((c) => c.id === chatId));
-  const agent = useAppSelector((s) =>
-    s.agents.agents.find((a) => a.url === chat?.agentUrl)
-  );
-  const agentWorkbench = useAppSelector((s) =>
+  const chat = useAppSelector(s => s.chats.chats.find(c => c.id === chatId));
+  const agent = useAppSelector(s => s.agents.agents.find(a => a.url === chat?.agentUrl));
+  const agentWorkbench = useAppSelector(s =>
     chat ? s.workbench.agentSettings[chat.agentUrl] : undefined,
   );
 
-  const { isStreaming, isInputRequired, error, transportMethod, logs, validationWarnings, cancelStream, sendMessage, newSession, clearLogs } =
-    useChatSession(chatId);
+  const {
+    isStreaming,
+    isInputRequired,
+    error,
+    transportMethod,
+    logs,
+    validationWarnings,
+    cancelStream,
+    sendMessage,
+    newSession,
+    clearLogs,
+  } = useChatSession(chatId);
 
   const [debugOpen, setDebugOpen] = useState(false);
   const [eventsOpen, setEventsOpen] = useState(false);
@@ -101,10 +105,7 @@ export default function ChatPage({ params }: PageProps) {
     [chat],
   );
 
-  const compliance = useMemo(
-    () => (agent ? checkCompliance(agent.card) : null),
-    [agent],
-  );
+  const compliance = useMemo(() => (agent ? checkCompliance(agent.card) : null), [agent]);
 
   // Show error as an actionable toast
   useEffect(() => {
@@ -119,7 +120,7 @@ export default function ChatPage({ params }: PageProps) {
   // Warn when the agent card declares an unsupported protocol version
   useEffect(() => {
     if (!compliance) return;
-    const versionCheck = compliance.checks.find((c) => c.id === "protocolVersion-compatible");
+    const versionCheck = compliance.checks.find(c => c.id === "protocolVersion-compatible");
     if (versionCheck && !versionCheck.pass) {
       toast({ type: "warning", message: `Protocol version mismatch: ${versionCheck.message}` });
     }
@@ -132,7 +133,7 @@ export default function ChatPage({ params }: PageProps) {
       if (!mod || !e.shiftKey) return;
       if (e.key === "d" || e.key === "D") {
         e.preventDefault();
-        setDebugOpen((v) => !v);
+        setDebugOpen(v => !v);
       } else if ((e.key === "n" || e.key === "N") && !isStreaming) {
         e.preventDefault();
         newSession();
@@ -145,7 +146,7 @@ export default function ChatPage({ params }: PageProps) {
   useEffect(() => {
     const rerun = consumeRerunDraft(chatId);
     if (!rerun) return;
-    sendMessage(rerun.parts, rerun.metadata).catch((err) => {
+    sendMessage(rerun.parts, rerun.metadata).catch(err => {
       toast({
         type: "error",
         message: getErrorMessage(err, "Unable to rerun prompt."),
@@ -155,7 +156,7 @@ export default function ChatPage({ params }: PageProps) {
 
   const skillPromptStarters = useMemo(
     () =>
-      (agent?.card.skills ?? []).flatMap((skill) =>
+      (agent?.card.skills ?? []).flatMap(skill =>
         (skill.examples ?? []).map((example, index) => ({
           id: `agent-example-${skill.id}-${index}`,
           label: example.slice(0, 40) || skill.name,
@@ -171,10 +172,7 @@ export default function ChatPage({ params }: PageProps) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3">
         <Muted>Chat not found.</Muted>
-        <button
-          className="text-sm underline"
-          onClick={() => router.push("/dashboard")}
-        >
+        <button className="text-sm underline" onClick={() => router.push("/dashboard")}>
           Back to dashboard
         </button>
       </div>
@@ -209,7 +207,7 @@ export default function ChatPage({ params }: PageProps) {
     downloadFile(
       protocolReportFilename(agent.displayName ?? agent.card.name),
       JSON.stringify(report, null, 2),
-      "application/json"
+      "application/json",
     );
   };
 
@@ -257,9 +255,9 @@ export default function ChatPage({ params }: PageProps) {
       {/* Header */}
       <div className="hidden flex-wrap items-start gap-2 border-b px-3 py-3.5 sm:flex sm:items-center sm:px-4">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="flex items-center gap-2 truncate text-[17px] font-bold leading-tight tracking-tight">
+          <span className="flex items-center gap-2 truncate text-[17px] leading-tight font-bold tracking-tight">
             {chat.title}
-            <span className="size-1.75 shrink-0 rounded-full bg-primary shadow-[0_0_0_3px_var(--brand-soft)]" />
+            <span className="bg-primary size-1.75 shrink-0 rounded-full shadow-[0_0_0_3px_var(--brand-soft)]" />
           </span>
           <Caption className="truncate text-[12.5px] font-medium">{chat.agentName}</Caption>
         </div>
@@ -278,12 +276,8 @@ export default function ChatPage({ params }: PageProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={exportMarkdownTrace}>
-              Export Markdown Trace
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={exportForensicJson}>
-              Export Forensic JSON
-            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportMarkdownTrace}>Export Markdown Trace</DropdownMenuItem>
+            <DropdownMenuItem onClick={exportForensicJson}>Export Forensic JSON</DropdownMenuItem>
             <DropdownMenuItem onClick={() => exportAsJson(chat)}>
               Export Raw Chat State
             </DropdownMenuItem>
@@ -301,7 +295,7 @@ export default function ChatPage({ params }: PageProps) {
           size="icon"
           className={cn("size-8.5 shrink-0", eventsOpen && "bg-muted text-foreground")}
           onClick={() => {
-            setEventsOpen((v) => !v);
+            setEventsOpen(v => !v);
             setDebugOpen(false);
           }}
           title="Toggle event explorer"
@@ -317,7 +311,7 @@ export default function ChatPage({ params }: PageProps) {
           size="icon"
           className={cn("size-8.5 shrink-0", debugOpen && "bg-muted text-foreground")}
           onClick={() => {
-            setDebugOpen((v) => !v);
+            setDebugOpen(v => !v);
             setEventsOpen(false);
           }}
           title="Toggle debug console (⌘⇧D)"
@@ -327,7 +321,7 @@ export default function ChatPage({ params }: PageProps) {
           <BugIcon className="size-4" />
         </Button>
 
-        <div className="mx-0.5 hidden h-5.5 w-px shrink-0 bg-border sm:block" />
+        <div className="bg-border mx-0.5 hidden h-5.5 w-px shrink-0 sm:block" />
 
         {/* New Session */}
         <Button
@@ -392,7 +386,7 @@ export default function ChatPage({ params }: PageProps) {
       <ChatMessages
         chat={chat}
         a2uiEnabled={agent?.a2uiEnabled}
-        onRetry={(item) => sendMessage(item.parts, item.metadata)}
+        onRetry={item => sendMessage(item.parts, item.metadata)}
         onRerunMessage={rerunMessage}
         onSubmitArtifactRevision={submitArtifactRevision}
       />
@@ -415,7 +409,7 @@ export default function ChatPage({ params }: PageProps) {
             message: "Saved prompt preset for this agent.",
           });
         }}
-        onSaveDefaultMetadata={(metadata) => {
+        onSaveDefaultMetadata={metadata => {
           if (!chat) return;
           dispatch(setAgentDefaultMetadata({ agentUrl: chat.agentUrl, metadata }));
           toast({
@@ -423,26 +417,19 @@ export default function ChatPage({ params }: PageProps) {
             message: "Saved default metadata for this agent.",
           });
         }}
-        onApplyPromptPreset={(presetId) => {
+        onApplyPromptPreset={presetId => {
           if (!chat) return;
           dispatch(markPromptPresetUsed({ agentUrl: chat.agentUrl, presetId }));
         }}
       />
 
       {eventsOpen && (
-        <EventExplorer
-          events={chat.executionEvents}
-          onClose={() => setEventsOpen(false)}
-        />
+        <EventExplorer events={chat.executionEvents} onClose={() => setEventsOpen(false)} />
       )}
 
       {/* Debug console */}
       {debugOpen && (
-        <DebugPanel
-          logs={logs}
-          onClear={clearLogs}
-          onClose={() => setDebugOpen(false)}
-        />
+        <DebugPanel logs={logs} onClear={clearLogs} onClose={() => setDebugOpen(false)} />
       )}
     </div>
   );

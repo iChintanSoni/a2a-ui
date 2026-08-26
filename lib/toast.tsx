@@ -1,14 +1,13 @@
 "use client";
 
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { XIcon, CheckCircle2Icon, AlertCircleIcon, InfoIcon, AlertTriangleIcon } from "lucide-react";
+  XIcon,
+  CheckCircle2Icon,
+  AlertCircleIcon,
+  InfoIcon,
+  AlertTriangleIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -48,12 +47,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const dismiss = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
+    setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
   const toast = useCallback((opts: Omit<Toast, "id">) => {
     const id = crypto.randomUUID();
-    setToasts((prev) => [...prev, { ...opts, id }]);
+    setToasts(prev => [...prev, { ...opts, id }]);
   }, []);
 
   return (
@@ -70,7 +69,7 @@ const ICONS: Record<ToastType, React.ReactNode> = {
   info: <InfoIcon className="size-4 shrink-0 text-blue-500" />,
   success: <CheckCircle2Icon className="size-4 shrink-0 text-green-500" />,
   warning: <AlertTriangleIcon className="size-4 shrink-0 text-yellow-500" />,
-  error: <AlertCircleIcon className="size-4 shrink-0 text-destructive" />,
+  error: <AlertCircleIcon className="text-destructive size-4 shrink-0" />,
 };
 
 const BORDER: Record<ToastType, string> = {
@@ -94,23 +93,26 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: (id: stri
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-lg border bg-background px-3 py-2.5 shadow-md text-sm max-w-sm w-full animate-in slide-in-from-bottom-2 fade-in",
-        BORDER[t.type]
+        "bg-background animate-in slide-in-from-bottom-2 fade-in flex w-full max-w-sm items-start gap-3 rounded-lg border px-3 py-2.5 text-sm shadow-md",
+        BORDER[t.type],
       )}
     >
       {ICONS[t.type]}
       <span className="flex-1 leading-snug">{t.message}</span>
       {t.action && (
         <button
-          onClick={() => { t.action!.onClick(); onDismiss(t.id); }}
-          className="shrink-0 font-medium text-xs underline underline-offset-2 hover:no-underline"
+          onClick={() => {
+            t.action!.onClick();
+            onDismiss(t.id);
+          }}
+          className="shrink-0 text-xs font-medium underline underline-offset-2 hover:no-underline"
         >
           {t.action.label}
         </button>
       )}
       <button
         onClick={() => onDismiss(t.id)}
-        className="shrink-0 text-muted-foreground hover:text-foreground"
+        className="text-muted-foreground hover:text-foreground shrink-0"
         aria-label="Dismiss"
       >
         <XIcon className="size-3.5" />
@@ -122,8 +124,8 @@ function ToastItem({ toast: t, onDismiss }: { toast: Toast; onDismiss: (id: stri
 function Toaster({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id: string) => void }) {
   if (toasts.length === 0) return null;
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 items-end">
-      {toasts.map((t) => (
+    <div className="fixed right-4 bottom-4 z-50 flex flex-col items-end gap-2">
+      {toasts.map(t => (
         <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
       ))}
     </div>
