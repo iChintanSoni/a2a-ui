@@ -152,6 +152,7 @@ procedure and the npm Trusted Publishing setup.
 | The CLI entrypoint               | `bin/a2a-ui.mjs`                   |
 | The headless QA runner           | `bin/qa-run.mjs`                   |
 | Accessibility standards          | `docs/accessibility.md`            |
+| Design tokens and UI tone        | `docs/design.md`                   |
 | Testing standards                | `docs/testing.md`                  |
 | Preset gallery guide             | `docs/features/example-presets.md` |
 | Unit tests                       | `tests/`                           |
@@ -222,6 +223,8 @@ e2e tests, and a build check on every PR.
 ## Code Style
 
 - **TypeScript strict mode** is enabled — no implicit `any`.
+- **Semantic design tokens only** for anything visual — see
+  [docs/design.md](docs/design.md).
 - **Prettier** for formatting — run `npm run format` before committing.
 - **No comments explaining what** the code does — code should be
   self-explanatory. Comments should explain _why_ something is done a certain
