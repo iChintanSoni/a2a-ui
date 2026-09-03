@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { current } from "immer";
-import type { Part, TaskState } from "@a2a-js/sdk";
+import { TaskState, type Part } from "@a2a-js/sdk";
 import type { ExecutionEvent } from "@/lib/a2a/execution-events";
 import { buildPartsPreview } from "@/lib/a2a/parts";
 import type {
@@ -265,13 +265,13 @@ export const chatsSlice = createSlice({
         if (action.payload.append) {
           // Merge incoming TextParts onto the last TextPart, push others
           for (const newPart of action.payload.parts) {
-            if (newPart.kind === "text") {
-              const lastPart = existing.parts[existing.parts.length - 1];
-              if (lastPart?.kind === "text") {
-                lastPart.text += newPart.text;
-              } else {
-                existing.parts.push(newPart);
-              }
+            const lastPart = existing.parts[existing.parts.length - 1];
+            if (
+              newPart.content?.$case === "text" &&
+              lastPart?.content?.$case === "text" &&
+              lastPart.mediaType === newPart.mediaType
+            ) {
+              lastPart.content.value += newPart.content.value;
             } else {
               existing.parts.push(newPart);
             }
@@ -386,9 +386,10 @@ export const chatsSlice = createSlice({
         // Mark any dangling non-terminal task state as unknown so the spinner stops.
         if (
           item.kind === "task-status" &&
-          (item.state === "working" || item.state === "submitted")
+          (item.state === TaskState.TASK_STATE_WORKING ||
+            item.state === TaskState.TASK_STATE_SUBMITTED)
         ) {
-          item.state = "unknown";
+          item.state = TaskState.TASK_STATE_UNSPECIFIED;
         }
       }
     },

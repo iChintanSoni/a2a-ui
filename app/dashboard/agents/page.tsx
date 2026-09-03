@@ -1,5 +1,6 @@
 "use client";
 
+import { agentCardTransport } from "@/lib/a2a/agent-card";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,9 +33,7 @@ type StatusFilter = "all" | "connected" | "disconnected" | "error" | "favorite";
 type SortMode = "favorite" | "name" | "last-used" | "compliance";
 
 function getTransport(agent: Agent) {
-  return (
-    agent.card.preferredTransport ?? agent.card.additionalInterfaces?.[0]?.transport ?? "JSONRPC"
-  );
+  return agentCardTransport(agent.card);
 }
 
 export default function AgentsPage() {

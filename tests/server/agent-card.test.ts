@@ -6,11 +6,19 @@ describe("demo A2A server agent card", () => {
   it("declares spec-compatible transports and MIME modes", () => {
     const card = createAgentCard("http://localhost:3001");
 
-    expect(card.url).toBe("http://localhost:3001/a2a/jsonrpc");
-    expect(card.preferredTransport).toBe("JSONRPC");
-    expect(card.additionalInterfaces).toEqual([
-      { url: "http://localhost:3001/a2a/jsonrpc", transport: "JSONRPC" },
-      { url: "http://localhost:3001/a2a/rest", transport: "HTTP+JSON" },
+    expect(card.supportedInterfaces).toEqual([
+      {
+        url: "http://localhost:3001/a2a/jsonrpc",
+        protocolBinding: "JSONRPC",
+        tenant: "",
+        protocolVersion: "1.0",
+      },
+      {
+        url: "http://localhost:3001/a2a/rest",
+        protocolBinding: "HTTP+JSON",
+        tenant: "",
+        protocolVersion: "1.0",
+      },
     ]);
     expect(card.defaultInputModes).toContain("text/plain");
     expect(card.defaultOutputModes).toContain("text/plain");

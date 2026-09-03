@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AgentCard } from "@a2a-js/sdk";
+import { makeAgentCard } from "../../helpers/agent-card";
 import { buildWorkspaceExport, normalizeImportedAgent } from "@/lib/utils/workspace";
 import type { Agent } from "@/lib/features/agents/agentsSlice";
 
@@ -9,17 +9,7 @@ const agent: Agent = {
   displayName: "Agent",
   tags: ["demo"],
   favorite: true,
-  card: {
-    name: "Agent",
-    description: "desc",
-    url: "https://agent.test",
-    version: "1",
-    protocolVersion: "0.3.0",
-    capabilities: {},
-    defaultInputModes: ["text/plain"],
-    defaultOutputModes: ["text/plain"],
-    skills: [],
-  } satisfies AgentCard,
+  card: makeAgentCard({ name: "Agent", version: "1" }),
   status: "connected",
   auth: { type: "bearer", bearerToken: "secret-token" },
   customHeaders: [{ key: "X-Api-Key", value: "secret" }],

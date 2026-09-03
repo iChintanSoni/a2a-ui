@@ -1,13 +1,8 @@
-import type {
-  Message,
-  Part,
-  TaskArtifactUpdateEvent,
-  TaskState,
-  TaskStatusUpdateEvent,
-} from "@a2a-js/sdk";
+import { Role, type Part, type TaskState } from "@a2a-js/sdk";
 import type { Client } from "@a2a-js/sdk/client";
 import type { Agent } from "@/lib/features/agents/agentsSlice";
 import { buildOutgoingMessage } from "@/lib/a2a/message-utils";
+import { isFilePart, textPart } from "@/lib/a2a/parts";
 import { getErrorMessage } from "@/lib/utils/error";
 import { createClientFactory } from "@/lib/utils/auth";
 import {
@@ -34,14 +29,7 @@ function outputModeFromCapture(output: QaCapturedOutput) {
 }
 
 function mimeTypesFromParts(parts: Part[]): string[] {
-  const mimes: string[] = [];
-  for (const part of parts) {
-    if (part.kind === "file" && "file" in part) {
-      const file = (part as { kind: "file"; file: { mimeType?: string } }).file;
-      if (file.mimeType) mimes.push(file.mimeType);
-    }
-  }
-  return mimes;
+  return parts.filter(isFilePart).flatMap(part => (part.mediaType ? [part.mediaType] : []));
 }
 
 /** Substitute {{varName}} placeholders in a string from a data-table row. */
@@ -73,10 +61,7 @@ async function executeQaCase(input: {
   const startedAt = Date.now();
   const contextId = crypto.randomUUID();
   const messageId = crypto.randomUUID();
-  const parts: Part[] = [
-    { kind: "text", text: input.testCase.prompt },
-    ...input.testCase.attachments,
-  ];
+  const parts: Part[] = [textPart(input.testCase.prompt), ...input.testCase.attachments];
   const outputParts: Part[] = [];
   const artifactMimeTypes: string[] = [];
   let artifactCount = 0;
@@ -90,32 +75,39 @@ async function executeQaCase(input: {
       agentUrl: input.agent.url,
       metadata: input.testCase.metadata,
     });
-    const stream = input.client.sendMessageStream({ message });
+    const stream = input.client.sendMessageStream({
+      tenant: "",
+      message,
+      configuration: undefined,
+      metadata: undefined,
+    });
 
     for await (const event of stream) {
-      if (event.kind === "status-update") {
-        const statusEvent = event as TaskStatusUpdateEvent;
-        finalTaskState = statusEvent.status.state;
-        if (statusEvent.status.message) {
-          outputParts.push(...statusEvent.status.message.parts);
+      switch (event.payload?.$case) {
+        case "statusUpdate": {
+          const status = event.payload.value.status;
+          if (status) {
+            finalTaskState = status.state;
+            if (status.message) outputParts.push(...status.message.parts);
+          }
+          break;
         }
-        continue;
-      }
-
-      if (event.kind === "artifact-update") {
-        const artifactEvent = event as TaskArtifactUpdateEvent;
-        if (artifactEvent.lastChunk !== false) {
-          artifactCount += 1;
-          artifactMimeTypes.push(...mimeTypesFromParts(artifactEvent.artifact.parts));
+        case "artifactUpdate": {
+          const artifact = event.payload.value.artifact;
+          if (!artifact) break;
+          if (event.payload.value.lastChunk !== false) {
+            artifactCount += 1;
+            artifactMimeTypes.push(...mimeTypesFromParts(artifact.parts));
+          }
+          outputParts.push(...artifact.parts);
+          break;
         }
-        outputParts.push(...artifactEvent.artifact.parts);
-        continue;
-      }
-
-      if (event.kind === "message") {
-        const agentMessage = event as Message;
-        if (agentMessage.role === "agent") {
-          outputParts.push(...agentMessage.parts);
+        case "message": {
+          const agentMessage = event.payload.value;
+          if (agentMessage.role === Role.ROLE_AGENT) {
+            outputParts.push(...agentMessage.parts);
+          }
+          break;
         }
       }
     }

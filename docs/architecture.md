@@ -163,18 +163,20 @@ useA2AMessages ← useA2ASession (passed as `session` option)
 
 A single user message goes through this sequence:
 
-1. **User calls `sendMessage([{ kind: "text", text: "…" }])`** — from
-   `useA2AMessages`
+1. **User calls `sendMessage([textPart("…")])`** — from `useA2AMessages`
+   (`textPart` and friends live in `lib/a2a/parts.ts`; a v1.0 `Part` carries a
+   `content` oneof discriminated by `$case`, not a `kind` field)
 2. `normalizeOutgoingParts` resolves any `File` objects to base64 data URIs
 3. `messageStore.addUserMessage()` dispatches `chats/addUserMessage` to Redux
 4. `buildOutgoingMessage` constructs the A2A `Message` object with parts,
    context ID, metadata, and any hidden context enrichers
-5. `client.sendMessageStream({ message })` opens an SSE stream to the agent
-6. For each event in the stream:
-   - `status-update` → `chats/applyStatusUpdate`
-   - `artifact-update` → `chats/applyArtifactUpdate` (append semantics for
+5. `client.sendMessageStream({ tenant, message, … })` opens an SSE stream to the
+   agent, yielding `StreamResponse` values
+6. For each event, dispatching on `event.payload.$case`:
+   - `statusUpdate` → `chats/applyStatusUpdate`
+   - `artifactUpdate` → `chats/applyArtifactUpdate` (append semantics for
      chunked artifacts)
-   - `message` (agent role) → `chats/applyAgentMessage`
+   - `message` (`Role.ROLE_AGENT`) → `chats/applyAgentMessage`
    - All events → `chats/appendExecutionEvent`
 7. The `store.subscribe` listener in `app/StoreProvider.tsx` sees a new `chats`
    reference and writes the slice to IndexedDB

@@ -1,5 +1,11 @@
-import { type AgentExecutor, type ExecutionEventBus, RequestContext } from "@a2a-js/sdk/server";
-import { type Part } from "@a2a-js/sdk";
+import {
+  AgentEvent,
+  type AgentExecutor,
+  type ExecutionEventBus,
+  RequestContext,
+} from "@a2a-js/sdk/server";
+import { Role, TaskState, type Message, type Part } from "@a2a-js/sdk";
+import { rawFilePart, textPart } from "#src/parts.ts";
 import { type ReactAgent } from "langchain";
 import { z } from "zod";
 import { agent } from "#src/agentTools.ts";
@@ -143,28 +149,29 @@ async function streamAgentResponse(
                 query,
                 resultCount: 1,
               });
-              eventBus.publish({
-                kind: "artifact-update",
-                taskId,
-                contextId,
-                append: false,
-                lastChunk: true,
-                artifact: {
-                  artifactId: crypto.randomUUID(),
-                  name: "generated-image",
-                  description: `Generated image for: ${query}`,
-                  parts: [
-                    {
-                      kind: "file",
-                      file: {
-                        name: `generated-image.${ext}`,
+              eventBus.publish(
+                AgentEvent.artifactUpdate({
+                  taskId,
+                  contextId,
+                  append: false,
+                  lastChunk: true,
+                  metadata: undefined,
+                  artifact: {
+                    artifactId: crypto.randomUUID(),
+                    name: "generated-image",
+                    description: `Generated image for: ${query}`,
+                    extensions: [],
+                    metadata: undefined,
+                    parts: [
+                      rawFilePart(
+                        Buffer.from(parsed.image_base64, "base64"),
+                        `generated-image.${ext}`,
                         mimeType,
-                        bytes: parsed.image_base64,
-                      },
-                    },
-                  ],
-                },
-              });
+                      ),
+                    ],
+                  },
+                }),
+              );
             } else {
               imageToolError = parsed.error ?? "Image generation failed without an error message.";
             }
@@ -222,6 +229,19 @@ const activeAbortControllers = new Map<string, AbortController>();
 const activeContextIds = new Map<string, string>();
 const activeCancelledTasks = new Set<string>();
 
+function agentMessage(taskId: string, contextId: string, text: string): Message {
+  return {
+    messageId: crypto.randomUUID(),
+    contextId,
+    taskId,
+    role: Role.ROLE_AGENT,
+    parts: [textPart(text)],
+    metadata: undefined,
+    extensions: [],
+    referenceTaskIds: [],
+  };
+}
+
 export const chatAgentExecutor: AgentExecutor = {
   async execute(requestContext: RequestContext, eventBus: ExecutionEventBus) {
     const { taskId, contextId, userMessage } = requestContext;
@@ -230,46 +250,48 @@ export const chatAgentExecutor: AgentExecutor = {
     debug(`[Input]`, JSON.stringify(userMessage.parts, null, 2));
 
     const totalInputChars = (userMessage.parts as Part[]).reduce((sum, part) => {
-      if (part.kind === "text") return sum + part.text.length;
-      if (part.kind === "data") return sum + JSON.stringify(part.data).length;
+      if (part.content?.$case === "text") return sum + part.content.value.length;
+      if (part.content?.$case === "data") {
+        return sum + JSON.stringify(part.content.value).length;
+      }
       return sum;
     }, 0);
 
     if (totalInputChars > MAX_INPUT_CHARS) {
-      eventBus.publish({
-        kind: "status-update",
-        taskId,
-        contextId,
-        final: true,
-        status: {
-          state: "failed",
-          timestamp: new Date().toISOString(),
-          message: {
-            kind: "message",
-            messageId: crypto.randomUUID(),
-            role: "agent",
-            parts: [
-              {
-                kind: "text",
-                text: `Input too large (${totalInputChars.toLocaleString()} characters). Please shorten your message and try again.`,
-              },
-            ],
+      eventBus.publish(
+        AgentEvent.statusUpdate({
+          taskId,
+          contextId,
+          metadata: undefined,
+          status: {
+            state: TaskState.TASK_STATE_FAILED,
+            timestamp: new Date().toISOString(),
+            message: agentMessage(
+              taskId,
+              contextId,
+              `Input too large (${totalInputChars.toLocaleString()} characters). Please shorten your message and try again.`,
+            ),
           },
-        },
-      });
+        }),
+      );
       eventBus.finished();
       return;
     }
 
     const content = buildMessageContent(userMessage.parts as Part[]);
 
-    eventBus.publish({
-      kind: "status-update",
-      taskId,
-      contextId,
-      final: false,
-      status: { state: "working", timestamp: new Date().toISOString() },
-    });
+    eventBus.publish(
+      AgentEvent.statusUpdate({
+        taskId,
+        contextId,
+        metadata: undefined,
+        status: {
+          state: TaskState.TASK_STATE_WORKING,
+          message: undefined,
+          timestamp: new Date().toISOString(),
+        },
+      }),
+    );
 
     const abortController = new AbortController();
     activeAbortControllers.set(taskId, abortController);
@@ -278,13 +300,18 @@ export const chatAgentExecutor: AgentExecutor = {
     try {
       if (shouldReturnA2UIDemo(content)) {
         publishA2UIDemo(eventBus, taskId, contextId);
-        eventBus.publish({
-          kind: "status-update",
-          taskId,
-          contextId,
-          final: true,
-          status: { state: "completed", timestamp: new Date().toISOString() },
-        });
+        eventBus.publish(
+          AgentEvent.statusUpdate({
+            taskId,
+            contextId,
+            metadata: undefined,
+            status: {
+              state: TaskState.TASK_STATE_COMPLETED,
+              message: undefined,
+              timestamp: new Date().toISOString(),
+            },
+          }),
+        );
         eventBus.finished();
         return;
       }
@@ -305,55 +332,58 @@ export const chatAgentExecutor: AgentExecutor = {
       debug(`[Final Response]`, responseText);
       log(`--- [Task Complete] Context ID: ${contextId} | Task ID: ${taskId} ---\n`);
 
-      eventBus.publish({
-        kind: "artifact-update",
-        taskId,
-        contextId,
-        append: false,
-        lastChunk: true,
-        artifact: {
-          artifactId: crypto.randomUUID(),
-          name: "response",
-          description: "Agent response",
-          parts: [{ kind: "text", text: responseText }],
-          metadata: usageMetadata ? { usage: usageMetadata } : undefined,
-        },
-      });
+      eventBus.publish(
+        AgentEvent.artifactUpdate({
+          taskId,
+          contextId,
+          append: false,
+          lastChunk: true,
+          metadata: undefined,
+          artifact: {
+            artifactId: crypto.randomUUID(),
+            name: "response",
+            description: "Agent response",
+            extensions: [],
+            parts: [textPart(responseText)],
+            metadata: usageMetadata ? { usage: usageMetadata } : undefined,
+          },
+        }),
+      );
 
-      eventBus.publish({
-        kind: "status-update",
-        taskId,
-        contextId,
-        final: true,
-        status: { state: "completed", timestamp: new Date().toISOString() },
-      });
+      eventBus.publish(
+        AgentEvent.statusUpdate({
+          taskId,
+          contextId,
+          metadata: undefined,
+          status: {
+            state: TaskState.TASK_STATE_COMPLETED,
+            message: undefined,
+            timestamp: new Date().toISOString(),
+          },
+        }),
+      );
     } catch (error) {
       if (activeCancelledTasks.has(taskId) || isAbortError(error)) {
         log(`--- [Task Canceled] Context ID: ${contextId} | Task ID: ${taskId} ---\n`);
         return;
       }
       console.error(`[Task Failed] Context ID: ${contextId} | Task ID: ${taskId}`, error);
-      eventBus.publish({
-        kind: "status-update",
-        taskId,
-        contextId,
-        final: true,
-        status: {
-          state: "failed",
-          timestamp: new Date().toISOString(),
-          message: {
-            kind: "message",
-            messageId: crypto.randomUUID(),
-            role: "agent",
-            parts: [
-              {
-                kind: "text",
-                text: "An error occurred while processing your request. Please try again.",
-              },
-            ],
+      eventBus.publish(
+        AgentEvent.statusUpdate({
+          taskId,
+          contextId,
+          metadata: undefined,
+          status: {
+            state: TaskState.TASK_STATE_FAILED,
+            timestamp: new Date().toISOString(),
+            message: agentMessage(
+              taskId,
+              contextId,
+              "An error occurred while processing your request. Please try again.",
+            ),
           },
-        },
-      });
+        }),
+      );
     } finally {
       activeAbortControllers.delete(taskId);
       activeContextIds.delete(taskId);
@@ -368,13 +398,18 @@ export const chatAgentExecutor: AgentExecutor = {
     activeCancelledTasks.add(taskId);
     if (controller) controller.abort();
 
-    eventBus.publish({
-      kind: "status-update",
-      taskId,
-      contextId: activeContextIds.get(taskId) ?? taskId,
-      final: true,
-      status: { state: "canceled", timestamp: new Date().toISOString() },
-    });
+    eventBus.publish(
+      AgentEvent.statusUpdate({
+        taskId,
+        contextId: activeContextIds.get(taskId) ?? taskId,
+        metadata: undefined,
+        status: {
+          state: TaskState.TASK_STATE_CANCELED,
+          message: undefined,
+          timestamp: new Date().toISOString(),
+        },
+      }),
+    );
     eventBus.finished();
     if (!controller) activeCancelledTasks.delete(taskId);
   },

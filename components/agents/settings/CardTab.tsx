@@ -1,3 +1,4 @@
+import { agentCardTransport } from "@/lib/a2a/agent-card";
 import {
   AlertTriangleIcon,
   CheckCircle2Icon,
@@ -62,21 +63,22 @@ export function CardTab({
           defaultInputModes={card.defaultInputModes}
           defaultOutputModes={card.defaultOutputModes}
         />
-        {card.preferredTransport && (
+        {card.supportedInterfaces.length > 0 && (
           <Caption>
-            Preferred transport: <Mono>{card.preferredTransport}</Mono>
+            Preferred transport: <Mono>{agentCardTransport(card)}</Mono>
           </Caption>
         )}
-        {card.additionalInterfaces && card.additionalInterfaces.length > 0 && (
+        {card.supportedInterfaces.length > 0 && (
           <div className="space-y-1">
-            <Caption>Additional interfaces</Caption>
-            {card.additionalInterfaces.map((entry, index) => (
+            <Caption>Supported interfaces</Caption>
+            {card.supportedInterfaces.map((entry, index) => (
               <div
-                key={`${entry.url}-${entry.transport}-${index}`}
+                key={`${entry.url}-${entry.protocolBinding}-${index}`}
                 className="flex min-w-0 flex-col gap-1 text-xs sm:flex-row sm:gap-2"
               >
-                <Badge variant="secondary">{entry.transport}</Badge>
+                <Badge variant="secondary">{entry.protocolBinding}</Badge>
                 <Mono className="break-all">{entry.url}</Mono>
+                <Caption className="inline">v{entry.protocolVersion}</Caption>
               </div>
             ))}
           </div>

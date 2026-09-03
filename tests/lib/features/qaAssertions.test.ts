@@ -1,3 +1,5 @@
+import { TaskState } from "@a2a-js/sdk";
+import { dataPart, textPart } from "@/lib/a2a/parts";
 import { describe, expect, it } from "vitest";
 import {
   evaluateExpectedTaskState,
@@ -9,11 +11,7 @@ import {
 
 describe("qa assertions", () => {
   it("extracts text and JSON values from parts", () => {
-    const parts = [
-      { kind: "text" as const, text: "hello" },
-      { kind: "data" as const, data: { status: "ok" } },
-      { kind: "text" as const, text: '{"ready":true}' },
-    ];
+    const parts = [textPart("hello"), dataPart({ status: "ok" }), textPart('{"ready":true}')];
 
     expect(textFromParts(parts)).toContain("hello");
     expect(jsonValuesFromParts(parts)).toEqual([{ status: "ok" }, { ready: true }]);
@@ -26,11 +24,11 @@ describe("qa assertions", () => {
       artifactCount: 0,
       artifactMimeTypes: [],
       durationMs: 100,
-      finalTaskState: "completed" as const,
+      finalTaskState: TaskState.TASK_STATE_COMPLETED as const,
     };
 
-    expect(evaluateExpectedTaskState("completed", output)?.passed).toBe(true);
-    expect(evaluateExpectedTaskState("failed", output)?.passed).toBe(false);
+    expect(evaluateExpectedTaskState(TaskState.TASK_STATE_COMPLETED, output)?.passed).toBe(true);
+    expect(evaluateExpectedTaskState(TaskState.TASK_STATE_FAILED, output)?.passed).toBe(false);
     expect(evaluateOutputMode("text", output)?.passed).toBe(true);
     expect(evaluateOutputMode("json", output)?.passed).toBe(false);
   });
@@ -59,7 +57,7 @@ describe("qa assertions", () => {
         artifactCount: 0,
         artifactMimeTypes: [],
         durationMs: 250,
-        finalTaskState: "completed",
+        finalTaskState: TaskState.TASK_STATE_COMPLETED,
       },
     );
 
@@ -73,7 +71,7 @@ describe("qa assertions", () => {
       artifactCount: 0,
       artifactMimeTypes: [],
       durationMs: 800,
-      finalTaskState: "completed" as const,
+      finalTaskState: TaskState.TASK_STATE_COMPLETED as const,
     };
     const results = evaluateQaAssertions(
       [
@@ -105,7 +103,7 @@ describe("qa assertions", () => {
       artifactCount: 1,
       artifactMimeTypes: ["image/png"],
       durationMs: 100,
-      finalTaskState: "completed" as const,
+      finalTaskState: TaskState.TASK_STATE_COMPLETED as const,
     };
     const results = evaluateQaAssertions(
       [

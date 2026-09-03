@@ -81,13 +81,24 @@ Persistence is **not** Redux middleware. `app/StoreProvider.tsx` reads IndexedDB
 
 `Chat.items` is a discriminated union (`ChatItem`: user-message / task-status / artifact / agent-message / tool-call) plus a parallel `executionEvents` array that feeds the Event Explorer.
 
+### A2A SDK v1.0 shapes
+
+The app is on `@a2a-js/sdk` v1.0 and stores its types directly, so protobuf shapes reach Redux, IndexedDB, and the exports.
+
+- **`Part` has no `kind`.** It is `{ content: { $case: "text" | "data" | "url" | "raw", value }, metadata, filename, mediaType }`. Build parts with the constructors in `lib/a2a/parts.ts` (`textPart`, `dataPart`, `urlFilePart`, `rawFilePart`) and read them with `getPartText` / `getPartData` / `isFilePart` — never hand-write the literal. Note `url` and `raw` are both "file"; `isFilePart` covers both.
+- **`TaskState` and `Role` are numeric enums** (`TaskState.TASK_STATE_COMPLETED`). `0` is a real value, so guard with `=== undefined`, never truthiness. For anything user-visible or serialized to an execution event, use `taskStateLabel()` from `lib/a2a/legacy.ts` — `ExecutionEvent.details.state` carries the short kebab label (`"working"`), which is what `lib/a2a/execution-events.ts` and `compareRuns.ts` match on.
+- **`AgentCard` has no `url`/`preferredTransport`/`protocolVersion`** — one ordered `supportedInterfaces[]` replaces them, first entry preferred. Read it through `lib/a2a/agent-card.ts`.
+- **Streaming yields `StreamResponse`**, discriminated by `event.payload.$case` (`statusUpdate` / `artifactUpdate` / `message` / `task`), not by `event.kind`.
+- **`lib/a2a/legacy.ts` reads v0.3 data.** IndexedDB migrates on load (schema v4); it also keeps QA-suite imports forgiving about task-state spellings. Do not add v0.3 shapes to new code — this module exists only for reading what is already stored.
+- **`lib/utils/buffer-polyfill.ts` is load-bearing.** The SDK encodes and decodes file parts through `globalThis.Buffer`, which Next.js does not provide in the browser; without the polyfill every attachment throws. It is imported for its side effect by `lib/a2a/parts.ts` and `lib/utils/auth.ts`.
+
 ### CORS proxy
 
 `lib/utils/auth.ts` detects cross-origin agent URLs (`shouldProxyRequest`) and rewrites requests through `app/api/proxy/route.ts`. The proxy strips hop-by-hop and browser-only headers but forwards auth headers verbatim — acceptable only because the dashboard is local-only. Keep it that way.
 
 ### QA harness
 
-`lib/features/qa/runner.ts` (`executeQaSuite`) is the browser runner. `bin/qa-run.mjs` tries to `import()` that TypeScript file via `tsx`, but **falls back to a duplicated inline JS implementation** of the runner and assertions when `tsx` is not installed (the normal case for `npx a2a-ui`). Changes to assertion semantics in `lib/features/qa/assertions.ts` must be mirrored in `bin/qa-run.mjs` or the CLI silently diverges from the UI. The inline runner deliberately skips `json-path` assertions.
+`lib/features/qa/runner.ts` (`executeQaSuite`) is the browser runner. `bin/qa-run.mjs` tries to `import()` that TypeScript file via `tsx`, but **falls back to a duplicated inline JS implementation** of the runner and assertions when `tsx` is not installed (the normal case for `npx a2a-ui`). Changes to assertion semantics in `lib/features/qa/assertions.ts` must be mirrored in `bin/qa-run.mjs` or the CLI silently diverges from the UI; `tests/cli/qa-run.test.ts` pins the two together. The inline runner deliberately skips `json-path` assertions.
 
 ## Conventions
 
@@ -105,8 +116,19 @@ Persistence is **not** Redux middleware. `app/StoreProvider.tsx` reads IndexedDB
 - **`server/` is excluded from the root `tsconfig.json`.** `npm run typecheck` will not catch errors there; run `npm --prefix server run typecheck`.
 - **`package.json` `files` is an explicit allowlist.** A new top-level directory that consumers need (or a new `scripts/*.mjs` used at pack time) must be added there or it will not ship to npm.
 - Dashboard pages are all `"use client"`; there are no server components beyond the layouts.
+- **`server/` has its own copy of the SDK.** Bumping `@a2a-js/sdk` means bumping it in both `package.json` files, or `tests/server/agent-card.test.ts` fails with two incompatible `AgentCard` types.
 - Adding a dashboard page means four edits, not one — route, sidebar, breadcrumb, and mobile nav. Use the `add-dashboard-page` skill.
 
 ## Project skills
 
 `.claude/skills/` — `release` (tag/version invariants and npm Trusted Publishing), `add-dashboard-page` (the four-edit checklist plus slice/IndexedDB wiring), `run-app` (dashboard + demo agent + Ollama).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

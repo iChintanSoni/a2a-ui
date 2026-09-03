@@ -1,5 +1,6 @@
 import { getErrorMessage } from "@/lib/utils/error";
 import type { QaAssertion, QaOutputMode, QaSuiteRun, QaTestCase } from "./types";
+import { toOptionalTaskState } from "@/lib/a2a/legacy";
 
 // ── validators ────────────────────────────────────────────────────────────────
 
@@ -134,7 +135,7 @@ export function parseCsvImport(text: string): Partial<QaTestCase>[] {
             }
           })()
         : {},
-      expectedTaskState: (row["expectedTaskState"] as QaTestCase["expectedTaskState"]) || undefined,
+      expectedTaskState: toOptionalTaskState(row["expectedTaskState"]),
       expectedOutputMode: (row["expectedOutputMode"] as QaOutputMode) || "any",
       assertions,
     };

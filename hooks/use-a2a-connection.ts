@@ -170,7 +170,7 @@ export function useA2AConnection({
 
   const cancelTask = useCallback(async (taskId: string) => {
     if (!clientRef.current) return;
-    await clientRef.current.cancelTask({ id: taskId });
+    await clientRef.current.cancelTask({ tenant: "", id: taskId, metadata: undefined });
   }, []);
 
   useEffect(() => {

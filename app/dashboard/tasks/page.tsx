@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import type { TaskState } from "@a2a-js/sdk";
+import { TaskState } from "@a2a-js/sdk";
 import { ArrowRightIcon, BookmarkPlusIcon, Trash2Icon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import { partsToPlainText } from "@/lib/a2a/parts";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { buildTaskSummaries, type TaskSummary } from "@/lib/features/chats/taskIndex";
 import type { ArtifactItem, TaskStatusItem } from "@/lib/features/chats/chatsSlice";
+import { taskStateLabel, toTaskState } from "@/lib/a2a/legacy";
 import {
   removeTaskFilterPreset,
   saveTaskFilterPreset,
@@ -37,9 +38,16 @@ import {
 type TaskFilter = "all" | TaskState;
 
 function stateBadgeVariant(state: TaskState): "brand" | "warning" | "outline" | "destructive" {
-  if (state === "completed") return "brand";
-  if (state === "failed" || state === "rejected") return "destructive";
-  if (state === "input-required" || state === "auth-required") return "warning";
+  if (state === TaskState.TASK_STATE_COMPLETED) return "brand";
+  if (state === TaskState.TASK_STATE_FAILED || state === TaskState.TASK_STATE_REJECTED) {
+    return "destructive";
+  }
+  if (
+    state === TaskState.TASK_STATE_INPUT_REQUIRED ||
+    state === TaskState.TASK_STATE_AUTH_REQUIRED
+  ) {
+    return "warning";
+  }
   return "outline";
 }
 
@@ -121,7 +129,10 @@ export default function TasksPage() {
           value={query}
           onChange={event => setQuery(event.target.value)}
         />
-        <Select value={stateFilter} onValueChange={value => setStateFilter(value as TaskFilter)}>
+        <Select
+          value={stateFilter === "all" ? "all" : taskStateLabel(stateFilter)}
+          onValueChange={value => setStateFilter(value === "all" ? "all" : toTaskState(value))}
+        >
           <SelectTrigger className="max-sm:hidden">
             <SelectValue />
           </SelectTrigger>
@@ -200,10 +211,11 @@ export default function TasksPage() {
                       {task.taskId}
                     </span>
                     <Badge variant={stateBadgeVariant(task.state)} className="gap-1.25">
-                      {(task.state === "completed" || task.state === "input-required") && (
+                      {(task.state === TaskState.TASK_STATE_COMPLETED ||
+                        task.state === TaskState.TASK_STATE_INPUT_REQUIRED) && (
                         <span className="size-1.25 rounded-full bg-current" />
                       )}
-                      {task.state}
+                      {taskStateLabel(task.state)}
                     </Badge>
                     {task.validationWarningCount > 0 && (
                       <Badge variant="warning">

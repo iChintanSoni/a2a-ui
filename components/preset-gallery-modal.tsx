@@ -1,5 +1,6 @@
 "use client";
 
+import { agentCardTransport } from "@/lib/a2a/agent-card";
 import { useMemo, useState } from "react";
 import {
   BotIcon,
@@ -217,10 +218,7 @@ export function PresetGalleryModal({
               {filteredPresets.map(preset => {
                 const isAlreadyInWorkspace = existingAgents.some(a => a.url === preset.agent.url);
                 const wasImportedThisSession = importedIds.has(preset.id);
-                const transport =
-                  preset.agent.card.preferredTransport ??
-                  preset.agent.card.additionalInterfaces?.[0]?.transport ??
-                  "JSONRPC";
+                const transport = agentCardTransport(preset.agent.card);
 
                 return (
                   <div

@@ -1,5 +1,6 @@
 "use client";
 
+import { toOptionalTaskState, toTaskState } from "@/lib/a2a/legacy";
 import { useRef, useMemo, useState } from "react";
 import { ClipboardCheckIcon, PlusIcon, Trash2Icon, UploadIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -152,7 +153,7 @@ export function SuiteBuilder({ agents, selectedAgent, agentUrl, onAgentChange }:
       prompt,
       attachments: [],
       metadata: parsedMetadata,
-      expectedTaskState: expectedTaskState as QaTestCase["expectedTaskState"],
+      expectedTaskState: toTaskState(expectedTaskState),
       expectedOutputMode,
       assertions,
       dataTable,
@@ -228,7 +229,7 @@ export function SuiteBuilder({ agents, selectedAgent, agentUrl, onAgentChange }:
           prompt: c.prompt ?? "",
           attachments: c.attachments ?? [],
           metadata: c.metadata ?? {},
-          expectedTaskState: c.expectedTaskState,
+          expectedTaskState: toOptionalTaskState(c.expectedTaskState),
           expectedOutputMode: c.expectedOutputMode ?? "any",
           assertions: c.assertions ?? [],
           dataTable: c.dataTable,

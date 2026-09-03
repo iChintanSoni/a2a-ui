@@ -1,3 +1,5 @@
+import { textPart } from "@/lib/a2a/parts";
+import { TaskState } from "@a2a-js/sdk";
 import { describe, expect, it } from "vitest";
 import type { Chat } from "@/lib/features/chats/chatsSlice";
 import type { LogEntry } from "@/lib/utils/debugInterceptor";
@@ -23,7 +25,7 @@ function makeTraceChat(overrides: Partial<Chat> = {}): Chat {
       {
         kind: "user-message",
         id: "msg-user-1",
-        parts: [{ kind: "text", text: "Create a small IBM Cloud diagram" }],
+        parts: [textPart("Create a small IBM Cloud diagram")],
         metadata: { traceToken: "secret-token", safe: "visible" },
         timestamp: 1_000,
       },
@@ -42,7 +44,7 @@ function makeTraceChat(overrides: Partial<Chat> = {}): Chat {
         taskId: "task-1",
         name: "ibm-cloud-diagram.md",
         description: "Generated diagram markdown",
-        parts: [{ kind: "text", text: "Diagram artifact with Load Balancer -> VSI" }],
+        parts: [textPart("Diagram artifact with Load Balancer -> VSI")],
         metadata: { usage: { total_tokens: 120 } },
         isStreaming: false,
         timestamp: 2_000,
@@ -51,15 +53,15 @@ function makeTraceChat(overrides: Partial<Chat> = {}): Chat {
         kind: "agent-message",
         id: "msg-agent-1",
         taskId: "task-1",
-        parts: [{ kind: "text", text: "The diagram is ready." }],
+        parts: [textPart("The diagram is ready.")],
         timestamp: 2_100,
       },
       {
         kind: "task-status",
         id: "task-1",
         taskId: "task-1",
-        state: "completed",
-        statusMessage: { parts: [{ kind: "text", text: "Completed successfully" }] },
+        state: TaskState.TASK_STATE_COMPLETED,
+        statusMessage: { parts: [textPart("Completed successfully")] },
         timestamp: 2_200,
       },
     ],

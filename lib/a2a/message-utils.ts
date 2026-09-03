@@ -1,5 +1,5 @@
-import type { FilePart, Message, Part } from "@a2a-js/sdk";
-import { getTextPartsText } from "@/lib/a2a/parts";
+import { Role, type Message, type Part } from "@a2a-js/sdk";
+import { getTextPartsText, rawFilePart, textPart } from "@/lib/a2a/parts";
 import type {
   A2AContextConfig,
   A2AMessageContextInput,
@@ -56,19 +56,16 @@ export async function resolveContextConfig(
   };
 }
 
-export async function encodeAttachments(files: File[]): Promise<FilePart[]> {
+export async function encodeAttachments(files: File[]): Promise<Part[]> {
   return Promise.all(
     files.map(
       file =>
-        new Promise<FilePart>((resolve, reject) => {
+        new Promise<Part>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => {
             const dataUrl = reader.result as string;
             const base64 = dataUrl.split(",")[1];
-            resolve({
-              kind: "file",
-              file: { name: file.name, mimeType: file.type, bytes: base64 },
-            });
+            resolve(rawFilePart(Buffer.from(base64, "base64"), file.name, file.type));
           };
           reader.onerror = reject;
           reader.readAsDataURL(file);
@@ -83,16 +80,20 @@ function injectHiddenContext(parts: Part[], hiddenSystemContext?: string): Part[
 
   let injected = false;
   const nextParts = parts.map(part => {
-    if (injected || part.kind !== "text") return part;
+    if (injected || part.content?.$case !== "text") return part;
     injected = true;
+    const existing = part.content.value;
     return {
       ...part,
-      text: part.text ? `${hiddenEnvelope}\n\n${part.text}` : hiddenEnvelope,
+      content: {
+        $case: "text" as const,
+        value: existing ? `${hiddenEnvelope}\n\n${existing}` : hiddenEnvelope,
+      },
     };
   });
 
   if (injected) return nextParts;
-  return [{ kind: "text", text: hiddenEnvelope }, ...parts];
+  return [textPart(hiddenEnvelope), ...parts];
 }
 
 function isNativeFile(part: OutgoingMessagePartInput): part is File {
@@ -131,12 +132,13 @@ export async function buildOutgoingMessage(input: BuildOutgoingMessageInput): Pr
   const parts = injectHiddenContext(input.parts, resolvedContext.hiddenSystemContext);
 
   return {
-    kind: "message",
     messageId: input.messageId,
-    role: "user",
+    role: Role.ROLE_USER,
     contextId: input.contextId,
-    ...(input.inputTaskId ? { taskId: input.inputTaskId } : {}),
-    ...(resolvedContext.metadata ? { metadata: resolvedContext.metadata } : {}),
+    taskId: input.inputTaskId ?? "",
+    metadata: resolvedContext.metadata,
     parts,
+    extensions: [],
+    referenceTaskIds: [],
   };
 }

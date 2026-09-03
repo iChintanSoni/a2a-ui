@@ -1,5 +1,6 @@
 "use client";
 
+import { agentCardProtocolVersion } from "@/lib/a2a/agent-card";
 import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LinkIcon, StarIcon, StarOffIcon } from "lucide-react";
@@ -222,7 +223,8 @@ export default function AgentSettingsPage({ params, searchParams }: PageProps) {
                 {agent.status}
               </Badge>
               <Caption className="inline">
-                Protocol v{agent.card.protocolVersion} · Agent v{agent.card.version}
+                Protocol v{agentCardProtocolVersion(agent.card) || "?"} · Agent v
+                {agent.card.version}
               </Caption>
             </div>
           </div>

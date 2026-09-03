@@ -1,3 +1,5 @@
+import { TaskState } from "@a2a-js/sdk";
+import { textPart } from "@/lib/a2a/parts";
 import type { AgentPreset } from "./types";
 
 export const CURATED_AGENT_PRESETS: AgentPreset[] = [
@@ -23,20 +25,31 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
         name: "Local Demo Agent",
         description:
           "Conversational A2A reference agent with web search, image input, image generation, and A2UI demo surfaces.",
-        url: "http://localhost:3001/a2a/jsonrpc",
         version: "1.0.0",
-        protocolVersion: "0.3.0",
-        preferredTransport: "JSONRPC",
+        supportedInterfaces: [
+          {
+            url: "http://localhost:3001/a2a/jsonrpc",
+            protocolBinding: "JSONRPC",
+            tenant: "",
+            protocolVersion: "1.0",
+          },
+          {
+            url: "http://localhost:3001/a2a/rest",
+            protocolBinding: "HTTP+JSON",
+            tenant: "",
+            protocolVersion: "1.0",
+          },
+        ],
         defaultInputModes: ["text/plain", "image/*"],
         defaultOutputModes: ["text/plain", "image/png", "application/vnd.a2ui+json"],
         capabilities: {
           streaming: true,
-          stateTransitionHistory: true,
+          extensions: [],
         },
-        additionalInterfaces: [
-          { url: "http://localhost:3001/a2a/jsonrpc", transport: "JSONRPC" },
-          { url: "http://localhost:3001/a2a/rest", transport: "HTTP+JSON" },
-        ],
+        provider: undefined,
+        securitySchemes: {},
+        securityRequirements: [],
+        signatures: [],
         skills: [
           {
             id: "chat",
@@ -49,6 +62,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             ],
             inputModes: ["text/plain", "image/*"],
             outputModes: ["text/plain"],
+            securityRequirements: [],
           },
           {
             id: "image-generation",
@@ -61,6 +75,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             ],
             inputModes: ["text/plain"],
             outputModes: ["image/png"],
+            securityRequirements: [],
           },
           {
             id: "a2ui-demo",
@@ -73,6 +88,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             ],
             inputModes: ["text/plain"],
             outputModes: ["application/vnd.a2ui+json"],
+            securityRequirements: [],
           },
         ],
       },
@@ -99,26 +115,23 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             id: "msg-1",
             kind: "user-message",
             timestamp: Date.now() - 3600000,
-            parts: [
-              { kind: "text", text: "What is the primary goal of the Agent2Agent protocol?" },
-            ],
+            parts: [textPart("What is the primary goal of the Agent2Agent protocol?")],
           },
           {
             id: "msg-2",
             kind: "agent-message",
             timestamp: Date.now() - 3590000,
             parts: [
-              {
-                kind: "text",
-                text: "The primary goal of the Agent2Agent (A2A) protocol is to provide a standardized, transport-agnostic interface enabling autonomous AI agents to discover capabilities, exchange structured tasks, stream multimodal artifacts, and coordinate workflows securely across different platforms and runtimes.",
-              },
+              textPart(
+                "The primary goal of the Agent2Agent (A2A) protocol is to provide a standardized, transport-agnostic interface enabling autonomous AI agents to discover capabilities, exchange structured tasks, stream multimodal artifacts, and coordinate workflows securely across different platforms and runtimes.",
+              ),
             ],
           },
           {
             id: "task-1",
             kind: "task-status",
             taskId: "task-demo-01",
-            state: "completed",
+            state: TaskState.TASK_STATE_COMPLETED,
             timestamp: Date.now() - 3580000,
           },
         ],
@@ -147,19 +160,25 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
         name: "Weather Scout",
         description:
           "Specialized meteorology and climate intelligence agent delivering hyper-local forecasts and radar analysis.",
-        url: "https://weather-agent.a2a.dev/a2a",
         version: "2.1.0",
-        protocolVersion: "0.3.0",
-        preferredTransport: "HTTP+JSON",
+        supportedInterfaces: [
+          {
+            url: "https://weather-agent.a2a.dev/a2a",
+            protocolBinding: "HTTP+JSON",
+            tenant: "",
+            protocolVersion: "1.0",
+          },
+        ],
         defaultInputModes: ["text/plain"],
         defaultOutputModes: ["text/plain", "application/json"],
         capabilities: {
           streaming: true,
-          stateTransitionHistory: true,
+          extensions: [],
         },
-        additionalInterfaces: [
-          { url: "https://weather-agent.a2a.dev/a2a", transport: "HTTP+JSON" },
-        ],
+        provider: undefined,
+        securitySchemes: {},
+        securityRequirements: [],
+        signatures: [],
         skills: [
           {
             id: "current-weather",
@@ -173,6 +192,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             ],
             inputModes: ["text/plain"],
             outputModes: ["text/plain", "application/json"],
+            securityRequirements: [],
           },
           {
             id: "forecast-7day",
@@ -185,6 +205,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             ],
             inputModes: ["text/plain"],
             outputModes: ["text/plain"],
+            securityRequirements: [],
           },
           {
             id: "severe-alerts",
@@ -195,6 +216,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             examples: ["Any active cyclone or blizzard warnings in the Northeast?"],
             inputModes: ["text/plain"],
             outputModes: ["text/plain"],
+            securityRequirements: [],
           },
         ],
       },
@@ -219,24 +241,23 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             id: "w-msg-1",
             kind: "user-message",
             timestamp: Date.now() - 7200000,
-            parts: [{ kind: "text", text: "What is the 7-day forecast for Tokyo?" }],
+            parts: [textPart("What is the 7-day forecast for Tokyo?")],
           },
           {
             id: "w-msg-2",
             kind: "agent-message",
             timestamp: Date.now() - 7190000,
             parts: [
-              {
-                kind: "text",
-                text: "Here is the 7-day meteorological forecast for **Tokyo, Japan**:\n\n- **Monday**: 21°C / 14°C — Sunny with gentle breeze\n- **Tuesday**: 22°C / 15°C — Partly cloudy\n- **Wednesday**: 19°C / 13°C — Light showers in the afternoon (60% chance)\n- **Thursday**: 20°C / 12°C — Clear and dry\n- **Friday**: 23°C / 16°C — Mild sunshine\n- **Saturday**: 24°C / 17°C — Warm with scattered clouds\n- **Sunday**: 21°C / 15°C — Overcast with moderate winds",
-              },
+              textPart(
+                "Here is the 7-day meteorological forecast for **Tokyo, Japan**:\n\n- **Monday**: 21°C / 14°C — Sunny with gentle breeze\n- **Tuesday**: 22°C / 15°C — Partly cloudy\n- **Wednesday**: 19°C / 13°C — Light showers in the afternoon (60% chance)\n- **Thursday**: 20°C / 12°C — Clear and dry\n- **Friday**: 23°C / 16°C — Mild sunshine\n- **Saturday**: 24°C / 17°C — Warm with scattered clouds\n- **Sunday**: 21°C / 15°C — Overcast with moderate winds",
+              ),
             ],
           },
           {
             id: "w-task-1",
             kind: "task-status",
             taskId: "task-weather-01",
-            state: "completed",
+            state: TaskState.TASK_STATE_COMPLETED,
             timestamp: Date.now() - 7180000,
           },
         ],
@@ -265,17 +286,25 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
         name: "Deep Research Agent",
         description:
           "Autonomous literature and technical synthesizer that compiles multi-source research dossiers.",
-        url: "https://research-agent.a2a.dev/a2a",
         version: "1.4.2",
-        protocolVersion: "0.3.0",
-        preferredTransport: "JSONRPC",
+        supportedInterfaces: [
+          {
+            url: "https://research-agent.a2a.dev/a2a",
+            protocolBinding: "JSONRPC",
+            tenant: "",
+            protocolVersion: "1.0",
+          },
+        ],
         defaultInputModes: ["text/plain"],
         defaultOutputModes: ["text/plain", "text/markdown"],
         capabilities: {
           streaming: true,
-          stateTransitionHistory: true,
+          extensions: [],
         },
-        additionalInterfaces: [{ url: "https://research-agent.a2a.dev/a2a", transport: "JSONRPC" }],
+        provider: undefined,
+        securitySchemes: {},
+        securityRequirements: [],
+        signatures: [],
         skills: [
           {
             id: "literature-review",
@@ -288,6 +317,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             ],
             inputModes: ["text/plain"],
             outputModes: ["text/markdown"],
+            securityRequirements: [],
           },
           {
             id: "citation-extractor",
@@ -297,6 +327,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             examples: ["Extract benchmark results comparing JSON-RPC vs gRPC latency"],
             inputModes: ["text/plain"],
             outputModes: ["text/markdown"],
+            securityRequirements: [],
           },
         ],
       },
@@ -321,10 +352,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             kind: "user-message",
             timestamp: Date.now() - 18000000,
             parts: [
-              {
-                kind: "text",
-                text: "Summarize recent paradigms in decentralized multi-agent coordination.",
-              },
+              textPart("Summarize recent paradigms in decentralized multi-agent coordination."),
             ],
           },
           {
@@ -337,17 +365,16 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             description:
               "Synthesized review of token-bucket negotiation vs leader-election topologies.",
             parts: [
-              {
-                kind: "text",
-                text: "# Decentralized Multi-Agent Coordination\n\n## 1. Topologies\n- **Hierarchical Delegation**: Orchestrator delegates subtasks to domain specialists.\n- **Peer Negotiation**: Direct Agent2Agent communication via mutual discovery cards.\n\n## 2. Key Challenges\n1. Latency overhead in nested multi-hop chains.\n2. Security boundaries & capability verification.\n3. Dynamic context compression across long-lived tasks.",
-              },
+              textPart(
+                "# Decentralized Multi-Agent Coordination\n\n## 1. Topologies\n- **Hierarchical Delegation**: Orchestrator delegates subtasks to domain specialists.\n- **Peer Negotiation**: Direct Agent2Agent communication via mutual discovery cards.\n\n## 2. Key Challenges\n1. Latency overhead in nested multi-hop chains.\n2. Security boundaries & capability verification.\n3. Dynamic context compression across long-lived tasks.",
+              ),
             ],
           },
           {
             id: "r-task-1",
             kind: "task-status",
             taskId: "task-research-01",
-            state: "completed",
+            state: TaskState.TASK_STATE_COMPLETED,
             timestamp: Date.now() - 17980000,
           },
         ],
@@ -379,17 +406,25 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
         name: "Support Concierge",
         description:
           "Intelligent support triage agent with automated diagnostics, priority tagging, and ticket routing.",
-        url: "https://support-agent.a2a.dev/a2a",
         version: "3.0.0",
-        protocolVersion: "0.3.0",
-        preferredTransport: "JSONRPC",
+        supportedInterfaces: [
+          {
+            url: "https://support-agent.a2a.dev/a2a",
+            protocolBinding: "JSONRPC",
+            tenant: "",
+            protocolVersion: "1.0",
+          },
+        ],
         defaultInputModes: ["text/plain"],
         defaultOutputModes: ["text/plain", "application/json"],
         capabilities: {
           streaming: true,
-          stateTransitionHistory: true,
+          extensions: [],
         },
-        additionalInterfaces: [{ url: "https://support-agent.a2a.dev/a2a", transport: "JSONRPC" }],
+        provider: undefined,
+        securitySchemes: {},
+        securityRequirements: [],
+        signatures: [],
         skills: [
           {
             id: "ticket-triage",
@@ -400,6 +435,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             examples: ["Triage incident: Client reports 500 error when uploading 50MB audio files"],
             inputModes: ["text/plain"],
             outputModes: ["text/plain", "application/json"],
+            securityRequirements: [],
           },
           {
             id: "knowledge-base",
@@ -410,6 +446,7 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             examples: ["Find troubleshooting steps for SSL handshake timeouts"],
             inputModes: ["text/plain"],
             outputModes: ["text/plain"],
+            securityRequirements: [],
           },
         ],
       },
@@ -434,10 +471,9 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             kind: "user-message",
             timestamp: Date.now() - 86400000,
             parts: [
-              {
-                kind: "text",
-                text: "Customer reports: 'Our webhook endpoints are intermittently timing out under high load.'",
-              },
+              textPart(
+                "Customer reports: 'Our webhook endpoints are intermittently timing out under high load.'",
+              ),
             ],
           },
           {
@@ -445,17 +481,16 @@ export const CURATED_AGENT_PRESETS: AgentPreset[] = [
             kind: "agent-message",
             timestamp: Date.now() - 86390000,
             parts: [
-              {
-                kind: "text",
-                text: "### Triage Assessment: Incident #5081\n\n- **Severity**: P2 (Elevated)\n- **Suspected Area**: Webhook retry queue exhaustion / concurrency limits\n- **Recommended Action**:\n  1. Inspect egress proxy connection pools.\n  2. Enable exponential backoff on failed attempts.\n  3. Verify whether target endpoints respond within 2000ms.",
-              },
+              textPart(
+                "### Triage Assessment: Incident #5081\n\n- **Severity**: P2 (Elevated)\n- **Suspected Area**: Webhook retry queue exhaustion / concurrency limits\n- **Recommended Action**:\n  1. Inspect egress proxy connection pools.\n  2. Enable exponential backoff on failed attempts.\n  3. Verify whether target endpoints respond within 2000ms.",
+              ),
             ],
           },
           {
             id: "s-task-1",
             kind: "task-status",
             taskId: "task-support-01",
-            state: "completed",
+            state: TaskState.TASK_STATE_COMPLETED,
             timestamp: Date.now() - 86380000,
           },
         ],

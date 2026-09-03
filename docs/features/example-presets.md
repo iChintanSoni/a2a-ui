@@ -63,14 +63,20 @@ To add a new example agent preset to the gallery:
     card: {
       name: "My Custom Agent",
       description: "Full agent card description.",
-      url: "https://my-agent.example.com/a2a",
       version: "1.0.0",
-      protocolVersion: "0.3.0",
-      preferredTransport: "JSONRPC",
+      supportedInterfaces: [
+        {
+          url: "https://my-agent.example.com/a2a",
+          protocolBinding: "JSONRPC",
+          tenant: "",
+          protocolVersion: "1.0",
+        },
+      ],
       defaultInputModes: ["text/plain"],
       defaultOutputModes: ["text/plain"],
       capabilities: {
         streaming: true,
+        extensions: [],
       },
       skills: [
         {

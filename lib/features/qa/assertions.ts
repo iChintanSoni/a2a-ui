@@ -1,4 +1,5 @@
-import type { Part, TaskState } from "@a2a-js/sdk";
+import { taskStateToJSON, type Part, type TaskState } from "@a2a-js/sdk";
+import { getPartText } from "@/lib/a2a/parts";
 import { getErrorMessage } from "@/lib/utils/error";
 import type { QaAssertion, QaAssertionResult, QaOutputMode } from "@/lib/features/qa/types";
 
@@ -25,8 +26,8 @@ export interface QaCapturedOutput {
 
 export function textFromParts(parts: Part[]): string {
   return parts
-    .filter((part): part is Extract<Part, { kind: "text" }> => part.kind === "text")
-    .map(part => part.text)
+    .map(getPartText)
+    .filter((text): text is string => text != null)
     .join("\n")
     .trim();
 }
@@ -34,13 +35,14 @@ export function textFromParts(parts: Part[]): string {
 export function jsonValuesFromParts(parts: Part[]): unknown[] {
   const values: unknown[] = [];
   for (const part of parts) {
-    if (part.kind === "data") {
-      values.push(part.data);
+    if (part.content?.$case === "data") {
+      values.push(part.content.value);
       continue;
     }
-    if (part.kind !== "text") continue;
+    const text = getPartText(part);
+    if (text == null) continue;
     try {
-      values.push(JSON.parse(part.text));
+      values.push(JSON.parse(text));
     } catch {
       // Plain text is still valid output; it just cannot satisfy JSON assertions.
     }
@@ -117,15 +119,18 @@ export function evaluateExpectedTaskState(
   expected: TaskState | undefined,
   output: QaCapturedOutput,
 ): QaAssertionResult | null {
-  if (!expected) return null;
+  if (expected === undefined) return null;
   const passed = output.finalTaskState === expected;
+  const expectedLabel = taskStateToJSON(expected);
   return {
     assertionId: "expected-task-state",
-    label: `Expected task state ${expected}`,
+    label: `Expected task state ${expectedLabel}`,
     passed,
     message: passed
-      ? `Final task state was ${expected}.`
-      : `Final task state was ${output.finalTaskState ?? "unknown"}.`,
+      ? `Final task state was ${expectedLabel}.`
+      : `Final task state was ${
+          output.finalTaskState === undefined ? "unknown" : taskStateToJSON(output.finalTaskState)
+        }.`,
   };
 }
 

@@ -1,3 +1,5 @@
+import { textPart } from "@/lib/a2a/parts";
+import { TaskState } from "@a2a-js/sdk";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { UserBubble, AgentBubble } from "@/components/chat/MessageBubble";
@@ -21,7 +23,7 @@ describe("Accessibility checks across chat & dashboard components", () => {
       id: "user-1",
       kind: "user-message",
       timestamp: Date.now(),
-      parts: [{ kind: "text", text: "Hello world" }],
+      parts: [textPart("Hello world")],
     };
     const onInspect = vi.fn();
     const onRerun = vi.fn();
@@ -44,7 +46,7 @@ describe("Accessibility checks across chat & dashboard components", () => {
       id: "agent-1",
       kind: "agent-message",
       timestamp: Date.now(),
-      parts: [{ kind: "text", text: "I can help with that." }],
+      parts: [textPart("I can help with that.")],
     };
     const onInspect = vi.fn();
 
@@ -83,7 +85,7 @@ describe("Accessibility checks across chat & dashboard components", () => {
       timestamp: Date.now(),
       name: "report.md",
       description: "Analysis report",
-      parts: [{ kind: "text", text: "Report contents" }],
+      parts: [textPart("Report contents")],
     };
     const onInspect = vi.fn();
     const onSubmitRevision = vi.fn();
@@ -100,7 +102,7 @@ describe("Accessibility checks across chat & dashboard components", () => {
       id: "task-1",
       kind: "task-status",
       taskId: "t-123",
-      state: "working",
+      state: TaskState.TASK_STATE_WORKING,
       timestamp: Date.now(),
     };
     const onInspect = vi.fn();

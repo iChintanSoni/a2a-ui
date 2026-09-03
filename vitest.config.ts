@@ -8,6 +8,9 @@ export default defineConfig({
     environment: "happy-dom",
     globals: true,
     setupFiles: ["./tests/setup.ts"],
+    // The bin/*.mjs entrypoints start with a shebang, which Vite's SSR
+    // transform cannot parse. Let Node load them natively instead.
+    server: { deps: { external: [/[\\/]bin[\\/].*\.mjs$/] } },
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     coverage: {
       provider: "v8",

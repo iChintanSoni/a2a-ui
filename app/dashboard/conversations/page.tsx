@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Part } from "@a2a-js/sdk";
-import { partsToPlainText } from "@/lib/a2a/parts";
+import { getTextPartsText, partsToPlainText } from "@/lib/a2a/parts";
+import { taskStateLabel } from "@/lib/a2a/legacy";
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
@@ -54,10 +54,7 @@ function downloadFile(name: string, content: string, type: string) {
 }
 
 function textOf(item: ArtifactItem | AgentMessageItem) {
-  return item.parts
-    .filter((part): part is Extract<Part, { kind: "text" }> => part.kind === "text")
-    .map(part => part.text)
-    .join("");
+  return getTextPartsText(item.parts);
 }
 
 function chatSearchText(chat: Chat) {
@@ -70,7 +67,7 @@ function chatSearchText(chat: Chat) {
       if (item.kind === "user-message") return [partsToPlainText(item.parts)];
       if (item.kind === "artifact" || item.kind === "agent-message") return [textOf(item)];
       if (item.kind === "tool-call") return [item.toolName, item.query];
-      if (item.kind === "task-status") return [item.state];
+      if (item.kind === "task-status") return [taskStateLabel(item.state)];
       return [];
     }),
   ]

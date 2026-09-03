@@ -1,3 +1,4 @@
+import { TaskState } from "@a2a-js/sdk";
 import { describe, expect, it } from "vitest";
 import reducer, {
   saveTaskFilterPreset,
@@ -18,7 +19,7 @@ describe("workbenchSlice", () => {
   it("saves and removes task filter presets", () => {
     let state = reducer(
       INITIAL_STATE,
-      saveTaskFilterPreset({ query: "weather", state: "completed" }),
+      saveTaskFilterPreset({ query: "weather", state: TaskState.TASK_STATE_COMPLETED }),
     );
     expect(state.taskFilterPresets).toHaveLength(1);
 

@@ -1,4 +1,5 @@
 import type { Part } from "@a2a-js/sdk";
+import { getPartText, textPart } from "@/lib/a2a/parts";
 import type { ArtifactItem } from "./chatsSlice";
 
 export interface TextDiffSummary {
@@ -10,16 +11,13 @@ export interface TextDiffSummary {
 export type EditableArtifactKind = "text" | "markdown" | "code" | "table" | "diagram";
 
 export function isEditableArtifact(item: ArtifactItem): boolean {
-  return item.parts.length > 0 && item.parts.every(part => part.kind === "text");
+  return item.parts.length > 0 && item.parts.every(part => part.content?.$case === "text");
 }
 
 export function getArtifactText(item: ArtifactItem): string {
   return item.parts
-    .filter(
-      (part): part is Extract<(typeof item.parts)[number], { kind: "text" }> =>
-        part.kind === "text",
-    )
-    .map(part => part.text)
+    .map(getPartText)
+    .filter((text): text is string => text != null)
     .join("");
 }
 
@@ -130,7 +128,7 @@ export function buildArtifactRevisionMessage(item: ArtifactItem, revisedText: st
   ].join("\n");
 
   return {
-    parts: [{ kind: "text", text }] satisfies Part[],
+    parts: [textPart(text)] satisfies Part[],
     metadata: {
       artifactId: item.id,
       artifactName: item.name ?? item.id,

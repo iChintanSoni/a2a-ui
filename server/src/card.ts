@@ -8,20 +8,21 @@ export function createAgentCard(baseUrl: string): AgentCard {
     name: "Chat Agent",
     description:
       "A conversational A2A agent with search, image input, image generation, and A2UI demo surfaces.",
-    url: jsonRpcUrl,
     version: "1.0.0",
-    protocolVersion: "0.3.0",
-    preferredTransport: "JSONRPC",
+    supportedInterfaces: [
+      { url: jsonRpcUrl, protocolBinding: "JSONRPC", tenant: "", protocolVersion: "1.0" },
+      { url: restUrl, protocolBinding: "HTTP+JSON", tenant: "", protocolVersion: "1.0" },
+    ],
+    provider: undefined,
+    securitySchemes: {},
+    securityRequirements: [],
+    signatures: [],
     defaultInputModes: ["text/plain", "image/*"],
     defaultOutputModes: ["text/plain", "image/png", "application/vnd.a2ui+json"],
     capabilities: {
       streaming: true,
-      stateTransitionHistory: true,
+      extensions: [],
     },
-    additionalInterfaces: [
-      { url: jsonRpcUrl, transport: "JSONRPC" },
-      { url: restUrl, transport: "HTTP+JSON" },
-    ],
     skills: [
       {
         id: "chat",
@@ -32,6 +33,7 @@ export function createAgentCard(baseUrl: string): AgentCard {
         examples: ["What is the capital of France?", "Search for the latest news on AI"],
         inputModes: ["text/plain", "image/*"],
         outputModes: ["text/plain"],
+        securityRequirements: [],
       },
       {
         id: "image-generation",
@@ -44,6 +46,7 @@ export function createAgentCard(baseUrl: string): AgentCard {
         ],
         inputModes: ["text/plain"],
         outputModes: ["image/png"],
+        securityRequirements: [],
       },
       {
         id: "a2ui-demo",
@@ -53,6 +56,7 @@ export function createAgentCard(baseUrl: string): AgentCard {
         examples: ["Show me an A2UI demo surface", "Render a structured status summary"],
         inputModes: ["text/plain"],
         outputModes: ["application/vnd.a2ui+json"],
+        securityRequirements: [],
       },
     ],
   };

@@ -1,3 +1,4 @@
+import { textPart } from "@/lib/a2a/parts";
 import { describe, expect, it } from "vitest";
 import { compareRuns } from "@/lib/features/chats/compareRuns";
 import type { Chat } from "@/lib/features/chats/chatsSlice";
@@ -23,13 +24,13 @@ describe("compareRuns", () => {
         {
           kind: "user-message",
           id: "u1",
-          parts: [{ kind: "text", text: "What is the forecast?" }],
+          parts: [textPart("What is the forecast?")],
           timestamp: 1,
         },
         {
           kind: "agent-message",
           id: "a1",
-          parts: [{ kind: "text", text: "Sunny" }],
+          parts: [textPart("Sunny")],
           timestamp: 2,
         },
         {
@@ -37,7 +38,7 @@ describe("compareRuns", () => {
           id: "artifact-1",
           taskId: "task-1",
           name: "forecast.md",
-          parts: [{ kind: "text", text: "Sunny\nWarm" }],
+          parts: [textPart("Sunny\nWarm")],
           isStreaming: false,
           timestamp: 3,
         },
@@ -77,13 +78,13 @@ describe("compareRuns", () => {
         {
           kind: "user-message",
           id: "u2",
-          parts: [{ kind: "text", text: "What is the forecast?" }],
+          parts: [textPart("What is the forecast?")],
           timestamp: 1,
         },
         {
           kind: "agent-message",
           id: "a2",
-          parts: [{ kind: "text", text: "Rainy" }],
+          parts: [textPart("Rainy")],
           timestamp: 2,
         },
         {
@@ -91,7 +92,7 @@ describe("compareRuns", () => {
           id: "artifact-2",
           taskId: "task-2",
           name: "forecast.md",
-          parts: [{ kind: "text", text: "Rainy\nCool" }],
+          parts: [textPart("Rainy\nCool")],
           isStreaming: false,
           timestamp: 3,
         },

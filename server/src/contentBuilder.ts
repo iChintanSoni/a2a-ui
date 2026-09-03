@@ -1,4 +1,5 @@
 import { type Part } from "@a2a-js/sdk";
+import { DEFAULT_FILE_MEDIA_TYPE, filePartUrl, isFilePart } from "#src/parts.ts";
 
 // LangChain multimodal content block types
 export type TextBlock = { type: "text"; text: string };
@@ -7,10 +8,10 @@ export type ContentBlock = TextBlock | ImageBlock;
 
 /**
  * Convert A2A message parts into a LangChain content value.
- * - TextPart → plain string (or TextBlock in a multi-part message)
- * - DataPart → JSON text block so structured payloads reach the model
- * - FilePart with image/* MIME → ImageBlock (data URL or URI)
- * - Other FilePart → text placeholder so the model knows a file was attached
+ * - text part → plain string (or TextBlock in a multi-part message)
+ * - data part → JSON text block so structured payloads reach the model
+ * - file part with image/* media type → ImageBlock (data URL or URL)
+ * - any other file part → text placeholder so the model knows a file was attached
  * Returns a plain string when there is only a single text part (widest model compatibility),
  * otherwise returns a ContentBlock array for multimodal input.
  */
@@ -18,23 +19,20 @@ export function buildMessageContent(parts: Part[]): string | ContentBlock[] {
   const blocks: ContentBlock[] = [];
 
   for (const part of parts) {
-    if (part.kind === "text") {
-      if (part.text) blocks.push({ type: "text", text: part.text });
-    } else if (part.kind === "data") {
+    if (part.content?.$case === "text") {
+      if (part.content.value) blocks.push({ type: "text", text: part.content.value });
+    } else if (part.content?.$case === "data") {
       blocks.push({
         type: "text",
-        text: `Structured data:\n${JSON.stringify(part.data, null, 2)}`,
+        text: `Structured data:\n${JSON.stringify(part.content.value, null, 2)}`,
       });
-    } else if (part.kind === "file") {
-      const { file } = part;
-      const mimeType = file.mimeType ?? "application/octet-stream";
+    } else if (isFilePart(part)) {
+      const mimeType = part.mediaType || DEFAULT_FILE_MEDIA_TYPE;
 
       if (mimeType.startsWith("image/")) {
-        const url =
-          "uri" in file ? file.uri : `data:${mimeType};base64,${"bytes" in file ? file.bytes : ""}`;
-        blocks.push({ type: "image_url", image_url: { url } });
+        blocks.push({ type: "image_url", image_url: { url: filePartUrl(part) } });
       } else {
-        const name = file.name ?? "file";
+        const name = part.filename || "file";
         blocks.push({
           type: "text",
           text: `[Attached file: ${name} (${mimeType}) — content not shown]`,

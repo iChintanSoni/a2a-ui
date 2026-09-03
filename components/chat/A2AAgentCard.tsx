@@ -1,5 +1,6 @@
 "use client";
 
+import { agentCardProtocolVersion, agentCardTransport, agentCardUrl } from "@/lib/a2a/agent-card";
 import { RefreshCwIcon } from "lucide-react";
 import { AgentCardViewer } from "@/components/agent-card-viewer";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ export function A2AAgentCard({ card, loading, error, onRefresh }: A2AAgentCardPr
       {card ? (
         <div className="mt-4 space-y-3">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">Protocol {card.protocolVersion}</Badge>
+            <Badge variant="outline">Protocol {agentCardProtocolVersion(card) || "—"}</Badge>
             <Badge variant="outline">Version {card.version}</Badge>
             {compliance && (
               <Badge variant={compliance.failCount === 0 ? "default" : "destructive"}>
@@ -51,8 +52,8 @@ export function A2AAgentCard({ card, loading, error, onRefresh }: A2AAgentCardPr
           </div>
 
           <div className="text-muted-foreground grid gap-2 text-sm sm:grid-cols-2">
-            <div>URL: {card.url ?? "Not declared"}</div>
-            <div>Preferred transport: {card.preferredTransport ?? "Not declared"}</div>
+            <div>URL: {agentCardUrl(card) || "Not declared"}</div>
+            <div>Preferred transport: {agentCardTransport(card)}</div>
             <div>Input modes: {(card.defaultInputModes ?? []).join(", ") || "None"}</div>
             <div>Output modes: {(card.defaultOutputModes ?? []).join(", ") || "None"}</div>
           </div>

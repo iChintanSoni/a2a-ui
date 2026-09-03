@@ -1,8 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import type { Message, TaskArtifactUpdateEvent, TaskStatusUpdateEvent } from "@a2a-js/sdk";
-import { getTextPartsText } from "@/lib/a2a/parts";
+import {
+  Role,
+  TaskState,
+  type Message,
+  type TaskArtifactUpdateEvent,
+  type TaskStatusUpdateEvent,
+} from "@a2a-js/sdk";
+import { getPartData, getTextPartsText, isFilePart } from "@/lib/a2a/parts";
+import { taskStateLabel } from "@/lib/a2a/legacy";
 import { buildOutgoingMessage, normalizeOutgoingParts } from "@/lib/a2a/message-utils";
 import type {
   A2AContextConfig,
@@ -93,7 +100,7 @@ export function useA2AMessages({
   const pendingInputTask = chat?.items
     .filter(item => item.kind === "task-status")
     .findLast(item => item.kind === "task-status");
-  const isInputRequired = pendingInputTask?.state === "input-required";
+  const isInputRequired = pendingInputTask?.state === TaskState.TASK_STATE_INPUT_REQUIRED;
   const inputRequiredTaskId = isInputRequired ? pendingInputTask.taskId : undefined;
 
   const cancelStream = useCallback(() => {
@@ -102,7 +109,7 @@ export function useA2AMessages({
       messageStore.applyStatusUpdate({
         chatId: session.contextId,
         taskId: session.activeTaskId,
-        state: "canceled",
+        state: TaskState.TASK_STATE_CANCELED,
       });
       messageStore.appendExecutionEvent({
         chatId: session.contextId,
@@ -117,7 +124,7 @@ export function useA2AMessages({
           traceId: null,
           spanId: null,
           parentSpanId: null,
-          details: { state: "canceled", source: "user" },
+          details: { state: taskStateLabel(TaskState.TASK_STATE_CANCELED), source: "user" },
         },
       });
       connection.cancelTask(session.activeTaskId).catch(() => {});
@@ -136,8 +143,8 @@ export function useA2AMessages({
 
       const messageId = crypto.randomUUID();
       const text = getTextPartsText(parts);
-      const fileCount = parts.filter(p => p.kind === "file").length;
-      const dataCount = parts.filter(p => p.kind === "data").length;
+      const fileCount = parts.filter(isFilePart).length;
+      const dataCount = parts.filter(p => p.content?.$case === "data").length;
       const modalities = summarizePartModalities(parts);
 
       messageStore.addUserMessage({
@@ -190,35 +197,31 @@ export function useA2AMessages({
         const outgoingWarnings = validateOutgoingMessage(outgoingMessage);
         debug.recordValidation("message/send", outgoingWarnings);
 
-        const stream = client.sendMessageStream({ message: outgoingMessage });
+        const stream = client.sendMessageStream({
+          tenant: "",
+          message: outgoingMessage,
+          configuration: undefined,
+          metadata: undefined,
+        });
         for await (const event of stream) {
           if (session.abortRef.current?.signal.aborted) break;
 
           const incomingWarnings = validateIncomingEvent(event);
-          debug.recordValidation(
-            String((event as { kind?: unknown }).kind ?? "incoming-event"),
-            incomingWarnings,
-          );
+          debug.recordValidation(event.payload?.$case ?? "incoming-event", incomingWarnings);
 
-          if (event.kind === "status-update") {
-            await handleStatusUpdate(event as TaskStatusUpdateEvent, session, messageStore);
-            continue;
-          }
-
-          if (event.kind === "artifact-update") {
-            await handleArtifactUpdate(
-              event as TaskArtifactUpdateEvent,
-              session,
-              messageStore,
-              connection,
-            );
-            continue;
-          }
-
-          if (event.kind === "message") {
-            const agentMessage = event as Message;
-            if (agentMessage.role === "agent") {
-              handleAgentMessage(agentMessage, session, messageStore, connection);
+          switch (event.payload?.$case) {
+            case "statusUpdate":
+              await handleStatusUpdate(event.payload.value, session, messageStore);
+              break;
+            case "artifactUpdate":
+              await handleArtifactUpdate(event.payload.value, session, messageStore, connection);
+              break;
+            case "message": {
+              const agentMessage = event.payload.value;
+              if (agentMessage.role === Role.ROLE_AGENT) {
+                handleAgentMessage(agentMessage, session, messageStore, connection);
+              }
+              break;
             }
           }
         }
@@ -252,22 +255,15 @@ async function handleStatusUpdate(
   messageStore: A2AExternalMessageStore,
 ) {
   session.setActiveTaskId(statusEvent.taskId);
+  const state = statusEvent.status?.state ?? TaskState.TASK_STATE_UNSPECIFIED;
+  const statusMessage = statusEvent.status?.message;
+  const stateLabel = taskStateLabel(state);
+
   messageStore.applyStatusUpdate({
     chatId: session.contextId,
     taskId: statusEvent.taskId,
-    state: statusEvent.status.state as
-      | "submitted"
-      | "working"
-      | "input-required"
-      | "completed"
-      | "canceled"
-      | "failed"
-      | "rejected"
-      | "auth-required"
-      | "unknown",
-    statusMessage: statusEvent.status.message
-      ? { parts: statusEvent.status.message.parts }
-      : undefined,
+    state,
+    statusMessage: statusMessage ? { parts: statusMessage.parts } : undefined,
   });
   messageStore.appendExecutionEvent({
     chatId: session.contextId,
@@ -276,19 +272,19 @@ async function handleStatusUpdate(
       chatId: session.contextId,
       kind: "task-status",
       level:
-        statusEvent.status.state === "failed" || statusEvent.status.state === "rejected"
+        state === TaskState.TASK_STATE_FAILED || state === TaskState.TASK_STATE_REJECTED
           ? "error"
-          : statusEvent.status.state === "input-required" ||
-              statusEvent.status.state === "auth-required"
+          : state === TaskState.TASK_STATE_INPUT_REQUIRED ||
+              state === TaskState.TASK_STATE_AUTH_REQUIRED
             ? "warning"
             : "info",
       timestamp: Date.now(),
-      summary: `Task ${statusEvent.status.state}`,
+      summary: `Task ${stateLabel}`,
       taskId: statusEvent.taskId,
       traceId: null,
       spanId: null,
       parentSpanId: null,
-      details: { state: statusEvent.status.state, message: statusEvent.status.message },
+      details: { state: stateLabel, message: statusMessage },
     },
   });
 }
@@ -299,13 +295,17 @@ async function handleArtifactUpdate(
   messageStore: A2AExternalMessageStore,
   connection: ReturnType<typeof useA2AConnection>,
 ) {
-  if (artifactEvent.artifact.name === "tool-call") {
-    const dataPart = artifactEvent.artifact.parts[0];
-    if (dataPart?.kind === "data" && isToolCallData(dataPart.data)) {
-      const data = dataPart.data;
+  const artifact = artifactEvent.artifact;
+  if (!artifact) return;
+
+  if (artifact.name === "tool-call") {
+    const dataPart = artifact.parts[0];
+    const dataValue = dataPart ? getPartData(dataPart) : undefined;
+    if (isToolCallData(dataValue)) {
+      const data = dataValue;
       messageStore.applyToolCall({
         chatId: session.contextId,
-        runId: artifactEvent.artifact.artifactId,
+        runId: artifact.artifactId,
         toolName: data.toolName,
         query: data.query,
         resultCount: data.resultCount,
@@ -327,8 +327,8 @@ async function handleArtifactUpdate(
                 ? `${data.toolName} finished`
                 : `${data.toolName} failed`,
           taskId: artifactEvent.taskId,
-          artifactId: artifactEvent.artifact.artifactId,
-          runId: artifactEvent.artifact.artifactId,
+          artifactId: artifact.artifactId,
+          runId: artifact.artifactId,
           traceId: null,
           spanId: null,
           parentSpanId: null,
@@ -344,17 +344,17 @@ async function handleArtifactUpdate(
     return;
   }
 
-  const structuredSurfaceCount = countA2UISurfaces(artifactEvent.artifact.parts);
+  const structuredSurfaceCount = countA2UISurfaces(artifact.parts);
   messageStore.applyArtifactUpdate({
     chatId: session.contextId,
     taskId: artifactEvent.taskId,
-    artifactId: artifactEvent.artifact.artifactId,
-    name: artifactEvent.artifact.name,
-    description: artifactEvent.artifact.description,
-    parts: artifactEvent.artifact.parts,
-    metadata: artifactEvent.artifact.metadata,
-    append: artifactEvent.append ?? false,
-    lastChunk: artifactEvent.lastChunk ?? false,
+    artifactId: artifact.artifactId,
+    name: artifact.name,
+    description: artifact.description,
+    parts: artifact.parts,
+    metadata: artifact.metadata,
+    append: artifactEvent.append,
+    lastChunk: artifactEvent.lastChunk,
   });
   messageStore.appendExecutionEvent({
     chatId: session.contextId,
@@ -365,20 +365,20 @@ async function handleArtifactUpdate(
       level: "info",
       timestamp: Date.now(),
       summary: artifactEvent.lastChunk
-        ? `${artifactEvent.artifact.name ?? "Artifact"} completed`
-        : `${artifactEvent.artifact.name ?? "Artifact"} updated`,
+        ? `${artifact.name ?? "Artifact"} completed`
+        : `${artifact.name ?? "Artifact"} updated`,
       taskId: artifactEvent.taskId,
-      artifactId: artifactEvent.artifact.artifactId,
+      artifactId: artifact.artifactId,
       traceId: null,
       spanId: null,
       parentSpanId: null,
       details: {
-        name: artifactEvent.artifact.name,
-        description: artifactEvent.artifact.description,
-        modalities: summarizePartModalities(artifactEvent.artifact.parts),
-        append: artifactEvent.append ?? false,
-        lastChunk: artifactEvent.lastChunk ?? false,
-        metadata: artifactEvent.artifact.metadata,
+        name: artifact.name,
+        description: artifact.description,
+        modalities: summarizePartModalities(artifact.parts),
+        append: artifactEvent.append,
+        lastChunk: artifactEvent.lastChunk,
+        metadata: artifact.metadata,
       },
     },
   });
@@ -393,7 +393,7 @@ async function handleArtifactUpdate(
         timestamp: Date.now(),
         summary: `${structuredSurfaceCount} structured UI surface${structuredSurfaceCount === 1 ? "" : "s"} detected`,
         taskId: artifactEvent.taskId,
-        artifactId: artifactEvent.artifact.artifactId,
+        artifactId: artifact.artifactId,
         traceId: null,
         spanId: null,
         parentSpanId: null,
@@ -417,7 +417,7 @@ function handleAgentMessage(
   messageStore.applyAgentMessage({
     chatId: session.contextId,
     messageId: agentMessage.messageId,
-    taskId: agentMessage.taskId,
+    taskId: agentMessage.taskId || undefined,
     parts: agentMessage.parts,
   });
   messageStore.appendExecutionEvent({
@@ -429,7 +429,7 @@ function handleAgentMessage(
       level: "info",
       timestamp: Date.now(),
       summary: "Agent message received",
-      taskId: agentMessage.taskId,
+      taskId: agentMessage.taskId || undefined,
       messageId: agentMessage.messageId,
       traceId: null,
       spanId: null,

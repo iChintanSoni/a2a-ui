@@ -1,5 +1,6 @@
 import type { Part } from "@a2a-js/sdk";
 import { detectA2UISurface } from "@/lib/a2a/a2ui";
+import { DEFAULT_FILE_MEDIA_TYPE, getPartBytesBase64 } from "@/lib/a2a/parts";
 import { A2UISurfaceRenderer } from "./A2UISurfaceRenderer";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
@@ -9,36 +10,36 @@ interface Props {
 }
 
 function getPartMimeType(part: Part): string | undefined {
-  if (part.kind === "file") return part.file.mimeType;
-  const metadata = (part as { metadata?: { mimeType?: unknown } }).metadata;
+  if (part.mediaType) return part.mediaType;
+  const metadata = part.metadata;
   return typeof metadata?.mimeType === "string" ? metadata.mimeType : undefined;
 }
 
 export function PartRenderer({ part, a2uiEnabled = false }: Props) {
-  if (part.kind === "text") {
-    return <MarkdownRenderer content={part.text} />;
+  if (part.content?.$case === "text") {
+    return <MarkdownRenderer content={part.content.value} />;
   }
 
-  if (part.kind === "file") {
-    const { file } = part;
+  if (part.content?.$case === "url" || part.content?.$case === "raw") {
+    const mimeType = part.mediaType || DEFAULT_FILE_MEDIA_TYPE;
     const src =
-      "uri" in file
-        ? file.uri
-        : `data:${file.mimeType ?? "application/octet-stream"};base64,${file.bytes}`;
-    const name = file.name ?? "file";
+      part.content.$case === "url"
+        ? part.content.value
+        : `data:${mimeType};base64,${getPartBytesBase64(part) ?? ""}`;
+    const name = part.filename || "file";
 
-    if (file.mimeType?.startsWith("image/")) {
+    if (mimeType.startsWith("image/")) {
       // eslint-disable-next-line @next/next/no-img-element
       return <img src={src} alt={name} className="max-w-full rounded border sm:max-w-xs" />;
     }
 
-    if (file.mimeType?.startsWith("audio/")) {
+    if (mimeType.startsWith("audio/")) {
       return (
         <audio controls src={src} className="max-w-full rounded sm:max-w-xs" aria-label={name} />
       );
     }
 
-    if (file.mimeType?.startsWith("video/")) {
+    if (mimeType.startsWith("video/")) {
       return (
         <video
           controls
@@ -49,7 +50,7 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
       );
     }
 
-    if (file.mimeType === "application/pdf") {
+    if (mimeType === "application/pdf") {
       return (
         <div className="flex flex-col gap-1">
           <object
@@ -85,15 +86,16 @@ export function PartRenderer({ part, a2uiEnabled = false }: Props) {
     );
   }
 
-  if (part.kind === "data") {
-    const detection = detectA2UISurface(part.data, getPartMimeType(part));
+  if (part.content?.$case === "data") {
+    const data = part.content.value;
+    const detection = detectA2UISurface(data, getPartMimeType(part));
     if (a2uiEnabled && detection) {
       return <A2UISurfaceRenderer surface={detection.surface} />;
     }
 
     return (
       <pre className="bg-muted overflow-x-auto rounded p-3 text-xs">
-        {JSON.stringify(part.data, null, 2)}
+        {JSON.stringify(data, null, 2)}
       </pre>
     );
   }

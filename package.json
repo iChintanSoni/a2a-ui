@@ -54,9 +54,10 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@a2a-js/sdk": "^0",
+    "@a2a-js/sdk": "^1.1.0",
     "@reduxjs/toolkit": "^2",
     "@tailwindcss/postcss": "^4",
+    "buffer": "^6.0.3",
     "class-variance-authority": "^0",
     "clsx": "^2",
     "highlight.js": "^11",

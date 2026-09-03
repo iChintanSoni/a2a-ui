@@ -1,4 +1,5 @@
-import type { Part, TaskState } from "@a2a-js/sdk";
+import { TaskState, type Part } from "@a2a-js/sdk";
+import { getPartText } from "@/lib/a2a/parts";
 import { getTaskTimelineStages, type TaskTimelineStage } from "@/lib/a2a/execution-events";
 import type { Chat } from "./chatsSlice";
 
@@ -20,8 +21,8 @@ export interface TaskSummary {
 
 function textFromParts(parts: Part[]): string {
   return parts
-    .filter((part): part is Extract<Part, { kind: "text" }> => part.kind === "text")
-    .map(part => part.text)
+    .map(getPartText)
+    .filter((text): text is string => text != null)
     .join(" ")
     .trim();
 }
@@ -68,7 +69,7 @@ export function buildTaskSummaries(chats: Chat[]): TaskSummary[] {
           taskId: item.taskId,
           agentName: chat.agentName,
           agentUrl: chat.agentUrl,
-          state: existing?.state ?? "unknown",
+          state: existing?.state ?? TaskState.TASK_STATE_UNSPECIFIED,
           artifactCount: (existing?.artifactCount ?? 0) + 1,
           artifactNames:
             item.name && !(existing?.artifactNames ?? []).includes(item.name)
@@ -93,7 +94,7 @@ export function buildTaskSummaries(chats: Chat[]): TaskSummary[] {
         taskId: event.taskId,
         agentName: chat.agentName,
         agentUrl: chat.agentUrl,
-        state: existing?.state ?? "unknown",
+        state: existing?.state ?? TaskState.TASK_STATE_UNSPECIFIED,
         artifactCount: existing?.artifactCount ?? 0,
         artifactNames: existing?.artifactNames ?? [],
         validationWarningCount: (existing?.validationWarningCount ?? 0) + 1,

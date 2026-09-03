@@ -1,3 +1,4 @@
+import { textPart } from "@/lib/a2a/parts";
 import { describe, expect, it } from "vitest";
 import { CURATED_AGENT_PRESETS } from "@/lib/presets/data";
 import {
@@ -118,7 +119,7 @@ describe("presetUtils", () => {
           id: "m1",
           kind: "user-message" as const,
           timestamp: Date.now(),
-          parts: [{ kind: "text" as const, text: "Hi" }],
+          parts: [textPart("Hi")],
         },
       ],
     };

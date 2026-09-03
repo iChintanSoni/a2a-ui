@@ -52,8 +52,8 @@ function normalizeAgentCard(card: SDKAgentCard): SDKAgentCard {
     defaultOutputModes: defaultOutputModes ?? [],
     skills: (card.skills ?? []).map(skill => ({
       ...skill,
-      inputModes: normalizeModes(skill.inputModes),
-      outputModes: normalizeModes(skill.outputModes),
+      inputModes: normalizeModes(skill.inputModes) ?? [],
+      outputModes: normalizeModes(skill.outputModes) ?? [],
     })),
   };
 }

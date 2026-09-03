@@ -1,3 +1,4 @@
+import { TaskState } from "@a2a-js/sdk";
 import type { Agent } from "@/lib/features/agents/agentsSlice";
 import type { QaSuite } from "@/lib/features/qa/types";
 
@@ -19,7 +20,7 @@ export function createDemoSmokeSuite(agent: Agent): QaSuite {
         prompt: "Reply with one concise sentence confirming you are ready for A2A QA.",
         attachments: [],
         metadata: { source: "a2a-ui-qa-smoke" },
-        expectedTaskState: "completed",
+        expectedTaskState: TaskState.TASK_STATE_COMPLETED,
         expectedOutputMode: "text",
         assertions: [
           {

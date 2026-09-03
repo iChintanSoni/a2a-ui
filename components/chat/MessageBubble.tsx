@@ -20,7 +20,7 @@ export const UserBubble = memo(function UserBubble({
     <div className="group flex justify-end">
       <div className="relative flex max-w-[92%] flex-col items-end gap-1.5 sm:max-w-[75%]">
         {item.parts.map((part, i) =>
-          part.kind === "text" ? (
+          part.content?.$case === "text" ? (
             <div
               key={i}
               className="bg-foreground text-background rounded-[13px] rounded-br-[4px] px-4 py-2.5 text-[13.5px] leading-relaxed font-medium"

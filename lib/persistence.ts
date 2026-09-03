@@ -1,5 +1,10 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
-import type { Part } from "@a2a-js/sdk";
+import {
+  migrateLegacyAgentCard,
+  migrateLegacyParts,
+  toOptionalTaskState,
+  toTaskState,
+} from "@/lib/a2a/legacy";
 import type { Agent } from "./features/agents/agentsSlice";
 import type { Chat, ChatItem } from "./features/chats/chatsSlice";
 import type { QaState } from "./features/qa/types";
@@ -16,7 +21,7 @@ let _db: Promise<IDBPDatabase<A2ASchema>> | null = null;
 
 function getDB(): Promise<IDBPDatabase<A2ASchema>> {
   if (!_db) {
-    _db = openDB<A2ASchema>("a2a-ui", 3, {
+    _db = openDB<A2ASchema>("a2a-ui", 4, {
       upgrade(db) {
         if (!db.objectStoreNames.contains("agents")) {
           db.createObjectStore("agents", { keyPath: "id" });
@@ -36,23 +41,61 @@ function getDB(): Promise<IDBPDatabase<A2ASchema>> {
   return _db;
 }
 
-// Migrate items from old format where UserMessageItem had `text` + `attachments`
-// instead of the current `parts` array.
+// Two generations of stored chat items:
+//   v1 → v2: UserMessageItem carried `text` + `attachments` instead of `parts`.
+//   v2 → v3: @a2a-js/sdk v1.0 restructured Part and made TaskState a numeric enum.
 function migrateItems(items: unknown[]): ChatItem[] {
   return items.map(item => {
     const raw = item as Record<string, unknown>;
+
     if (raw.kind === "user-message" && !Array.isArray(raw.parts)) {
-      const parts: Part[] = [];
+      const legacyParts: unknown[] = [];
       if (typeof raw.text === "string" && raw.text) {
-        parts.push({ kind: "text", text: raw.text });
+        legacyParts.push({ kind: "text", text: raw.text });
       }
       if (Array.isArray(raw.attachments)) {
-        parts.push(...(raw.attachments as Part[]));
+        legacyParts.push(...raw.attachments);
       }
-      return { ...raw, parts } as ChatItem;
+      return { ...raw, parts: migrateLegacyParts(legacyParts) } as ChatItem;
     }
+
+    if (raw.kind === "task-status") {
+      const statusMessage = raw.statusMessage as Record<string, unknown> | undefined;
+      return {
+        ...raw,
+        state: toTaskState(raw.state),
+        ...(statusMessage
+          ? { statusMessage: { parts: migrateLegacyParts(statusMessage.parts) } }
+          : {}),
+      } as ChatItem;
+    }
+
+    if (Array.isArray(raw.parts)) {
+      return { ...raw, parts: migrateLegacyParts(raw.parts) } as ChatItem;
+    }
+
     return item as ChatItem;
   });
+}
+
+function migrateQaState(qa: QaState | undefined): QaState {
+  return {
+    suites: (qa?.suites ?? []).map(suite => ({
+      ...suite,
+      cases: (suite.cases ?? []).map(testCase => ({
+        ...testCase,
+        attachments: migrateLegacyParts(testCase.attachments),
+        expectedTaskState: toOptionalTaskState(testCase.expectedTaskState),
+      })),
+    })),
+    runs: (qa?.runs ?? []).map(run => ({
+      ...run,
+      caseResults: (run.caseResults ?? []).map(result => ({
+        ...result,
+        finalTaskState: toOptionalTaskState(result.finalTaskState),
+      })),
+    })),
+  };
 }
 
 export async function loadPersistedState(): Promise<{
@@ -73,6 +116,7 @@ export async function loadPersistedState(): Promise<{
     ...a,
     tags: a.tags ?? [],
     favorite: a.favorite ?? false,
+    card: migrateLegacyAgentCard(a.card),
     status: "disconnected" as const,
     error: undefined,
   }));
@@ -90,10 +134,7 @@ export async function loadPersistedState(): Promise<{
       taskFilterPresets: workbench?.taskFilterPresets ?? [],
       agentSettings: workbench?.agentSettings ?? {},
     },
-    qa: {
-      suites: qa?.suites ?? [],
-      runs: qa?.runs ?? [],
-    },
+    qa: migrateQaState(qa),
   };
 }
 

@@ -1,3 +1,4 @@
+import "@/lib/utils/buffer-polyfill";
 import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
 import { A2UI_EXTENSION_HEADER, A2UI_EXTENSION_VALUE } from "@/lib/a2a/a2ui";
 import { createDebugFetch, type LogEntry } from "@/lib/utils/debugInterceptor";

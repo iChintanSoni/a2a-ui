@@ -1,3 +1,5 @@
+import { TaskState } from "@a2a-js/sdk";
+import { taskStateLabel } from "@/lib/a2a/legacy";
 import {
   CheckCircle2,
   XCircle,
@@ -75,11 +77,11 @@ const STATE_CONFIG: Record<
 };
 
 export function TaskStatusRow({ item, timelineStages = [], onInspect, onRetry }: Props) {
-  const config = STATE_CONFIG[item.state] ?? STATE_CONFIG.unknown;
+  const config = STATE_CONFIG[taskStateLabel(item.state)] ?? STATE_CONFIG.unknown;
   const Icon = config.icon;
 
   // Render a prominent callout card for input-required state
-  if (item.state === "input-required") {
+  if (item.state === TaskState.TASK_STATE_INPUT_REQUIRED) {
     return (
       <div className="group border-warning-soft bg-warning-soft/60 relative rounded-[9px] border px-4 py-3">
         <div className="text-warning-foreground mb-1 flex items-center gap-2 text-xs font-semibold">
@@ -127,7 +129,7 @@ export function TaskStatusRow({ item, timelineStages = [], onInspect, onRetry }:
           ))}
         </div>
       )}
-      {item.state === "canceled" && onRetry && (
+      {item.state === TaskState.TASK_STATE_CANCELED && onRetry && (
         <div className="ms-5 mt-1">
           <Button variant="outline" size="sm" className="h-7 gap-1 text-xs" onClick={onRetry}>
             <RotateCcw className="size-3" />

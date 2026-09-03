@@ -1,5 +1,6 @@
 "use client";
 
+import { TaskState } from "@a2a-js/sdk";
 import Link from "next/link";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -57,7 +58,7 @@ function chatStatus(chat: Chat): { label: string; dotClassName: string } {
   const lastTaskStatus = chat.items.findLast(
     (item): item is TaskStatusItem => item.kind === "task-status",
   );
-  if (lastTaskStatus?.state === "input-required") {
+  if (lastTaskStatus?.state === TaskState.TASK_STATE_INPUT_REQUIRED) {
     return { label: "input required", dotClassName: "bg-warning-foreground" };
   }
   return { label: "active", dotClassName: "bg-primary" };

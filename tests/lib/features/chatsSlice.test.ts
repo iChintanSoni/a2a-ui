@@ -1,3 +1,6 @@
+import type { Part } from "@a2a-js/sdk";
+import { dataPart, getTextPartsText, textPart } from "@/lib/a2a/parts";
+import { TaskState } from "@a2a-js/sdk";
 import { describe, it, expect, beforeEach } from "vitest";
 import reducer, {
   addChat,
@@ -35,7 +38,7 @@ function makeChat(
 }
 
 function userTextParts(text: string) {
-  return [{ kind: "text" as const, text }];
+  return [textPart(text)];
 }
 
 describe("chatsSlice", () => {
@@ -163,7 +166,10 @@ describe("chatsSlice", () => {
         state,
         addUserMessage({ chatId: "c1", id: "m1", parts: userTextParts("Hello") }),
       );
-      state = reducer(state, applyStatusUpdate({ chatId: "c1", taskId: "t1", state: "completed" }));
+      state = reducer(
+        state,
+        applyStatusUpdate({ chatId: "c1", taskId: "t1", state: TaskState.TASK_STATE_COMPLETED }),
+      );
       state = reducer(state, cloneChat({ chatId: "c1", newChatId: "c2" }));
 
       expect(state.activeChatId).toBe("c2");
@@ -193,7 +199,10 @@ describe("chatsSlice", () => {
         state,
         addUserMessage({ chatId: "c1", id: "m1", parts: userTextParts("Hello") }),
       );
-      state = reducer(state, applyStatusUpdate({ chatId: "c1", taskId: "t1", state: "completed" }));
+      state = reducer(
+        state,
+        applyStatusUpdate({ chatId: "c1", taskId: "t1", state: TaskState.TASK_STATE_COMPLETED }),
+      );
       state = reducer(
         state,
         appendExecutionEvent({
@@ -226,7 +235,7 @@ describe("chatsSlice", () => {
       );
       const item = state.chats[0].items[0];
       expect(item.kind).toBe("user-message");
-      expect((item as { parts: { text: string }[] }).parts[0].text).toBe("Hello");
+      expect(getTextPartsText((item as { parts: Part[] }).parts)).toBe("Hello");
     });
 
     it("updates lastMessage and timestamp on the chat", () => {
@@ -252,7 +261,7 @@ describe("chatsSlice", () => {
         addUserMessage({
           chatId: "c1",
           id: "m1",
-          parts: [{ kind: "data", data: { query: "status", limit: 3 } }],
+          parts: [dataPart({ query: "status", limit: 3 })],
         }),
       );
       expect(state.chats[0].lastMessage).toContain('"query": "status"');
@@ -276,22 +285,37 @@ describe("chatsSlice", () => {
     });
 
     it("adds a new task-status item", () => {
-      state = reducer(state, applyStatusUpdate({ chatId: "c1", taskId: "t1", state: "working" }));
+      state = reducer(
+        state,
+        applyStatusUpdate({ chatId: "c1", taskId: "t1", state: TaskState.TASK_STATE_WORKING }),
+      );
       expect(state.chats[0].items).toHaveLength(1);
       expect(state.chats[0].items[0].kind).toBe("task-status");
     });
 
     it("upserts (updates in place) an existing task-status for the same taskId", () => {
-      state = reducer(state, applyStatusUpdate({ chatId: "c1", taskId: "t1", state: "working" }));
-      state = reducer(state, applyStatusUpdate({ chatId: "c1", taskId: "t1", state: "completed" }));
+      state = reducer(
+        state,
+        applyStatusUpdate({ chatId: "c1", taskId: "t1", state: TaskState.TASK_STATE_WORKING }),
+      );
+      state = reducer(
+        state,
+        applyStatusUpdate({ chatId: "c1", taskId: "t1", state: TaskState.TASK_STATE_COMPLETED }),
+      );
       expect(state.chats[0].items).toHaveLength(1);
-      const item = state.chats[0].items[0] as { state: string };
-      expect(item.state).toBe("completed");
+      const item = state.chats[0].items[0] as { state: TaskState };
+      expect(item.state).toBe(TaskState.TASK_STATE_COMPLETED);
     });
 
     it("adds a separate item for a different taskId", () => {
-      state = reducer(state, applyStatusUpdate({ chatId: "c1", taskId: "t1", state: "working" }));
-      state = reducer(state, applyStatusUpdate({ chatId: "c1", taskId: "t2", state: "completed" }));
+      state = reducer(
+        state,
+        applyStatusUpdate({ chatId: "c1", taskId: "t1", state: TaskState.TASK_STATE_WORKING }),
+      );
+      state = reducer(
+        state,
+        applyStatusUpdate({ chatId: "c1", taskId: "t2", state: TaskState.TASK_STATE_COMPLETED }),
+      );
       expect(state.chats[0].items).toHaveLength(2);
     });
   });
@@ -302,7 +326,7 @@ describe("chatsSlice", () => {
       chatId: "c1",
       taskId: "t1",
       artifactId: "a1",
-      parts: [{ kind: "text" as const, text: "Hello" }],
+      parts: [textPart("Hello")],
       append: false,
       lastChunk: false,
     };
@@ -335,13 +359,13 @@ describe("chatsSlice", () => {
         state,
         applyArtifactUpdate({
           ...baseArtifact,
-          parts: [{ kind: "text", text: "World" }],
+          parts: [textPart("World")],
           append: false,
         }),
       );
-      const item = state.chats[0].items[0] as { parts: { text: string }[] };
+      const item = state.chats[0].items[0] as { parts: Part[] };
       expect(item.parts).toHaveLength(1);
-      expect(item.parts[0].text).toBe("World");
+      expect(getTextPartsText(item.parts)).toBe("World");
     });
 
     it("appends text to the last TextPart when append is true", () => {
@@ -350,12 +374,12 @@ describe("chatsSlice", () => {
         state,
         applyArtifactUpdate({
           ...baseArtifact,
-          parts: [{ kind: "text", text: " World" }],
+          parts: [textPart(" World")],
           append: true,
         }),
       );
-      const item = state.chats[0].items[0] as { parts: { text: string }[] };
-      expect(item.parts[0].text).toBe("Hello World");
+      const item = state.chats[0].items[0] as { parts: Part[] };
+      expect(getTextPartsText(item.parts)).toBe("Hello World");
     });
 
     it("pushes a new part when appending a non-text part", () => {
@@ -364,7 +388,7 @@ describe("chatsSlice", () => {
         state,
         applyArtifactUpdate({
           ...baseArtifact,
-          parts: [{ kind: "data", data: { key: "val" } }],
+          parts: [dataPart({ key: "val" })],
           append: true,
         }),
       );
@@ -431,7 +455,7 @@ describe("chatsSlice", () => {
         applyAgentMessage({
           chatId: "c1",
           messageId: "m1",
-          parts: [{ kind: "text", text: "Hi there" }],
+          parts: [textPart("Hi there")],
         }),
       );
       expect(state.chats[0].items[0].kind).toBe("agent-message");

@@ -1,26 +1,44 @@
+import { makeAgentCard } from "../../helpers/agent-card";
+import { textPart } from "@/lib/a2a/parts";
+import { Role, TaskState, type StreamResponse } from "@a2a-js/sdk";
 import { describe, expect, it } from "vitest";
 import type { Client } from "@a2a-js/sdk/client";
 import { executeQaSuite } from "@/lib/features/qa/runner";
 import type { Agent } from "@/lib/features/agents/agentsSlice";
 import type { QaSuite } from "@/lib/features/qa/types";
 
-async function* fakeStream() {
-  yield {
-    kind: "status-update",
-    taskId: "task-1",
-    status: { state: "working" },
+function statusUpdate(state: TaskState): StreamResponse {
+  return {
+    payload: {
+      $case: "statusUpdate",
+      value: {
+        taskId: "task-1",
+        contextId: "context-1",
+        status: { state, message: undefined, timestamp: undefined },
+        metadata: undefined,
+      },
+    },
   };
+}
+
+async function* fakeStream(): AsyncGenerator<StreamResponse> {
+  yield statusUpdate(TaskState.TASK_STATE_WORKING);
   yield {
-    kind: "message",
-    role: "agent",
-    messageId: "message-1",
-    parts: [{ kind: "text", text: "QA ready" }],
+    payload: {
+      $case: "message",
+      value: {
+        messageId: "message-1",
+        contextId: "context-1",
+        taskId: "task-1",
+        role: Role.ROLE_AGENT,
+        parts: [textPart("QA ready")],
+        metadata: undefined,
+        extensions: [],
+        referenceTaskIds: [],
+      },
+    },
   };
-  yield {
-    kind: "status-update",
-    taskId: "task-1",
-    status: { state: "completed" },
-  };
+  yield statusUpdate(TaskState.TASK_STATE_COMPLETED);
 }
 
 const agent: Agent = {
@@ -30,17 +48,7 @@ const agent: Agent = {
   status: "connected",
   auth: { type: "none" },
   customHeaders: [],
-  card: {
-    protocolVersion: "0.3.0",
-    name: "Agent",
-    description: "Test agent",
-    url: "https://agent.test",
-    version: "1",
-    capabilities: {},
-    defaultInputModes: ["text/plain"],
-    defaultOutputModes: ["text/plain"],
-    skills: [],
-  },
+  card: makeAgentCard({ name: "Agent", description: "Test agent" }),
 };
 
 const suite: QaSuite = {
@@ -57,7 +65,7 @@ const suite: QaSuite = {
       prompt: "Are you ready?",
       attachments: [],
       metadata: { source: "test" },
-      expectedTaskState: "completed",
+      expectedTaskState: TaskState.TASK_STATE_COMPLETED,
       expectedOutputMode: "text",
       assertions: [
         {
@@ -82,7 +90,7 @@ describe("qa runner", () => {
 
     expect(run.passed).toBe(true);
     expect(run.caseResults).toHaveLength(1);
-    expect(run.caseResults[0].finalTaskState).toBe("completed");
+    expect(run.caseResults[0].finalTaskState).toBe(TaskState.TASK_STATE_COMPLETED);
     expect(run.caseResults[0].assertionResults.every(result => result.passed)).toBe(true);
   });
 });

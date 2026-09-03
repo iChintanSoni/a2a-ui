@@ -1,3 +1,5 @@
+import { textPart } from "@/lib/a2a/parts";
+import { TaskState } from "@a2a-js/sdk";
 import { describe, expect, it } from "vitest";
 import type { Chat } from "@/lib/features/chats/chatsSlice";
 import { buildTaskSummaries } from "@/lib/features/chats/taskIndex";
@@ -17,9 +19,9 @@ describe("buildTaskSummaries", () => {
             kind: "task-status",
             id: "task-1",
             taskId: "task-1",
-            state: "completed",
+            state: TaskState.TASK_STATE_COMPLETED,
             statusMessage: {
-              parts: [{ kind: "text", text: "Forecast ready" }],
+              parts: [textPart("Forecast ready")],
             },
             timestamp: 20,
           },
@@ -28,7 +30,7 @@ describe("buildTaskSummaries", () => {
             id: "artifact-1",
             taskId: "task-1",
             name: "forecast.md",
-            parts: [{ kind: "text", text: "# Forecast" }],
+            parts: [textPart("# Forecast")],
             isStreaming: false,
             timestamp: 25,
           },
@@ -85,7 +87,7 @@ describe("buildTaskSummaries", () => {
       chatId: "chat-1",
       contextId: "chat-1",
       taskId: "task-1",
-      state: "completed",
+      state: TaskState.TASK_STATE_COMPLETED,
       artifactCount: 1,
       artifactNames: ["forecast.md"],
       validationWarningCount: 1,
@@ -112,7 +114,7 @@ describe("buildTaskSummaries", () => {
             id: "artifact-2",
             taskId: "task-2",
             name: "result.txt",
-            parts: [{ kind: "text", text: "Done" }],
+            parts: [textPart("Done")],
             isStreaming: false,
             timestamp: 5,
           },
@@ -125,7 +127,7 @@ describe("buildTaskSummaries", () => {
 
     expect(summaries).toHaveLength(1);
     expect(summaries[0].taskId).toBe("task-2");
-    expect(summaries[0].state).toBe("unknown");
+    expect(summaries[0].state).toBe(TaskState.TASK_STATE_UNSPECIFIED);
     expect(summaries[0].artifactCount).toBe(1);
   });
 });

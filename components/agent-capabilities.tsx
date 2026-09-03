@@ -25,9 +25,9 @@ export function AgentCapabilitiesBadges({
       title: "Async push notifications (capabilities.pushNotifications)",
     },
     {
-      label: "State History",
-      active: !!capabilities?.stateTransitionHistory,
-      title: "State transition history (capabilities.stateTransitionHistory)",
+      label: "Extended Card",
+      active: !!capabilities?.extendedAgentCard,
+      title: "Authenticated extended agent card (capabilities.extendedAgentCard)",
     },
   ];
 

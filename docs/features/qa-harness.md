@@ -183,7 +183,7 @@ Each row becomes one case. Supported columns:
 | -------------------- | ------------------------------------ |
 | `name`               | Case name                            |
 | `prompt`             | Prompt text                          |
-| `expectedTaskState`  | e.g. `completed`                     |
+| `expectedTaskState`  | e.g. `completed` (see note below)    |
 | `expectedOutputMode` | `any`, `text`, `json`, or `artifact` |
 | `regexPattern`       | Creates a `content-regex` assertion  |
 | `jsonPath`           | Creates a `json-path` assertion      |
@@ -196,6 +196,12 @@ name,prompt,expectedTaskState,expectedOutputMode,regexPattern
 "Readiness check","Are you ready?","completed","text","ready"
 "JSON output","Return status JSON","completed","json","$.status"
 ```
+
+> **Task state spellings.** A2A v1.0 made `TaskState` a numeric enum, which is
+> what suites store once saved. Imports stay forgiving: `expectedTaskState`
+> accepts the short name (`completed`, `input-required`), the protocol spelling
+> (`TASK_STATE_COMPLETED`), or the enum ordinal. Both the dashboard runner and
+> `npx a2a-ui qa-run` parse all three, so hand-written suites can stay readable.
 
 Import errors are shown inline — the existing draft cases are not cleared on
 a parse failure.

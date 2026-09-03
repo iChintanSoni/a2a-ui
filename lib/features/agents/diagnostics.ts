@@ -1,3 +1,4 @@
+import { agentCardTransport, agentCardTransports } from "@/lib/a2a/agent-card";
 import type { AgentCard } from "@a2a-js/sdk";
 import type { Client } from "@a2a-js/sdk/client";
 import type { AuthConfig, CustomHeader } from "@/lib/features/agents/agentsSlice";
@@ -106,14 +107,7 @@ export async function runAgentConnectionDiagnostic({
         setTimeout(() => reject(new Error("Agent card fetch timed out after 15s")), 15_000),
       ),
     ]);
-    const interfaces = card.additionalInterfaces ?? [];
-    const transports = Array.from(
-      new Set(
-        [card.preferredTransport, ...interfaces.map(entry => entry.transport)].filter(
-          (entry): entry is string => Boolean(entry),
-        ),
-      ),
-    );
+    const transports = agentCardTransports(card);
 
     const diagnostic: AgentConnectionDiagnostic = {
       status: "connected",
@@ -122,7 +116,7 @@ export async function runAgentConnectionDiagnostic({
       attemptedCardUrl,
       finalUrl,
       agentName: card.name,
-      preferredTransport: card.preferredTransport,
+      preferredTransport: agentCardTransport(card),
       transports,
       latencyMs: Date.now() - startedAt,
       proxyPath: proxyPathFor(attemptedCardUrl ?? normalizedUrl ?? url),

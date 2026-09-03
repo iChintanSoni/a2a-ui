@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@a2a-js/sdk": "^0",
+    "@a2a-js/sdk": "^1",
     "@langchain/community": "^1",
     "@langchain/core": "^1",
     "@langchain/ollama": "^1.2.6",

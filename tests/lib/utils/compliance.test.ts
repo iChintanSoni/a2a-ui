@@ -1,18 +1,23 @@
 import { describe, it, expect } from "vitest";
 import type { AgentCard } from "@a2a-js/sdk";
+import { makeAgentCard, makeAgentSkill } from "../../helpers/agent-card";
 import { checkCompliance } from "@/lib/utils/compliance";
 
-const VALID_CARD: AgentCard = {
+const VALID_CARD: AgentCard = makeAgentCard({
   name: "Test Agent",
   description: "A test agent",
-  url: "https://example.com/agent",
-  version: "1.0.0",
-  protocolVersion: "0.1",
-  capabilities: { streaming: true },
-  skills: [{ id: "s1", name: "Skill One", description: "Does stuff", tags: [] }],
+  supportedInterfaces: [
+    {
+      url: "https://example.com/agent",
+      protocolBinding: "JSONRPC",
+      tenant: "",
+      protocolVersion: "1.0",
+    },
+  ],
+  skills: [makeAgentSkill()],
   defaultInputModes: ["text"],
   defaultOutputModes: ["text"],
-};
+});
 
 function makeCard(overrides: Partial<Record<string, unknown>>): AgentCard {
   return { ...VALID_CARD, ...overrides } as AgentCard;
@@ -36,52 +41,89 @@ describe("checkCompliance", () => {
   });
 
   describe("required string fields", () => {
-    it.each(["name", "description", "version", "protocolVersion"])(
-      "fails when %s is missing",
-      field => {
-        const result = checkCompliance(makeCard({ [field]: undefined }));
-        expect(getCheck(result, field).pass).toBe(false);
-      },
-    );
+    it.each(["name", "description", "version"])("fails when %s is missing", field => {
+      const result = checkCompliance(makeCard({ [field]: undefined }));
+      expect(getCheck(result, field).pass).toBe(false);
+    });
 
-    it.each(["name", "description", "version", "protocolVersion"])(
-      "fails when %s is empty string",
-      field => {
-        const result = checkCompliance(makeCard({ [field]: "   " }));
-        expect(getCheck(result, field).pass).toBe(false);
-      },
-    );
+    it.each(["name", "description", "version"])("fails when %s is empty string", field => {
+      const result = checkCompliance(makeCard({ [field]: "   " }));
+      expect(getCheck(result, field).pass).toBe(false);
+    });
 
-    it.each(["name", "description", "version", "protocolVersion"])(
-      "passes when %s has a value",
-      field => {
-        const result = checkCompliance(VALID_CARD);
-        expect(getCheck(result, field).pass).toBe(true);
-      },
-    );
+    it.each(["name", "description", "version"])("passes when %s has a value", field => {
+      const result = checkCompliance(VALID_CARD);
+      expect(getCheck(result, field).pass).toBe(true);
+    });
   });
 
-  describe("url", () => {
-    it("passes for a valid https URL", () => {
+  describe("supportedInterfaces", () => {
+    it("passes for a well-formed interface list", () => {
       const result = checkCompliance(VALID_CARD);
-      expect(getCheck(result, "url").pass).toBe(true);
+      expect(getCheck(result, "supportedInterfaces").pass).toBe(true);
+      expect(getCheck(result, "supportedInterfaces-entries").pass).toBe(true);
     });
 
-    it("fails for a missing URL", () => {
-      const result = checkCompliance(makeCard({ url: undefined }));
-      expect(getCheck(result, "url").pass).toBe(false);
-      expect(getCheck(result, "url").message).toMatch(/Missing/);
+    it("fails when no interfaces are declared", () => {
+      const result = checkCompliance(makeCard({ supportedInterfaces: [] }));
+      expect(getCheck(result, "supportedInterfaces").pass).toBe(false);
+      expect(getCheck(result, "supportedInterfaces").message).toMatch(/Missing or empty/);
     });
 
-    it("fails for an invalid URL string", () => {
-      const result = checkCompliance(makeCard({ url: "not-a-url" }));
-      expect(getCheck(result, "url").pass).toBe(false);
-      expect(getCheck(result, "url").message).toMatch(/Invalid URL/);
+    it("fails when an interface url is not absolute", () => {
+      const result = checkCompliance(
+        makeCard({
+          supportedInterfaces: [
+            { url: "not-a-url", protocolBinding: "JSONRPC", tenant: "", protocolVersion: "1.0" },
+          ],
+        }),
+      );
+      const check = getCheck(result, "supportedInterfaces-entries");
+      expect(check.pass).toBe(false);
+      expect(check.message).toContain("url must be an absolute URL");
     });
 
-    it("includes the URL value in the pass message", () => {
-      const result = checkCompliance(VALID_CARD);
-      expect(getCheck(result, "url").message).toContain("example.com");
+    it("identifies which interface entry is invalid", () => {
+      const result = checkCompliance(
+        makeCard({
+          supportedInterfaces: [
+            {
+              url: "http://127.0.0.1:4000/a2a/jsonrpc",
+              protocolBinding: "JSONRPC",
+              tenant: "",
+              protocolVersion: "1.0",
+            },
+            {
+              url: "http://127.0.0.1:4000/a2a/rest",
+              protocolBinding: "HTTP+JSON",
+              tenant: "",
+              protocolVersion: "1.0",
+            },
+            { url: "127.0.0.1:4001", protocolBinding: "GRPC", tenant: "", protocolVersion: "1.0" },
+          ],
+        }),
+      );
+
+      const check = getCheck(result, "supportedInterfaces-entries");
+      expect(check.pass).toBe(false);
+      expect(check.message).toContain("supportedInterfaces[2]");
+      expect(check.message).toContain("url must be an absolute URL");
+    });
+
+    it("rejects an unsupported protocol binding", () => {
+      const result = checkCompliance(
+        makeCard({
+          supportedInterfaces: [
+            {
+              url: "https://example.com/agent",
+              protocolBinding: "CARRIER_PIGEON",
+              tenant: "",
+              protocolVersion: "1.0",
+            },
+          ],
+        }),
+      );
+      expect(getCheck(result, "supportedInterfaces-entries").pass).toBe(false);
     });
   });
 
@@ -173,36 +215,43 @@ describe("checkCompliance", () => {
   });
 
   describe("expanded protocol checks", () => {
-    it("fails incompatible protocol major versions", () => {
-      const result = checkCompliance(makeCard({ protocolVersion: "2.0" }));
-      expect(getCheck(result, "protocolVersion-compatible").pass).toBe(false);
-    });
-
-    it("validates additionalInterfaces transport and URL pairs", () => {
+    it("fails when no interface speaks a supported protocol major version", () => {
       const result = checkCompliance(
         makeCard({
-          additionalInterfaces: [{ url: "not-a-url", transport: "JSONRPC" }],
-        }),
-      );
-      expect(getCheck(result, "additionalInterfaces").pass).toBe(false);
-      expect(getCheck(result, "additionalInterfaces").severity).toBe("warning");
-    });
-
-    it("identifies the invalid additionalInterfaces entry", () => {
-      const result = checkCompliance(
-        makeCard({
-          additionalInterfaces: [
-            { url: "http://127.0.0.1:4000/a2a/jsonrpc", transport: "JSONRPC" },
-            { url: "http://127.0.0.1:4000/a2a/rest", transport: "HTTP+JSON" },
-            { url: "127.0.0.1:4001", transport: "GRPC" },
+          supportedInterfaces: [
+            {
+              url: "https://example.com/agent",
+              protocolBinding: "JSONRPC",
+              tenant: "",
+              protocolVersion: "0.3",
+            },
           ],
         }),
       );
+      expect(getCheck(result, "protocolVersion-compatible").pass).toBe(false);
+      expect(getCheck(result, "protocolVersion-compatible").message).toContain("0.3");
+    });
 
-      const check = getCheck(result, "additionalInterfaces");
-      expect(check.pass).toBe(false);
-      expect(check.message).toContain("additionalInterfaces[2]");
-      expect(check.message).toContain("url must be an absolute URL");
+    it("passes when at least one interface speaks a supported version", () => {
+      const result = checkCompliance(
+        makeCard({
+          supportedInterfaces: [
+            {
+              url: "https://example.com/legacy",
+              protocolBinding: "JSONRPC",
+              tenant: "",
+              protocolVersion: "0.3",
+            },
+            {
+              url: "https://example.com/agent",
+              protocolBinding: "JSONRPC",
+              tenant: "",
+              protocolVersion: "1.0",
+            },
+          ],
+        }),
+      );
+      expect(getCheck(result, "protocolVersion-compatible").pass).toBe(true);
     });
 
     it("fails when skill modes are outside defaults", () => {
@@ -226,7 +275,7 @@ describe("checkCompliance", () => {
     it("warns when security references an undeclared scheme", () => {
       const result = checkCompliance(
         makeCard({
-          security: [{ bearer: [] }],
+          securityRequirements: [{ schemes: { bearer: { list: [] } } }],
           securitySchemes: {},
         }),
       );

@@ -1,3 +1,5 @@
+import { DEFAULT_FILE_MEDIA_TYPE, getPartBytesBase64, isFilePart } from "@/lib/a2a/parts";
+import { taskStateLabel } from "@/lib/a2a/legacy";
 import type { Part } from "@a2a-js/sdk";
 import {
   createExecutionEventFromLog,
@@ -208,25 +210,18 @@ function fencedBlock(value: string, language = "text"): string {
 }
 
 function partToText(part: Part): string {
-  if (part.kind === "text") return truncateString(part.text);
+  if (part.content?.$case === "text") return truncateString(part.content.value);
+  if (part.content?.$case === "data") return stringifyJson(part.content.value);
+  if (!isFilePart(part)) return "";
 
-  if (part.kind === "data") {
-    return stringifyJson(part.data);
-  }
-
-  const file = part.file as {
-    name?: string;
-    mimeType?: string;
-    uri?: string;
-    bytes?: string;
-  };
-  const name = file.name ?? "file";
-  const mimeType = file.mimeType ?? "application/octet-stream";
+  const name = part.filename || "file";
+  const mimeType = part.mediaType || DEFAULT_FILE_MEDIA_TYPE;
+  const bytes = getPartBytesBase64(part);
   const source =
-    typeof file.uri === "string"
-      ? `uri: ${truncateString(file.uri, 500)}`
-      : typeof file.bytes === "string"
-        ? `embedded bytes: ${file.bytes.length} characters`
+    part.content?.$case === "url"
+      ? `url: ${truncateString(part.content.value, 500)}`
+      : bytes
+        ? `embedded bytes: ${bytes.length} characters`
         : "embedded file";
 
   return `[File: ${name} (${mimeType}; ${source})]`;
@@ -247,8 +242,9 @@ function sanitizeParts(parts: Part[]): unknown[] {
 
 function summarizePartModalities(parts: Part[]): Record<string, number> {
   return parts.reduce<Record<string, number>>((summary, part) => {
-    const key =
-      part.kind === "file" ? `file:${part.file.mimeType ?? "application/octet-stream"}` : part.kind;
+    const key = isFilePart(part)
+      ? `file:${part.mediaType || DEFAULT_FILE_MEDIA_TYPE}`
+      : (part.content?.$case ?? "unknown");
     summary[key] = (summary[key] ?? 0) + 1;
     return summary;
   }, {});
@@ -308,7 +304,7 @@ function buildTranscriptEntry(item: ChatItem, index: number): ChatTraceTranscrip
       return {
         ...base,
         taskId: item.taskId,
-        state: item.state,
+        state: taskStateLabel(item.state),
         statusMessage: textFromStatusMessage(item),
       };
     case "artifact": {
@@ -418,7 +414,7 @@ function buildTaskTrace(chat: Chat, events: ExecutionEvent[], taskId: string): C
   const itemStates = taskItems
     .filter((item): item is TaskStatusItem => item.kind === "task-status")
     .map(item => ({
-      state: item.state,
+      state: taskStateLabel(item.state),
       timestamp: item.timestamp,
       timestampIso: timestampIso(item.timestamp),
       message: textFromStatusMessage(item),

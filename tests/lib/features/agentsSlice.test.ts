@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { AgentCard } from "@a2a-js/sdk";
+import { makeAgentCard, makeAgentSkill } from "../../helpers/agent-card";
 import reducer, {
   addAgent,
   removeAgent,
@@ -18,17 +18,7 @@ function makeAgent(overrides: Partial<Agent> = {}): Agent {
   return {
     id: "agent-1",
     url: "https://example.com/agent",
-    card: {
-      name: "Test Agent",
-      description: "desc",
-      url: "https://example.com/agent",
-      version: "1.0",
-      protocolVersion: "0.1",
-      capabilities: {},
-      defaultInputModes: ["text/plain"],
-      defaultOutputModes: ["text/plain"],
-      skills: [],
-    },
+    card: makeAgentCard({ name: "Test Agent" }),
     status: "connected",
     auth: { type: "none" },
     customHeaders: [],
@@ -90,14 +80,13 @@ describe("agentsSlice", () => {
               defaultInputModes: ["text", "image/*"],
               defaultOutputModes: ["json"],
               skills: [
-                {
+                makeAgentSkill({
                   id: "chat",
                   name: "Chat",
                   description: "Talks",
-                  tags: [],
                   inputModes: ["text"],
                   outputModes: ["json"],
-                },
+                }),
               ],
             },
           }),
@@ -194,26 +183,20 @@ describe("agentsSlice", () => {
         state,
         updateAgentCard({
           agentId: "a1",
-          card: {
+          card: makeAgentCard({
             name: "Refetched",
-            description: "desc",
-            url: "https://example.com/agent",
-            version: "1.0",
-            protocolVersion: "0.3.0",
-            capabilities: {},
             defaultInputModes: ["text"],
             defaultOutputModes: ["json"],
             skills: [
-              {
+              makeAgentSkill({
                 id: "chat",
                 name: "Chat",
                 description: "Talks",
-                tags: [],
                 inputModes: ["text"],
                 outputModes: ["json"],
-              },
+              }),
             ],
-          } satisfies AgentCard,
+          }),
         }),
       );
 

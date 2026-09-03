@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useReducer, useRef } from "react";
 import type { Part } from "@a2a-js/sdk";
 import { modalityFamily } from "@/lib/a2a/modalities";
+import { DEFAULT_FILE_MEDIA_TYPE } from "@/lib/a2a/parts";
 import { detectA2UISurface } from "@/lib/a2a/a2ui";
 import chatsReducer, {
   addChat,
@@ -52,27 +53,28 @@ export function createChatMeta(input: {
   };
 }
 
-export function getDataPartMimeType(part: Extract<Part, { kind: "data" }>): string | undefined {
-  const metadata = (part as { metadata?: Record<string, unknown> }).metadata;
+export function getDataPartMimeType(part: Part): string | undefined {
+  if (part.mediaType) return part.mediaType;
+  const metadata = part.metadata;
   if (!metadata) return undefined;
   return typeof metadata.mimeType === "string" ? metadata.mimeType : undefined;
 }
 
 export function countA2UISurfaces(parts: Part[]): number {
   return parts.reduce((count, part) => {
-    if (part.kind !== "data") return count;
-    return detectA2UISurface(part.data, getDataPartMimeType(part)) ? count + 1 : count;
+    if (part.content?.$case !== "data") return count;
+    return detectA2UISurface(part.content.value, getDataPartMimeType(part)) ? count + 1 : count;
   }, 0);
 }
 
 export function summarizePartModalities(parts: Part[]): Record<string, number> {
   return parts.reduce<Record<string, number>>((summary, part) => {
     const family =
-      part.kind === "text"
+      part.content?.$case === "text"
         ? "text"
-        : part.kind === "data"
+        : part.content?.$case === "data"
           ? "data"
-          : modalityFamily(part.file.mimeType ?? "application/octet-stream");
+          : modalityFamily(part.mediaType || DEFAULT_FILE_MEDIA_TYPE);
     summary[family] = (summary[family] ?? 0) + 1;
     return summary;
   }, {});

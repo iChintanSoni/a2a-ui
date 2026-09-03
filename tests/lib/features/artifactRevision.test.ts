@@ -1,3 +1,4 @@
+import { getTextPartsText, textPart } from "@/lib/a2a/parts";
 import { describe, expect, it } from "vitest";
 import type { ArtifactItem } from "@/lib/features/chats/chatsSlice";
 import {
@@ -15,7 +16,7 @@ function makeArtifact(overrides: Partial<ArtifactItem> = {}): ArtifactItem {
     id: "artifact-1",
     taskId: "task-1",
     name: "draft.md",
-    parts: [{ kind: "text", text: "hello" }],
+    parts: [textPart("hello")],
     isStreaming: false,
     timestamp: 1,
     ...overrides,
@@ -25,7 +26,7 @@ function makeArtifact(overrides: Partial<ArtifactItem> = {}): ArtifactItem {
 describe("artifactRevision", () => {
   it("detects editable text artifacts", () => {
     const artifact = makeArtifact({
-      parts: [{ kind: "text", text: "line one\nline two" }],
+      parts: [textPart("line one\nline two")],
     });
 
     expect(isEditableArtifact(artifact)).toBe(true);
@@ -42,7 +43,7 @@ describe("artifactRevision", () => {
 
   it("builds a revision message with metadata", () => {
     const artifact = makeArtifact({
-      parts: [{ kind: "text", text: "line one\nline two" }],
+      parts: [textPart("line one\nline two")],
     });
     const revision = buildArtifactRevisionMessage(artifact, "line one\nline three");
 
@@ -53,17 +54,17 @@ describe("artifactRevision", () => {
       artifactRevision: "true",
       artifactKind: "markdown",
     });
-    expect(revision.parts[0]).toMatchObject({ kind: "text" });
-    expect(revision.parts[0].kind === "text" ? revision.parts[0].text : "").toContain(
+    expect(revision.parts[0].content?.$case).toBe("text");
+    expect(getTextPartsText(revision.parts)).toContain(
       "Use this revised markdown artifact as the latest working version",
     );
-    expect(revision.parts[0].kind === "text" ? revision.parts[0].text : "").toContain("line three");
+    expect(getTextPartsText(revision.parts)).toContain("line three");
   });
 
   it("classifies code artifacts and preserves the kind in revision metadata", () => {
     const item = makeArtifact({
       name: "handler.ts",
-      parts: [{ kind: "text", text: "export const ok = true;" }],
+      parts: [textPart("export const ok = true;")],
     });
 
     const revision = buildArtifactRevisionMessage(item, "export const ok = false;");
@@ -71,7 +72,7 @@ describe("artifactRevision", () => {
     expect(getEditableArtifactKind(item)).toBe("code");
     expect(getArtifactRevisionLabel(item)).toBe("Revise code");
     expect(revision.metadata.artifactKind).toBe("code");
-    expect(revision.parts[0].text).toContain("revised code artifact");
+    expect(getTextPartsText(revision.parts)).toContain("revised code artifact");
   });
 
   it("classifies diagram and table artifacts", () => {
@@ -79,7 +80,7 @@ describe("artifactRevision", () => {
       getEditableArtifactKind(
         makeArtifact({
           name: "flow diagram",
-          parts: [{ kind: "text", text: "```mermaid\ngraph TD\n```" }],
+          parts: [textPart("```mermaid\ngraph TD\n```")],
         }),
       ),
     ).toBe("diagram");
@@ -89,7 +90,7 @@ describe("artifactRevision", () => {
         makeArtifact({
           name: "results.csv",
           metadata: { mimeType: "text/csv" },
-          parts: [{ kind: "text", text: "name,value\nalpha,1" }],
+          parts: [textPart("name,value\nalpha,1")],
         }),
       ),
     ).toBe("table");

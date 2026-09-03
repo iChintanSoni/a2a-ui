@@ -26,7 +26,7 @@ export const ArtifactBlock = memo(function ArtifactBlock({
   onSubmitRevision,
 }: Props) {
   const label = item.name ?? "Artifact";
-  const hasOnlyText = item.parts.every(p => p.kind === "text");
+  const hasOnlyText = item.parts.every(p => p.content?.$case === "text");
   const [isEditing, setIsEditing] = useState(false);
   const [revisedText, setRevisedText] = useState(() => getArtifactText(item));
   const [isSaving, setIsSaving] = useState(false);

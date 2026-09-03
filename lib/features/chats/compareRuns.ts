@@ -1,6 +1,6 @@
 import type { Chat, ArtifactItem } from "./chatsSlice";
 import { getArtifactText, summarizeTextDiff, type TextDiffSummary } from "./artifactRevision";
-import { partsToPlainText } from "@/lib/a2a/parts";
+import { getTextPartsText, partsToPlainText } from "@/lib/a2a/parts";
 
 export interface ComparableArtifact {
   key: string;
@@ -45,13 +45,7 @@ function getLatestPrompt(chat: Chat) {
 function getLatestOutput(chat: Chat): string {
   const agentMessage = chat.items.findLast(item => item.kind === "agent-message");
   if (agentMessage) {
-    return agentMessage.parts
-      .filter(
-        (part): part is Extract<(typeof agentMessage.parts)[number], { kind: "text" }> =>
-          part.kind === "text",
-      )
-      .map(part => part.text)
-      .join("");
+    return getTextPartsText(agentMessage.parts);
   }
 
   const artifact = chat.items.findLast(item => item.kind === "artifact");
@@ -61,7 +55,7 @@ function getLatestOutput(chat: Chat): string {
 function getComparableArtifacts(chat: Chat): ComparableArtifact[] {
   return chat.items
     .filter((item): item is ArtifactItem => item.kind === "artifact")
-    .filter(item => item.parts.every(part => part.kind === "text"))
+    .filter(item => item.parts.every(part => part.content?.$case === "text"))
     .map(item => ({
       key: item.name ?? item.id,
       label: item.name ?? item.id,

@@ -206,6 +206,7 @@ import { useA2ADebug } from "a2a-ui/hooks/use-a2a-debug";
 import { useA2AConnection } from "a2a-ui/hooks/use-a2a-connection";
 import { useA2ASession } from "a2a-ui/hooks/use-a2a-session";
 import { useA2AMessages } from "a2a-ui/hooks/use-a2a-messages";
+import { textPart } from "a2a-ui/lib/a2a/parts";
 
 function HeadlessChat({ agentUrl, auth }) {
   const debug = useA2ADebug();
@@ -219,7 +220,7 @@ function HeadlessChat({ agentUrl, auth }) {
 
   const [input, setInput] = useState("");
   const handleSend = () => {
-    sendMessage([{ kind: "text", text: input }]);
+    sendMessage([textPart(input)]);
     setInput("");
   };
 

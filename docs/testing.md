@@ -139,16 +139,18 @@ So: **any change to assertion semantics or runner behaviour must be mirrored in
 `bin/qa-run.mjs`, and both sides must be tested.** Otherwise the CLI silently
 disagrees with the UI about whether a suite passed.
 
-Known and deliberate divergences — keep this list current:
+[`tests/cli/qa-run.test.ts`](../tests/cli/qa-run.test.ts) enforces this: it runs
+the same cases through `evaluateAll` (inline) and
+`evaluateQaAssertions` / `evaluateExpectedTaskState` (TypeScript) and asserts
+both produce the same `assertionId` + `passed` verdicts. Extend it whenever you
+add an assertion kind.
+
+Known and deliberate divergences — keep this list and the parity test in sync:
 
 - The inline runner **skips `json-path` assertions** entirely.
 - Its result messages are shorter than the TypeScript ones (`"Matched /…/."`
-  without the flags suffix). Assert on `passed` and `assertionId`, not on exact
-  message text, when a test covers both sides.
-
-Current gap: `tests/cli/a2a-ui.test.ts` covers argument parsing only — the inline
-runner has **no test**. If you touch it, add one; the parity rule is otherwise
-unenforced.
+  without the flags suffix). The parity test compares `passed` and `assertionId`
+  only — never exact message text.
 
 ---
 
@@ -173,6 +175,8 @@ not — move it to `tests/`.
 - QA assertions and the QA runner, on **both** sides (see the parity rule).
 - Everything in `lib/utils/` and `lib/a2a/` — these are pure and cheap to cover.
 - Every new interactive component, in `tests/accessibility/` at minimum.
-- CLI argument parsing when `bin/*.mjs` grows a flag.
+- CLI argument parsing when `bin/*.mjs` grows a flag. Note that `bin/*.mjs` is
+  externalized in `vitest.config.ts` so Node loads it natively — Vite's SSR
+  transform cannot parse the shebang.
 - `server/src/card.ts` changes, via `tests/server/agent-card.test.ts` — the demo
   agent card is expected to pass `checkCompliance` with zero failures.

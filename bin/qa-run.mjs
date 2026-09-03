@@ -269,33 +269,21 @@ export async function runQaSuite(options) {
 
 async function buildInlineRunner() {
   // Minimal inline runner using @a2a-js/sdk directly (no TS source needed).
-  const { ClientFactory, RestTransportFactory, JsonRpcTransportFactory } =
-    await import("@a2a-js/sdk/client");
+  const { ClientFactory } = await import("@a2a-js/sdk/client");
+  const { Role } = await import("@a2a-js/sdk");
 
   async function executeQaSuite({ suite, agent }) {
     const caseResults = [];
     const startedAt = Date.now();
 
-    const clientFactory = new ClientFactory({
-      agentCardResolver: {
-        resolveAgentCard: async () => ({
-          name: suite.agentName,
-          url: suite.agentUrl,
-          version: "1.0",
-          description: "",
-          capabilities: {},
-          skills: [],
-        }),
-      },
-      transportFactories: [new RestTransportFactory(), new JsonRpcTransportFactory()],
-    });
-
-    const client = await clientFactory.createFromUrl(agent.url);
+    // Defaults already carry the JSON-RPC and REST transports plus the
+    // well-known card resolver, which v1.0 needs to pick a supportedInterface.
+    const client = await new ClientFactory().createFromUrl(agent.url);
 
     for (const testCase of flattenDataTable(suite.cases)) {
       const caseStart = Date.now();
       const contextId = generateId();
-      const parts = [{ kind: "text", text: testCase.prompt }, ...(testCase.attachments ?? [])];
+      const parts = [textPart(testCase.prompt), ...(testCase.attachments ?? [])];
       const outputParts = [];
       const artifactMimeTypes = [];
       let artifactCount = 0;
@@ -303,28 +291,41 @@ async function buildInlineRunner() {
 
       try {
         const message = {
-          kind: "message",
           messageId: generateId(),
           contextId,
-          role: "user",
+          taskId: "",
+          role: Role.ROLE_USER,
           parts,
           metadata: testCase.metadata ?? {},
+          extensions: [],
+          referenceTaskIds: [],
         };
-        const stream = client.sendMessageStream({ message });
+        const stream = client.sendMessageStream({
+          tenant: "",
+          message,
+          configuration: undefined,
+          metadata: undefined,
+        });
         for await (const event of stream) {
-          if (event.kind === "status-update") {
-            finalTaskState = event.status.state;
-            if (event.status.message) outputParts.push(...event.status.message.parts);
-          } else if (event.kind === "artifact-update") {
-            if (event.lastChunk !== false) {
+          const payload = event.payload;
+          if (payload?.$case === "statusUpdate") {
+            const status = payload.value.status;
+            if (status) {
+              finalTaskState = status.state;
+              if (status.message) outputParts.push(...status.message.parts);
+            }
+          } else if (payload?.$case === "artifactUpdate") {
+            const artifact = payload.value.artifact;
+            if (!artifact) continue;
+            if (payload.value.lastChunk !== false) {
               artifactCount++;
-              for (const p of event.artifact.parts) {
-                if (p.kind === "file" && p.file?.mimeType) artifactMimeTypes.push(p.file.mimeType);
+              for (const part of artifact.parts) {
+                if (isFilePart(part) && part.mediaType) artifactMimeTypes.push(part.mediaType);
               }
             }
-            outputParts.push(...event.artifact.parts);
-          } else if (event.kind === "message" && event.role === "agent") {
-            outputParts.push(...event.parts);
+            outputParts.push(...artifact.parts);
+          } else if (payload?.$case === "message" && payload.value.role === Role.ROLE_AGENT) {
+            outputParts.push(...payload.value.parts);
           }
         }
       } catch (err) {
@@ -344,8 +345,8 @@ async function buildInlineRunner() {
 
       const durationMs = Date.now() - caseStart;
       const text = outputParts
-        .filter(p => p.kind === "text")
-        .map(p => p.text)
+        .filter(p => p.content?.$case === "text")
+        .map(p => p.content.value)
         .join("\n")
         .trim();
       const assertionResults = evaluateAll(testCase, {
@@ -390,6 +391,66 @@ function generateId() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+// Mirrors lib/a2a/parts.ts — v1.0 `Part` requires every field.
+function textPart(text, mediaType = "text/plain") {
+  return { content: { $case: "text", value: text }, metadata: undefined, filename: "", mediaType };
+}
+
+function isFilePart(part) {
+  return part?.content?.$case === "url" || part?.content?.$case === "raw";
+}
+
+// Mirrors lib/a2a/legacy.ts — saved suites may hold v0.3 kebab-case states,
+// `TASK_STATE_*` names, or the v1.0 enum ordinal.
+const TASK_STATE_ORDINALS = {
+  TASK_STATE_UNSPECIFIED: 0,
+  TASK_STATE_SUBMITTED: 1,
+  TASK_STATE_WORKING: 2,
+  TASK_STATE_COMPLETED: 3,
+  TASK_STATE_FAILED: 4,
+  TASK_STATE_CANCELED: 5,
+  TASK_STATE_INPUT_REQUIRED: 6,
+  TASK_STATE_REJECTED: 7,
+  TASK_STATE_AUTH_REQUIRED: 8,
+};
+
+const LEGACY_TASK_STATES = {
+  unknown: 0,
+  submitted: 1,
+  working: 2,
+  completed: 3,
+  failed: 4,
+  canceled: 5,
+  cancelled: 5,
+  "input-required": 6,
+  rejected: 7,
+  "auth-required": 8,
+};
+
+const TASK_STATE_LABELS = [
+  "unknown",
+  "submitted",
+  "working",
+  "completed",
+  "failed",
+  "canceled",
+  "input-required",
+  "rejected",
+  "auth-required",
+];
+
+export function toTaskState(value) {
+  if (typeof value === "number") return value;
+  if (typeof value !== "string") return -1;
+  if (value in TASK_STATE_ORDINALS) return TASK_STATE_ORDINALS[value];
+  const legacy = LEGACY_TASK_STATES[value.toLowerCase()];
+  return legacy === undefined ? -1 : legacy;
+}
+
+export function taskStateLabel(state) {
+  return TASK_STATE_LABELS[state] ?? "unknown";
+}
+
 function flattenDataTable(cases) {
   return cases.flatMap(c => {
     if (!c.dataTable || c.dataTable.length === 0) return [c];
@@ -410,17 +471,22 @@ function applyRow(template, row) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => row[key] ?? `{{${key}}}`);
 }
 
-function evaluateAll(testCase, output) {
+export function evaluateAll(testCase, output) {
   const results = [];
-  if (testCase.expectedTaskState) {
-    const passed = output.finalTaskState === testCase.expectedTaskState;
+  // TASK_STATE_UNSPECIFIED is 0, so a truthiness check would silently skip it.
+  if (testCase.expectedTaskState !== undefined && testCase.expectedTaskState !== null) {
+    const expected = toTaskState(testCase.expectedTaskState);
+    const passed = output.finalTaskState === expected;
+    const expectedLabel = taskStateLabel(expected);
     results.push({
       assertionId: "expected-task-state",
-      label: `Expected task state ${testCase.expectedTaskState}`,
+      label: `Expected task state ${expectedLabel}`,
       passed,
       message: passed
-        ? `Final task state was ${testCase.expectedTaskState}.`
-        : `Final task state was ${output.finalTaskState ?? "unknown"}.`,
+        ? `Final task state was ${expectedLabel}.`
+        : `Final task state was ${
+            output.finalTaskState === undefined ? "unknown" : taskStateLabel(output.finalTaskState)
+          }.`,
     });
   }
   if (testCase.expectedOutputMode && testCase.expectedOutputMode !== "any") {

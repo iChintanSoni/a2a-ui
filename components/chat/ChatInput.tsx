@@ -22,6 +22,8 @@ import { PromptPresets } from "./PromptPresets";
 import { AttachmentPreviews } from "./AttachmentPreviews";
 import { DataPartEditor } from "./DataPartEditor";
 import { MetadataEditor } from "./MetadataEditor";
+import type { Part } from "@a2a-js/sdk";
+import { dataPart, textPart } from "@/lib/a2a/parts";
 
 export interface MetadataRow {
   key: string;
@@ -136,7 +138,7 @@ export function ChatInput({
       }, {});
 
     const nextDataErrors: Record<string, string> = {};
-    const parsedDataParts: Array<{ kind: "data"; data: Record<string, unknown> }> = [];
+    const parsedDataParts: Part[] = [];
     for (const draft of dataParts) {
       const trimmedValue = draft.value.trim();
       if (!trimmedValue) {
@@ -149,7 +151,7 @@ export function ChatInput({
           nextDataErrors[draft.id] = "Data parts must be JSON objects.";
           continue;
         }
-        parsedDataParts.push({ kind: "data", data: parsed as Record<string, unknown> });
+        parsedDataParts.push(dataPart(parsed));
       } catch {
         nextDataErrors[draft.id] = "Enter valid JSON before sending.";
       }
@@ -160,7 +162,7 @@ export function ChatInput({
 
     const trimmedText = text.trim();
     const parts: OutgoingMessagePartInput[] = [];
-    if (trimmedText) parts.push({ kind: "text", text: trimmedText });
+    if (trimmedText) parts.push(textPart(trimmedText));
     if (attachments.length > 0) parts.push(...attachments.map(a => a.file));
     parts.push(...parsedDataParts);
 
