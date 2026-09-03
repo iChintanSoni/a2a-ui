@@ -152,6 +152,7 @@ procedure and the npm Trusted Publishing setup.
 | The CLI entrypoint               | `bin/a2a-ui.mjs`                   |
 | The headless QA runner           | `bin/qa-run.mjs`                   |
 | Accessibility standards          | `docs/accessibility.md`            |
+| Testing standards                | `docs/testing.md`                  |
 | Preset gallery guide             | `docs/features/example-presets.md` |
 | Unit tests                       | `tests/`                           |
 | E2E smoke tests                  | `e2e/`                             |
@@ -160,6 +161,9 @@ procedure and the npm Trusted Publishing setup.
 ---
 
 ## Testing
+
+[docs/testing.md](docs/testing.md) is the full guide — layers, the patterns to
+copy, the QA parity rule, and what must have a test. The essentials:
 
 ### Unit / integration tests
 
