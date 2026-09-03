@@ -75,6 +75,67 @@ Examples: `feat/batch-evaluation`, `fix/qa-csv-export`, `docs/hooks-reference`
 
 ---
 
+## Commits
+
+Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/):
+`<type>(<optional scope>): <subject>`, imperative mood, no trailing period.
+
+| Type       | Example                                                  |
+| ---------- | -------------------------------------------------------- |
+| `feat`     | `feat: add chat export in JSON and Markdown formats`     |
+| `fix`      | `fix(server): bump js-yaml to patch a security advisory` |
+| `docs`     | `docs: add release project skill`                        |
+| `refactor` | `refactor: extract components, modularize server`        |
+| `test`     | `test: cover the QA json-path assertion`                 |
+| `chore`    | `chore(deps): bump next from 16.2.9 to 16.2.11`          |
+| `ci`       | `ci: restrict GITHUB_TOKEN to contents:read`             |
+
+Scope the change when it is confined to one area — `server` for `server/`,
+`deps` / `deps-dev` for dependency bumps (what Dependabot emits), `docs` for a
+documentation-only correction. Leave the scope off for changes that span the
+dashboard.
+
+The body explains _why_. Reference issues and PRs by number (`(#12)`) so the
+generated release notes link back.
+
+### Signing
+
+Commits on this repo are GPG-signed (`git config commit.gpgsign true`). Verify
+with `git log --show-signature -1`, and do not strip `-S` from a commit command
+you are given. If you have no signing key configured, set one up rather than
+committing unsigned — see
+[GitHub's signing docs](https://docs.github.com/authentication/managing-commit-signature-verification).
+
+### No `Co-Authored-By` trailers
+
+Do not add `Co-Authored-By` (or other agent-attribution) trailers. Authorship is
+the commit author; the trailers only add noise to the history and release notes.
+
+### The pre-commit hook
+
+`.husky/pre-commit` runs the full gauntlet on every commit:
+
+```bash
+npm run lint
+npm run typecheck
+npm --prefix server run typecheck
+npm run test
+```
+
+Commits are slow by design — this is the same set CI runs, so a green commit is
+a green CI run. **Do not bypass it with `--no-verify`.** If the hook is in your
+way, fix the failure or split the commit; a red `main` blocks releases, because
+`.github/workflows/release.yml` re-runs all of it before publishing.
+
+### Releases
+
+Releases are tag-driven and the tag must match `package.json` — bump the version
+on `main` _before_ creating the tag. See
+[`.claude/skills/release/SKILL.md`](.claude/skills/release/SKILL.md) for the full
+procedure and the npm Trusted Publishing setup.
+
+---
+
 ## Where to Find Things
 
 | You want to change…              | Look in…                           |
@@ -147,6 +208,7 @@ Before opening a PR:
 - [ ] New logic has tests in `tests/`
 - [ ] New UI pages are reachable from the sidebar
 - [ ] The PR description explains _what_ changed and _why_
+- [ ] Commits are signed and follow [Conventional Commits](#commits)
 
 The CI pipeline (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests,
 e2e tests, and a build check on every PR.
