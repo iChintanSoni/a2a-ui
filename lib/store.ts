@@ -15,6 +15,9 @@ export const makeStore = () => {
   });
 };
 
+// Public alias used by the embedding guide (docs/embed.md)
+export const createA2AStore = makeStore;
+
 // Infer the type of makeStore
 export type AppStore = ReturnType<typeof makeStore>;
 // Infer the `RootState` and `AppDispatch` types from the store itself

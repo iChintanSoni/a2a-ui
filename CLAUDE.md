@@ -104,6 +104,5 @@ Persistence is **not** Redux middleware. `app/StoreProvider.tsx` reads IndexedDB
 
 - **`server/` is excluded from the root `tsconfig.json`.** `npm run typecheck` will not catch errors there; run `npm --prefix server run typecheck`.
 - **`package.json` `files` is an explicit allowlist.** A new top-level directory that consumers need (or a new `scripts/*.mjs` used at pack time) must be added there or it will not ship to npm.
-- **`docs/architecture.md` and `docs/embed.md` reference `createA2AStore()`, which does not exist** — the actual export is `makeStore()` in `lib/store.ts`. Verify doc claims against source before relying on them.
 - Dashboard pages are all `"use client"`; there are no server components beyond the layouts.
 - Adding a dashboard page means four edits, not one: the route under `app/dashboard/<name>/page.tsx`, a sidebar entry in `components/app-sidebar.tsx`, a label in `components/dashboard-breadcrumb.tsx`, and `components/mobile-bottom-nav.tsx` if it belongs there.

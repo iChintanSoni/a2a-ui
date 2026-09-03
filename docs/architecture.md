@@ -31,8 +31,9 @@ Browser
 
 ## Redux Slices
 
-The Redux store is created by `createA2AStore()` in
-[`lib/store.ts`](../lib/store.ts). Four slices:
+The Redux store is created by `makeStore()` in
+[`lib/store.ts`](../lib/store.ts) — also exported as `createA2AStore` for
+embedding consumers. Four slices:
 
 ### `agentsSlice` — [`lib/features/agents/agentsSlice.ts`](../lib/features/agents/agentsSlice.ts)
 
@@ -115,8 +116,11 @@ initial empty state with the persisted data.
 
 ### Writes
 
-Every Redux action that mutates relevant state triggers a debounced write-back
-to IndexedDB. This happens in the Redux middleware defined in `lib/store.ts`.
+Persistence is not Redux middleware. After hydration resolves,
+[`app/StoreProvider.tsx`](../app/StoreProvider.tsx) installs a `store.subscribe`
+listener that compares the four slice roots by reference and writes back only
+the ones whose reference changed. Reducers must therefore return new top-level
+references for a change to be persisted.
 
 ### Legacy migration
 
@@ -172,7 +176,8 @@ A single user message goes through this sequence:
      chunked artifacts)
    - `message` (agent role) → `chats/applyAgentMessage`
    - All events → `chats/appendExecutionEvent`
-7. Redux middleware writes the updated `chats` slice to IndexedDB
+7. The `store.subscribe` listener in `app/StoreProvider.tsx` sees a new `chats`
+   reference and writes the slice to IndexedDB
 8. React re-renders the chat timeline from the updated `items` array
 
 ---
