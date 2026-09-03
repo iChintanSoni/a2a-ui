@@ -33,7 +33,9 @@ npx a2a-ui --port 3100 --open
 | **Internals & Standards**                           |                                                                      |
 | [Architecture](docs/architecture.md)                | Redux slices, IndexedDB, hook chain, event flow                      |
 | [Accessibility Guide](docs/accessibility.md)        | WCAG standards, keyboard navigation, screen reader support           |
-| [Contributing](CONTRIBUTING.md)                     | Local setup, branch naming, tests, submitting a PR                   |
+| [Design Guide](docs/design.md)                      | Tone, semantic tokens, shadcn boundary, dark mode                    |
+| [Testing Guide](docs/testing.md)                    | Test layers, patterns to copy, the QA parity rule                    |
+| [Contributing](CONTRIBUTING.md)                     | Local setup, commits, tests, submitting a PR                         |
 
 ## Useful References
 

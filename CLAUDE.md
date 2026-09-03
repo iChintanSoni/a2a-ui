@@ -41,7 +41,7 @@ npm --prefix server run typecheck
 
 `.husky/pre-commit` runs `lint`, `typecheck`, `npm --prefix server run typecheck`, and `test` on every commit — commits are slow by design. CI (`.github/workflows/ci.yml`) runs the same four plus `build` and `test:e2e`.
 
-Releases are tag-driven: pushing `v<x.y.z>` triggers `.github/workflows/release.yml`, which fails unless the tag exactly matches `package.json` version. Bump the version on `main` first.
+Releases are tag-driven: pushing `v<x.y.z>` triggers `.github/workflows/release.yml`, which fails unless the tag exactly matches `package.json` version. Bump the version on `main` first — see the `release` skill.
 
 ## Architecture
 
@@ -95,14 +95,18 @@ Persistence is **not** Redux middleware. `app/StoreProvider.tsx` reads IndexedDB
 - **Prettier** with `printWidth: 100`, double quotes, `arrowParens: "avoid"`, plus `prettier-plugin-tailwindcss`.
 - **Comments explain _why_, never _what_.** Self-explanatory code over narration.
 - **No new abstraction until the pattern repeats three times.** Prefer editing existing files over adding new ones.
-- shadcn/ui components (`components/ui/`, style `radix-vega`, lucide icons) are generated — regenerate via `shadcn` rather than hand-editing where possible.
-- Tests in `tests/` mirror the `lib/` tree. New logic in `lib/features/`, `lib/presets/`, `lib/utils/`, or `lib/a2a/` gets a matching test file. Vitest with `happy-dom`, globals enabled.
-- Accessibility is a hard PR requirement, not a nicety — keyboard operability, visible focus rings, hover/focus parity, `aria-label` on icon-only buttons. See `docs/accessibility.md` and `tests/accessibility/accessibility.test.tsx`.
-- Branches: `feat/`, `fix/`, `docs/`, `refactor/`, `test/`, `chore/`. Commits follow Conventional Commits. Do not add `Co-Authored-By` trailers to commit messages in this repo.
+- **Design** — semantic tokens only, never raw Tailwind colors; dense inspectable workbench, not a marketing surface. `docs/design.md`.
+- **Testing** — `tests/` mirrors `lib/`; Vitest with `happy-dom`. `docs/testing.md` has the patterns and the QA parity rule.
+- **Accessibility** — a hard PR requirement, not a nicety. `docs/accessibility.md`.
+- **Git** — branch prefixes, Conventional Commits, signed commits, no `Co-Authored-By` trailers, never `--no-verify`. `CONTRIBUTING.md`.
 
 ## Gotchas
 
 - **`server/` is excluded from the root `tsconfig.json`.** `npm run typecheck` will not catch errors there; run `npm --prefix server run typecheck`.
 - **`package.json` `files` is an explicit allowlist.** A new top-level directory that consumers need (or a new `scripts/*.mjs` used at pack time) must be added there or it will not ship to npm.
 - Dashboard pages are all `"use client"`; there are no server components beyond the layouts.
-- Adding a dashboard page means four edits, not one: the route under `app/dashboard/<name>/page.tsx`, a sidebar entry in `components/app-sidebar.tsx`, a label in `components/dashboard-breadcrumb.tsx`, and `components/mobile-bottom-nav.tsx` if it belongs there.
+- Adding a dashboard page means four edits, not one — route, sidebar, breadcrumb, and mobile nav. Use the `add-dashboard-page` skill.
+
+## Project skills
+
+`.claude/skills/` — `release` (tag/version invariants and npm Trusted Publishing), `add-dashboard-page` (the four-edit checklist plus slice/IndexedDB wiring), `run-app` (dashboard + demo agent + Ollama).
