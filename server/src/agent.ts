@@ -249,6 +249,27 @@ export const chatAgentExecutor: AgentExecutor = {
     log(`\n--- [Task Initiated] Context ID: ${contextId} | Task ID: ${taskId} ---`);
     debug(`[Input]`, JSON.stringify(userMessage.parts, null, 2));
 
+    // v1.0 requires every execute() call to publish a Task or Message as its
+    // first event, follow-up turns included; the handler rejects a stream that
+    // opens with a statusUpdate. Re-publish the existing task on follow-ups so
+    // the turn does not discard accumulated artifacts and history.
+    eventBus.publish(
+      AgentEvent.task(
+        requestContext.task ?? {
+          id: taskId,
+          contextId,
+          status: {
+            state: TaskState.TASK_STATE_SUBMITTED,
+            message: undefined,
+            timestamp: new Date().toISOString(),
+          },
+          artifacts: [],
+          history: [userMessage],
+          metadata: undefined,
+        },
+      ),
+    );
+
     const totalInputChars = (userMessage.parts as Part[]).reduce((sum, part) => {
       if (part.content?.$case === "text") return sum + part.content.value.length;
       if (part.content?.$case === "data") {
