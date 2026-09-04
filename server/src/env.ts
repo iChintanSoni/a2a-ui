@@ -7,7 +7,7 @@ const envSchema = z.object({
   ALLOWED_ORIGINS: z.string().optional(),
   TAVILY_API_KEY: z.string().optional(),
   OLLAMA_HOST: z.string().default("http://localhost:11434"),
-  OLLAMA_LLM_MODEL: z.string().default("qwen3.5:4b"),
+  OLLAMA_LLM_MODEL: z.string().default("gemma4:12b"),
   OLLAMA_IMAGE_MODEL: z.string().default("x/flux2-klein:4b"),
 });
 
