@@ -13,7 +13,7 @@ describe("environment examples", () => {
 
     expect(env).toContain("PORT=3001");
     expect(env).toContain("OLLAMA_HOST=http://localhost:11434");
-    expect(env).toContain("OLLAMA_LLM_MODEL=qwen3.5:4b");
+    expect(env).toContain("OLLAMA_LLM_MODEL=gemma4:12b");
     expect(env).not.toContain("AI_PROVIDER=");
     expect(env).not.toContain("GEMINI_API_KEY=");
   });

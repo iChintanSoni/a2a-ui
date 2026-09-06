@@ -71,6 +71,16 @@ icons. The generated primitives live in `components/ui/`.
   hand — the files are generated, and hand-edits are lost on regeneration. The
   shadcn MCP server is wired up for Claude Code in [`.mcp.json`](../.mcp.json)
   and for VS Code in [`.vscode/mcp.json`](../.vscode/mcp.json).
+- **The `shadcn` skill lives in [`.claude/skills/shadcn/`](../.claude/skills/shadcn),
+  pinned by [`skills-lock.json`](../skills-lock.json)** and installed with
+  `npx skills add shadcn/ui -s shadcn --copy`. It carries the CLI reference,
+  registry docs, and theming rules. Its styling rules agree with this guide —
+  semantic tokens, no manual `dark:` overrides, `cn()` for conditionals — but
+  **where they diverge, this document wins.** The known divergence is its chat
+  rule, which says to compose threads from the registry's `message-scroller`,
+  `bubble`, and `attachment` primitives. We do not: `components/chat/` is our
+  published npm surface, and adopting those would change the library's public
+  API and add registry dependencies for every consumer.
 - Compose primitives in `components/`; do not wrap Radix directly. If a
   primitive is missing, add it via shadcn first.
 - A2A-specific rendering (message bubbles, artifacts, tool calls, the event

@@ -71,11 +71,11 @@ The demo server listens on `http://localhost:3001`. Add it in the dashboard as `
 
 Key environment variables in `server/.env`:
 
-| Variable             | Default                  | Description                   |
-| -------------------- | ------------------------ | ----------------------------- |
-| `OLLAMA_HOST`        | `http://localhost:11434` | Ollama API base URL           |
-| `OLLAMA_LLM_MODEL`   | `llama3.2`               | Chat/reasoning model          |
-| `OLLAMA_IMAGE_MODEL` | `llava`                  | Vision model for image inputs |
+| Variable             | Default                  | Description                                          |
+| -------------------- | ------------------------ | ---------------------------------------------------- |
+| `OLLAMA_HOST`        | `http://localhost:11434` | Ollama API base URL                                  |
+| `OLLAMA_LLM_MODEL`   | `gemma4:12b`             | Chat/reasoning model; also reads image inputs        |
+| `OLLAMA_IMAGE_MODEL` | `x/flux2-klein:4b`       | Image generation model for the `generate_image` tool |
 
 ---
 

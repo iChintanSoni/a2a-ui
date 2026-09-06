@@ -62,6 +62,7 @@ export function useA2AMessages({
   const currentAgentName = agentName ?? connection.card?.name ?? chat?.agentName ?? "Agent";
   const processedLogsRef = useRef(0);
   const lastContextIdRef = useRef(session.contextId);
+  const sanitizedContextIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (chat) return;
@@ -74,7 +75,12 @@ export function useA2AMessages({
     );
   }, [chat, currentAgentName, messageStore, session.contextId, connection.agentUrl]);
 
+  // Once per context, not once per render: `messageStore` is rebuilt whenever its
+  // `chat` reference changes, which is every stream event. Unguarded, this re-runs
+  // mid-stream and rewrites the live working task to unspecified.
   useEffect(() => {
+    if (sanitizedContextIdRef.current === session.contextId) return;
+    sanitizedContextIdRef.current = session.contextId;
     messageStore.sanitizeStaleStreaming(session.contextId);
   }, [messageStore, session.contextId]);
 

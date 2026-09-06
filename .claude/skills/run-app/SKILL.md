@@ -47,7 +47,7 @@ npm run dev              # http://localhost:3001
 ```
 
 Defaults in `server/.env.example`: `OLLAMA_HOST=http://localhost:11434`,
-`OLLAMA_LLM_MODEL=qwen3.5:4b`. Pull the model first (`ollama pull qwen3.5:4b`)
+`OLLAMA_LLM_MODEL=gemma4:12b`. Pull the model first (`ollama pull gemma4:12b`)
 or the first request fails. `TAVILY_API_KEY` is optional — search skills degrade
 without it. **Never commit `server/.env`.**
 
