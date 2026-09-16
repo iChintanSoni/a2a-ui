@@ -95,10 +95,16 @@ export function normalizeImportedAgent(agent: Agent): Agent {
 }
 
 export function normalizeImportedChat(chat: Chat): Chat {
+  const nextId = crypto.randomUUID();
   return {
     ...chat,
-    id: crypto.randomUUID(),
+    id: nextId,
     archived: chat.archived ?? false,
+    pinned: chat.pinned ?? false,
     items: chat.items ?? [],
+    executionEvents: (chat.executionEvents ?? []).map(event => ({
+      ...event,
+      chatId: nextId,
+    })),
   };
 }

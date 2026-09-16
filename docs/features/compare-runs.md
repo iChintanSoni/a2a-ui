@@ -4,7 +4,7 @@ The Compare Runs view places two saved conversations side by side so you can
 see exactly what changed between runs — prompt wording, agent output, artifact
 content, and timing.
 
-<!-- Screenshot: TODO — compare runs page -->
+The Compare Runs workspace presents a side-by-side split comparison pane detailing prompt differences, execution duration delta, unified text diffs of model responses, and diff tables of generated artifacts.
 
 ---
 

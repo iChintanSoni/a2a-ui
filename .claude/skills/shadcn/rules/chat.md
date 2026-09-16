@@ -37,7 +37,7 @@ track visibility, and jump to it. `MessageScrollerButton` sits inside
 // Hand-rolled scroll container with manual stick-to-bottom logic.
 <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
   <div className="flex flex-col gap-6 p-4">
-    {messages.map((m) => (
+    {messages.map(m => (
       <ChatMessage key={m.id} message={m} />
     ))}
   </div>
@@ -51,7 +51,7 @@ track visibility, and jump to it. `MessageScrollerButton` sits inside
   <MessageScroller>
     <MessageScrollerViewport>
       <MessageScrollerContent>
-        {messages.map((message) => (
+        {messages.map(message => (
           <MessageScrollerItem
             key={message.id}
             messageId={message.id}
@@ -114,9 +114,7 @@ with absolutely-positioned `Badge`s.
 **Incorrect:**
 
 ```tsx
-<div className="w-fit rounded-2xl bg-primary px-3 py-2 text-primary-foreground">
-  {text}
-</div>
+<div className="bg-primary text-primary-foreground w-fit rounded-2xl px-3 py-2">{text}</div>
 ```
 
 **Correct:**
@@ -178,7 +176,7 @@ labeled separators are `Marker`, not a `Separator` plus a centered span.
 ```tsx
 <div className="flex items-center gap-3 py-2">
   <Separator className="flex-1" />
-  <span className="text-xs text-muted-foreground">Today</span>
+  <span className="text-muted-foreground text-xs">Today</span>
   <Separator className="flex-1" />
 </div>
 ```

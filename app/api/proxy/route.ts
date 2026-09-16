@@ -53,6 +53,11 @@ function buildResponseHeaders(headers: Headers): Headers {
       nextHeaders.delete(key);
     }
   }
+  const contentType = nextHeaders.get("content-type") ?? "";
+  if (contentType.includes("text/event-stream")) {
+    nextHeaders.set("cache-control", "no-cache, no-transform");
+    nextHeaders.set("x-accel-buffering", "no");
+  }
   return nextHeaders;
 }
 
@@ -84,9 +89,12 @@ async function proxyRequest(request: NextRequest) {
       headers,
       body,
       redirect: "follow",
-      signal: AbortSignal.timeout(30_000),
+      signal: request.signal,
     });
   } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      return new Response(null, { status: 499 });
+    }
     const message = err instanceof Error ? err.message : "Upstream connection failed";
     return Response.json({ error: message }, { status: 502 });
   }

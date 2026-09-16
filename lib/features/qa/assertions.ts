@@ -141,7 +141,9 @@ export function evaluateAssertion(
   if (assertion.kind === "content-regex") {
     try {
       const regex = getCachedRegex(assertion.pattern, assertion.flags);
+      regex.lastIndex = 0;
       const passed = regex.test(output.text);
+      regex.lastIndex = 0;
       return {
         assertionId: assertion.id,
         label: assertion.label,

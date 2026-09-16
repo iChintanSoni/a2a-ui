@@ -90,15 +90,36 @@ export function downloadCsv(filename: string, rows: string[][]) {
 
 // ── import parsers ─────────────────────────────────────────────────────────────
 
+export function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === "," && !inQuotes) {
+      result.push(cur);
+      cur = "";
+    } else {
+      cur += char;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
 export function parseCsvImport(text: string): Partial<QaTestCase>[] {
   const lines = text.trim().split("\n").filter(Boolean);
   if (lines.length < 2) return [];
-  const headers = lines[0].split(",").map(h => h.replace(/^"|"$/g, "").trim());
+  const headers = parseCsvLine(lines[0]).map(h => h.trim());
   return lines.slice(1).map(line => {
-    const values =
-      line
-        .match(/("(?:[^"]|"")*"|[^,]*)/g)
-        ?.map(v => v.replace(/^"|"$/g, "").replace(/""/g, '"')) ?? [];
+    const values = parseCsvLine(line);
     const row: Record<string, string> = {};
     headers.forEach((h, i) => {
       row[h] = values[i] ?? "";
@@ -151,7 +172,7 @@ export function parseJsonImport(text: string): Partial<QaTestCase>[] {
     prompt: typeof item["prompt"] === "string" ? item["prompt"] : "",
     attachments: [],
     metadata: (item["metadata"] as Record<string, string>) ?? {},
-    expectedTaskState: (item["expectedTaskState"] as QaTestCase["expectedTaskState"]) ?? undefined,
+    expectedTaskState: toOptionalTaskState(item["expectedTaskState"]),
     expectedOutputMode: (item["expectedOutputMode"] as QaOutputMode) ?? "any",
     assertions: Array.isArray(item["assertions"]) ? (item["assertions"] as QaAssertion[]) : [],
     dataTable: Array.isArray(item["dataTable"])

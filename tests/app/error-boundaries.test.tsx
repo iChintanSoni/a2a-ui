@@ -1,10 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import DashboardError from "@/app/dashboard/error";
 import ChatError from "@/app/dashboard/chat/[chatId]/error";
 
 describe("route error boundaries", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
   it("renders the dashboard fallback and lets the user retry", async () => {
     const reset = vi.fn();
 

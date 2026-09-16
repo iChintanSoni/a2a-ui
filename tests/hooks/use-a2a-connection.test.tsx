@@ -1,4 +1,4 @@
-import { cleanup, render, waitFor } from "@testing-library/react";
+import { act, cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AgentCard } from "@a2a-js/sdk";
 import type { Client } from "@a2a-js/sdk/client";
@@ -96,7 +96,9 @@ describe("useA2AConnection", () => {
     await waitFor(() => expect(refreshRef.current).toBeTruthy());
     const refresh = refreshRef.current;
     if (!refresh) throw new Error("refresh was not registered");
-    await Promise.all([refresh(), refresh()]);
+    await act(async () => {
+      await Promise.all([refresh(), refresh()]);
+    });
 
     expect(createFromUrl).toHaveBeenCalledTimes(1);
     expect(getAgentCard).toHaveBeenCalledTimes(1);
@@ -121,7 +123,9 @@ describe("useA2AConnection", () => {
     await waitFor(() => expect(refreshRef.current).toBeTruthy());
     const refresh = refreshRef.current;
     if (!refresh) throw new Error("refresh was not registered");
-    await expect(refresh()).rejects.toThrow("card failed");
+    await act(async () => {
+      await expect(refresh()).rejects.toThrow("card failed");
+    });
 
     expect(createFromUrl).toHaveBeenCalledTimes(1);
     expect(getAgentCard).toHaveBeenCalledTimes(1);

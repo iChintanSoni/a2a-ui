@@ -64,19 +64,22 @@ function getComparableArtifacts(chat: Chat): ComparableArtifact[] {
 }
 
 function getDurationMs(chat: Chat): number | null {
-  const outgoing = chat.executionEvents.find(event => event.kind === "outgoing-message");
-  const terminal = [...chat.executionEvents]
-    .reverse()
-    .find(
-      event =>
-        event.kind === "task-status" &&
-        (event.details?.state === "completed" ||
-          event.details?.state === "failed" ||
-          event.details?.state === "rejected" ||
-          event.details?.state === "canceled"),
-    );
+  const terminalIndex = chat.executionEvents.findLastIndex(
+    event =>
+      event.kind === "task-status" &&
+      (event.details?.state === "completed" ||
+        event.details?.state === "failed" ||
+        event.details?.state === "rejected" ||
+        event.details?.state === "canceled"),
+  );
 
-  if (!outgoing || !terminal) return null;
+  if (terminalIndex < 0) return null;
+  const terminal = chat.executionEvents[terminalIndex];
+  const outgoing = chat.executionEvents
+    .slice(0, terminalIndex)
+    .findLast(event => event.kind === "outgoing-message");
+
+  if (!outgoing) return null;
   return terminal.timestamp - outgoing.timestamp;
 }
 

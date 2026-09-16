@@ -3,7 +3,7 @@
 Each agent has its own settings page where you can configure display
 preferences, authentication, custom headers, and inspect protocol compliance.
 
-<!-- Screenshot: TODO — agent settings page -->
+The agent settings interface is organized into tabbed sections: **General** (identity, tags, favorites, and A2UI toggles), **Auth** (Bearer, API Key, Basic, or None), **Headers** (custom request headers), and **Agent Card** (card spec details and real-time protocol compliance diagnostics).
 
 Navigate here from the Agent Library by clicking the **Settings** (gear) icon
 on an agent card, or via the sidebar when a chat with that agent is open.
