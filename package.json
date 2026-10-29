@@ -91,7 +91,7 @@
     "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16",
-    "happy-dom": "^20",
+    "happy-dom": "^21",
     "husky": "^9",
     "prettier": "^3",
     "prettier-plugin-tailwindcss": "^0",
